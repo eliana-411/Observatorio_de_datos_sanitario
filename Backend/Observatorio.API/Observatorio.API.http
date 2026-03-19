@@ -1,0 +1,6 @@
+@Observatorio.API_HostAddress = http://localhost:5083
+
+GET {{Observatorio.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
