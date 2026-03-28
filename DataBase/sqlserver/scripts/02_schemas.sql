@@ -1,0 +1,8 @@
+USE ObservatorioDW;
+GO
+
+CREATE SCHEMA dim;
+GO
+
+CREATE SCHEMA fact;
+GO
