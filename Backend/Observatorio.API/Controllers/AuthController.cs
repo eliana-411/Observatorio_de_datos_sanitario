@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Observatorio.Application.Auth.DTOs;
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Observatorio.API.Controllers;
 
@@ -37,5 +39,21 @@ public class AuthController : ControllerBase
     {
         var result = await _googleOAuth2Service.AuthenticateWithGoogleAsync(request.Token);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult GetMe()
+    {
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        var name = User.FindFirst(ClaimTypes.Name)?.Value;
+        var sub = User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new { id = sub, email, name });
     }
 }
