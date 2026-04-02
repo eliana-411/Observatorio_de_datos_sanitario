@@ -43,9 +43,16 @@ public class AuthService : IAuthService
         // TODO: Validar contra base de datos
         // TODO: Validar contraseña con hash
 
-        if (!FakeUsers.TryGetValue(request.Email, out var user) || user.Password != request.Password)
+        // Validar que el usuario exista
+        if (!FakeUsers.TryGetValue(request.Email, out var user))
         {
-            throw new UnauthorizedAccessException("Credenciales inválidas");
+            throw new UnauthorizedAccessException("El correo no está registrado. Por favor, regístrate primero.");
+        }
+
+        // Validar contraseña
+        if (user.Password != request.Password)
+        {
+            throw new UnauthorizedAccessException("La contraseña es incorrecta.");
         }
 
         var token = _jwtTokenGenerator.GenerateToken(Guid.NewGuid().ToString(), user.Email, user.Name);
