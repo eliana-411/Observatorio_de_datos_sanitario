@@ -1,5 +1,6 @@
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
+using Observatorio.API.Middleware;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -41,6 +42,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Agregar autorización
 builder.Services.AddAuthorization();
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Console.WriteLine(builder.Configuration["Jwt:Key"]);
 
 var app = builder.Build();
@@ -53,7 +66,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// CORS must be before HttpsRedirection to avoid blocking preflight requests
+app.UseCors("AllowFrontend");
+
 app.UseHttpsRedirection();
+
+// Error middleware
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
