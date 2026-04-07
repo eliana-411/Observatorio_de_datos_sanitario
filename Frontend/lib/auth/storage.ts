@@ -24,7 +24,7 @@ export function setToken(token: string): void {
     // Expira en 60 minutos (mismo que el token)
     const expiresInMs = 60 * 60 * 1000;
     const expiryDate = new Date(Date.now() + expiresInMs).toUTCString();
-    document.cookie = `${TOKEN_KEY}=${token}; path=/; expires=${expiryDate}`;
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; expires=${expiryDate}; SameSite=Lax`;
 }
 
 /** Elimina el token de localStorage Y cookies */

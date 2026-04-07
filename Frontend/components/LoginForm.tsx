@@ -26,8 +26,12 @@ export function LoginForm() {
     const onSubmit = async (data: LoginFormData) => {
         try {
             await login(data.email, data.password);
+
+            // Pequeño delay para asegurar que la cookie se establezca
+            await new Promise(resolve => setTimeout(resolve, 200));
             router.push('/dashboard');
         } catch (err) {
+            // El error ya está en el estado de useAuth
             console.error('Login error:', err);
         }
     };

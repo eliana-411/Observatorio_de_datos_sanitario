@@ -13,10 +13,14 @@ export default function DashboardPage() {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Dashboard</h1>
-            <p className="text-gray-600 mb-8">
-                Bienvenido al Observatorio de Datos Sanitarios
-            </p>
+            <div className="mb-8">
+                <h1 className="text-4xl font-bold text-gray-900">
+                    ¡Bienvenido, {user?.name}! 👋
+                </h1>
+                <p className="text-gray-600 mt-2">
+                    En el Observatorio de Datos Sanitarios
+                </p>
+            </div>
 
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg shadow p-6">

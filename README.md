@@ -39,6 +39,18 @@ password: admin123
 
 ## Requisitos previos
 
+### Frontend
+**Ejecución**
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
 ### Bases de datos
 
 **Instalar Docker**
@@ -55,7 +67,7 @@ password: admin123
 - Password: admin123
 - Port: 5433
 
-**Extenciones**
+**Extensiones**
 
 - Container Tools
 
