@@ -29,8 +29,11 @@ export function RegisterForm() {
     const onSubmit = async (data: RegisterFormData) => {
         try {
             await registerUser(data.name, data.email, data.password);
+            // Pequeño delay para asegurar que la cookie se establezca
+            await new Promise(resolve => setTimeout(resolve, 200));
             router.push('/dashboard');
         } catch (err) {
+            // El error ya está en el estado de useAuth
             console.error('Register error:', err);
         }
     };

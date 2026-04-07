@@ -58,13 +58,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     validationErrors: response.error.errors,
                     isLoading: false,
                 });
+                throw new Error(Object.values(response.error.errors)[0]?.[0] || 'Validation error');
             } else {
+                const errorMsg = response.error.message || 'Login failed';
                 set({
-                    error: response.error.message,
+                    error: errorMsg,
                     isLoading: false,
                 });
+                throw new Error(errorMsg);
             }
-            return;
         }
 
         if (response.data) {
@@ -73,7 +75,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             set({
                 token,
                 user: {
-                    id: email, // Placeholder, should be from token
+                    id: email,
                     email,
                     name,
                 },
@@ -98,13 +100,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     validationErrors: response.error.errors,
                     isLoading: false,
                 });
+                throw new Error(Object.values(response.error.errors)[0]?.[0] || 'Validation error');
             } else {
+                const errorMsg = response.error.message || 'Registration failed';
                 set({
-                    error: response.error.message,
+                    error: errorMsg,
                     isLoading: false,
                 });
+                throw new Error(errorMsg);
             }
-            return;
         }
 
         if (response.data) {
@@ -131,11 +135,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
 
         if (response.error) {
+            const errorMsg = response.error.message || 'Google login failed';
             set({
-                error: response.error.message,
+                error: errorMsg,
                 isLoading: false,
             });
-            return;
+            throw new Error(errorMsg);
         }
 
         if (response.data) {
