@@ -1,67 +1,76 @@
+using BCrypt.Net;
 using Observatorio.Application.Auth.DTOs;
 using Observatorio.Application.Auth.Interfaces;
+using Observatorio.Domain.Entities;
+using Observatorio.Infrastructure.Data.Repositories;
 
 namespace Observatorio.Application.Auth.Services;
 
 public class AuthService : IAuthService
 {
     private readonly JwtTokenGenerator _jwtTokenGenerator;
+    private readonly IUserRepository _userRepository;
 
-    // Usuarios de prueba (sin BD aún)
-    private static readonly Dictionary<string, (string Name, string Email, string Password)> FakeUsers = new()
-    {
-        { "testuser@example.com", ("Test User", "testuser@example.com", "password123") }
-    };
-
-    public AuthService(JwtTokenGenerator jwtTokenGenerator)
+    public AuthService(JwtTokenGenerator jwtTokenGenerator, IUserRepository userRepository)
     {
         _jwtTokenGenerator = jwtTokenGenerator;
+        _userRepository = userRepository;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
-        // TODO: Validar que el usuario no exista
-        // TODO: Guardar en base de datos
-        // TODO: Hash password
-
-        var userId = Guid.NewGuid().ToString();
-        var token = _jwtTokenGenerator.GenerateToken(userId, request.Email, request.Name);
-
-        // Simular guardado en usuarios fake
-        FakeUsers[request.Email] = (request.Name, request.Email, "hashed-password");
-
-        return await Task.FromResult(new AuthResponse
+        // Validar que el usuario no exista
+        var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+        if (existingUser != null)
         {
-            Token = token,
+            throw new InvalidOperationException("El usuario ya existe");
+        }
+
+        // Hashear password
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        // Crear nuevo usuario
+        var user = new User
+        {
             Name = request.Name,
-            Email = request.Email
-        });
-    }
+            Email = request.Email,
+            PasswordHash = passwordHash,
+            Provider = "Local",
+            CreatedAt = DateTime.UtcNow,
+        };
 
-    public async Task<AuthResponse> LoginAsync(LoginRequest request)
-    {
-        // TODO: Validar contra base de datos
-        // TODO: Validar contraseña con hash
+        // Guardar en BD
+        await _userRepository.AddAsync(user);
 
-        // Validar que el usuario exista
-        if (!FakeUsers.TryGetValue(request.Email, out var user))
-        {
-            throw new UnauthorizedAccessException("El correo no está registrado. Por favor, regístrate primero.");
-        }
+        // Generar JWT
+        var token = _jwtTokenGenerator.GenerateToken(user.Id.ToString(), user.Email, user.Name);
 
-        // Validar contraseña
-        if (user.Password != request.Password)
-        {
-            throw new UnauthorizedAccessException("La contraseña es incorrecta.");
-        }
-
-        var token = _jwtTokenGenerator.GenerateToken(Guid.NewGuid().ToString(), user.Email, user.Name);
-
-        return await Task.FromResult(new AuthResponse
+        return new AuthResponse
         {
             Token = token,
             Name = user.Name,
             Email = user.Email
-        });
+        };
+    }
+
+    public async Task<AuthResponse> LoginAsync(LoginRequest request)
+    {
+        // Buscar usuario por email
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            throw new UnauthorizedAccessException("Credenciales inválidas");
+        }
+
+        // Generar JWT
+        var token = _jwtTokenGenerator.GenerateToken(user.Id.ToString(), user.Email, user.Name);
+
+        return new AuthResponse
+        {
+            Token = token,
+            Name = user.Name,
+            Email = user.Email
+        };
     }
 }
