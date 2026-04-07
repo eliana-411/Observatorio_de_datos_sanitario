@@ -1,0 +1,39 @@
+using Microsoft.EntityFrameworkCore;
+using Observatorio.Domain.Entities;
+
+namespace Observatorio.Infrastructure.Data;
+
+public class ObservatorioDbContext : DbContext
+{
+    public ObservatorioDbContext(DbContextOptions<ObservatorioDbContext> options) 
+        : base(options) { }
+    
+    public DbSet<User> Users { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>().ToTable("usuarios");
+        
+        modelBuilder.Entity<User>().Property(u => u.Id)
+            .HasColumnName("id_usuario")
+            .ValueGeneratedOnAdd();
+        
+        modelBuilder.Entity<User>().Property(u => u.Name)
+            .HasColumnName("nombre");
+        
+        modelBuilder.Entity<User>().Property(u => u.Email)
+            .HasColumnName("email")
+            .IsRequired();
+        
+        modelBuilder.Entity<User>().Property(u => u.PasswordHash)
+            .HasColumnName("password_hash");
+        
+        modelBuilder.Entity<User>().Property(u => u.CreatedAt)
+            .HasColumnName("fecha_creacion");
+        
+        modelBuilder.Entity<User>().Ignore(u => u.Provider);
+        modelBuilder.Entity<User>().Ignore(u => u.ProviderId);
+        
+        base.OnModelCreating(modelBuilder);
+    }
+}

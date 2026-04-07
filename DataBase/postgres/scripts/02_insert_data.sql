@@ -1,6 +1,6 @@
 INSERT INTO usuarios(nombre, email, password_hash)
 VALUES (
-    'Admin Sistema',
+    'Admin ',
     'admin@observatorio.com',
-    'hash_simulado',
-);
+    'hash_simulado'
+)
