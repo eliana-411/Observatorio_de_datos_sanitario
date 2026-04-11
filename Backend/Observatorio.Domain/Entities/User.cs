@@ -2,7 +2,7 @@ namespace Observatorio.Domain.Entities;
 
 public class User
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
@@ -16,5 +16,4 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public bool IsActive { get; set; } = true;
 }

@@ -2,9 +2,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Observatorio.Domain\Observatorio.Domain.csproj" />
+    <ProjectReference Include="..\Observatorio.Infrastructure\Observatorio.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
