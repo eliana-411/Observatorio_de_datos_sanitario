@@ -1,8 +1,11 @@
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
 using Observatorio.API.Middleware;
+using Observatorio.Infrastructure.Data;
+using Observatorio.Infrastructure.Data.Repositories;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -10,16 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 DotNetEnv.Env.Load();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Cargar configuration después de cargar el .env
 builder.Configuration.AddEnvironmentVariables();
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
-
+builder.Services.AddDbContext<ObservatorioDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Agregar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

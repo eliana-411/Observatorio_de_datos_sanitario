@@ -1,6 +1,6 @@
 import { getToken } from '@/lib/auth/storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5083';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7083';
 
 export interface ApiError {
     message: string;
@@ -28,7 +28,6 @@ async function apiRequest<T>(
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Merge custom headers if provided
     if (options.headers && typeof options.headers === 'object') {
         Object.assign(headers, options.headers);
     }
@@ -48,25 +47,25 @@ async function apiRequest<T>(
             body = await response.text();
         }
 
-        // Success response (2xx)
+        // Éxito (2xx)
         if (response.ok) {
             return { data: body as T };
         }
 
-        // 401 Unauthorized - token expirado o inválido
+        // 401 - Mantener mensaje del backend
         if (response.status === 401) {
             return {
                 error: {
-                    message: 'Unauthorized. Please login again.',
-                    errors: undefined,
+                    message: body?.message || 'No autorizado. Por favor inicia sesión nuevamente.',
+                    errors: body?.errors,
                 },
             };
         }
 
-        // 400 Bad Request o 422 - validación
+        // 400 o 422 - Errores de validación
         if (response.status === 400 || response.status === 422) {
             const error: ApiError = {
-                message: body?.message || 'Validation error',
+                message: body?.message || 'Hubo un error en tu solicitud. Verifica los datos.',
             };
 
             if (body?.errors) {
@@ -79,13 +78,13 @@ async function apiRequest<T>(
         // Otros errores
         return {
             error: {
-                message: body?.message || 'An error occurred',
+                message: body?.message || 'Algo salió mal. Por favor intenta de nuevo.',
             },
         };
     } catch (err) {
         return {
             error: {
-                message: 'Network error. Please check your connection.',
+                message: 'No se pudo conectar al servidor',
             },
         };
     }
