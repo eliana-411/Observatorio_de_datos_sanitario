@@ -14,3 +14,4 @@ CREATE TABLE datos_anonimizados (
     fecha DATE,
     cantidad_casos INT
 );
+
