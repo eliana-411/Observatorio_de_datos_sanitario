@@ -1,6 +1,4 @@
 INSERT INTO usuarios(nombre, email, password_hash)
-VALUES (
-    'Admin Sistema',
-    'admin@observatorio.com',
-    'hash_simulado',
-);
+VALUES ('Luna', 'luna@test.com', '5953');
+
+SELECT * FROM usuarios;
