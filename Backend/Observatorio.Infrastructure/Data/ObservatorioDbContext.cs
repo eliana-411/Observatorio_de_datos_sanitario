@@ -31,6 +31,9 @@ public class ObservatorioDbContext : DbContext
         modelBuilder.Entity<User>().Property(u => u.CreatedAt)
             .HasColumnName("fecha_creacion");
         
+        modelBuilder.Entity<User>().Property(u => u.Role)
+            .HasColumnName("rol");
+        
         modelBuilder.Entity<User>().Ignore(u => u.Provider);
         modelBuilder.Entity<User>().Ignore(u => u.ProviderId);
         
