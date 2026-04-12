@@ -3,6 +3,7 @@ using Observatorio.Application.Auth.DTOs;
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Domain.Entities;
 using Observatorio.Infrastructure.Data.Repositories;
+using static Observatorio.Application.Auth.DTOs.AuthExceptions;
 
 namespace Observatorio.Application.Auth.Services;
 
@@ -36,6 +37,7 @@ public class AuthService : IAuthService
             Email = request.Email,
             PasswordHash = passwordHash,
             Provider = "Local",
+            Role = request.Role ?? "User", // Usar el rol del request o por defecto "User"
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -49,7 +51,8 @@ public class AuthService : IAuthService
         {
             Token = token,
             Name = user.Name,
-            Email = user.Email
+            Email = user.Email,
+            Role = user.Role
         };
     }
 
@@ -58,9 +61,14 @@ public class AuthService : IAuthService
         // Buscar usuario por email
         var user = await _userRepository.GetByEmailAsync(request.Email);
         
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user == null)
         {
-            throw new UnauthorizedAccessException("Credenciales inválidas");
+            throw new UserNotFoundException();
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            throw new InvalidPasswordException();
         }
 
         // Generar JWT
@@ -70,7 +78,8 @@ public class AuthService : IAuthService
         {
             Token = token,
             Name = user.Name,
-            Email = user.Email
+            Email = user.Email,
+            Role = user.Role
         };
     }
 }

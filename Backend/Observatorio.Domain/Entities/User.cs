@@ -14,6 +14,8 @@ public class User
 
     public string? ProviderId { get; set; } // ID del proveedor OAuth
 
+    public string Role { get; set; } = "User"; // Admin, User, etc.
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 }
