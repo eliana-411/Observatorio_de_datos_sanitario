@@ -9,13 +9,15 @@ https://www.pgadmin.org/download/pgadmin-4-windows/
 Password: admin123
 Port 5434
 Extenciones
+
 - Container Tools
 - SQL Server (mssql) para configurar La base de datos sql
 
 ** levantar el Docker desde /DataBase
 docker compose up -d
+
 - Verfiicar que se esten ejecutando
-docker ps
+  docker ps
 
 ** Conectarse a la base de datos SQL server
 Instalar extención
@@ -25,8 +27,8 @@ localhost,1433
 user: sa
 password: ****
 
-
 ## PostgreSQL
+
 Instalar extención
 PostgreSQL - Chris Kolkman
 
@@ -93,10 +95,7 @@ bun dev
   Swagger/OpenAPI: https://localhost:7083/swagger
   ```
 
-
-
 ## Dependencias .NET
-
 
 Las dependencias se instalan automáticamente con:
 

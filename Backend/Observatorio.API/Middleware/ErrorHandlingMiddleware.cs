@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Observatorio.Application.Auth.DTOs;
+using static Observatorio.Application.Auth.DTOs.AuthExceptions;
 
 namespace Observatorio.API.Middleware;
 
@@ -33,7 +35,17 @@ public class ErrorHandlingMiddleware
 
         var response = new { message = "An error occurred processing your request.", error = exception.Message };
 
-        if (exception is UnauthorizedAccessException)
+        if (exception is UserNotFoundException)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            response = new { message = "Usuario no encontrado", error = exception.Message };
+        }
+        else if (exception is InvalidPasswordException)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            response = new { message = "Contraseña incorrecta", error = exception.Message };
+        }
+        else if (exception is UnauthorizedAccessException)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             response = new { message = "Unauthorized access.", error = exception.Message };

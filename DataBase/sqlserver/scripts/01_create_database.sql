@@ -1,5 +1,5 @@
 CREATE DATABASE ObservatorioDW;
 GO
 
---USE ObservatorioDW;
---GO
+USE ObservatorioDW;
+GO
