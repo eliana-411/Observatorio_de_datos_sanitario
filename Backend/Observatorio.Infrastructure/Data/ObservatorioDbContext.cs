@@ -29,7 +29,11 @@ public class ObservatorioDbContext : DbContext
             .HasColumnName("password_hash");
         
         modelBuilder.Entity<User>().Property(u => u.CreatedAt)
-            .HasColumnName("fecha_creacion");
+            .HasColumnName("fecha_creacion")
+            .HasConversion(
+                v => v,
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+            );
         
         modelBuilder.Entity<User>().Property(u => u.Role)
             .HasColumnName("rol");
