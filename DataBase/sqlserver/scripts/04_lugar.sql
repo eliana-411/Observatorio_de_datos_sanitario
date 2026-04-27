@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 4: Dimensión de lugar
+--  OBSERVATORIO 
+--  Dimensión de lugar
 --  Fuente   : municipio_evento, municipio_origen, zona_evento
 --  Derivada : mismo_municipio
 --             (1 cuando el evento ocurre en el municipio

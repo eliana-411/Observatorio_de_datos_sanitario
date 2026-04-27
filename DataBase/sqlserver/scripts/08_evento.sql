@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 8: Tabla de hechos — FACT_EVENTO
+--  OBSERVATORIO 
+--  Tabla de hechos — FACT_EVENTO
 --
 --  Granularidad : un registro = un evento de intento de suicidio
 --  Métrica      : hospitalizado (BIT)
@@ -30,4 +30,7 @@ CREATE TABLE FACT_EVENTO (
     CONSTRAINT FK_FACT_ATENCION FOREIGN KEY (id_atencion) REFERENCES DIM_ATENCION (id_atencion),
     CONSTRAINT FK_FACT_CONTEXTO FOREIGN KEY (id_contexto) REFERENCES DIM_CONTEXTO (id_contexto)
 );
+
+ALTER TABLE FACT_EVENTO
+    ADD cantidad_intentos TINYINT NULL;  -- TINYINT basta (rango 0-255)
 GO

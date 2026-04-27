@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 6: Dimensión de atención
+--  OBSERVATORIO 
+--  Dimensión de atención
 --  Fuente   : resultado_atencion
 --  Derivadas: tipo_resultado, requirio_hospitalizacion
 --

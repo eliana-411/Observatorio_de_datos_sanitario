@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 9: Índices
+--  OBSERVATORIO 
+--  Índices
 --
 --  Se crean índices sobre:
 --    - Cada FK de FACT_EVENTO   → acelera los JOINs
