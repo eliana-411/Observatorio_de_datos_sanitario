@@ -1,0 +1,5 @@
+id_registro,fecha,municipio_origen,municipio_evento,zona_evento,genero,edad,estrato,grupo_poblacional,estado_civil,situacion_sentimental,metodo,hospitalizado,resultado_atencion,antecedentes_salud_mental,consumo_sustancias,errores
+9,2020-01-05,Anserma,Villamaria,Urbana,Femenino,128,2,Juventud (18-28),Soltero/A,Duelo Por Perdida De Pareja,Intoxicacion Por Plaguicidas,No,Alta Medica,Intento Previo + Depresion,Alcohol,Edad fuera de rango
+11,2020-01-06,Victoria,Chinchina,Urbana,Masculino,64,8,Persona Mayor (60+),Viudo/A,Con Pareja Estable,Lesion Por Arma Cortopunzante,Sí,Hospitalizacion Prolongada,Depresion,Alcohol,Estrato fuera de rango
+1895,2021-12-06,Samana,La Merced,Urbana,Femenino,660,2,Persona Mayor (60+),Soltero/A,Con Pareja Estable,Lesion Por Arma De Fuego,Sí,Remision A Psiquiatria,Intento Previo,Cocaina/Bazuco,Edad fuera de rango
+2026,2022-01-25,La Merced,San Jose,Rural,Femenino,240,1,Comunidad Lgbtiq+,Soltero/A,Relacion Conflictiva,Lesion Por Arma Cortopunzante,Sí,Hospitalizacion Prolongada,Depresion,Cocaina/Bazuco,Edad fuera de rango

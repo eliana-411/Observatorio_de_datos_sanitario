@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 3: Dimensión de persona
+--  OBSERVATORIO 
+--  Dimensión de persona
 --  Fuente   : genero, edad, estrato, grupo_poblacional,
 --             estado_civil, situacion_sentimental
 --  Derivada : grupo_etario (calculada a partir de edad)

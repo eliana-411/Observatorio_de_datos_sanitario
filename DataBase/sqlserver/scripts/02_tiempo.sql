@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 2: Dimensión de tiempo
+--  OBSERVATORIO 
+--  Dimensión de tiempo
 --  Fuente   : columna [fecha] del dataset original
 --  Derivadas: anio, mes, trimestre, nombre_mes,
 --             dia_semana, es_fin_de_semana
