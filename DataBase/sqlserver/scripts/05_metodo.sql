@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 5: Dimensión de método
+--  OBSERVATORIO 
+--  Dimensión de método
 --  Fuente   : metodo
 --  Derivadas: tipo_metodo, nivel_letalidad
 --
