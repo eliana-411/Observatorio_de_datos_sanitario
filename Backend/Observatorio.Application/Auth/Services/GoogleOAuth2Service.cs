@@ -57,12 +57,20 @@ public class GoogleOAuth2Service
                 await _userRepository.UpdateAsync(user);
             }
 
-            // Generar JWT
+            // Generar JWT y Refresh Token
             var jwtToken = _jwtTokenGenerator.GenerateToken(user.Id.ToString(), user.Email, user.Name);
+            var refreshToken = _jwtTokenGenerator.GenerateRefreshToken();
+            var refreshTokenExpiryDate = _jwtTokenGenerator.GetRefreshTokenExpiryDate();
+
+            // Guardar refresh token en BD
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryDate = refreshTokenExpiryDate;
+            await _userRepository.UpdateAsync(user);
 
             return new AuthResponse
             {
                 Token = jwtToken,
+                RefreshToken = refreshToken,
                 Name = user.Name,
                 Email = user.Email
             };
