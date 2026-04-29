@@ -75,4 +75,18 @@ public class AuthController : ControllerBase
         await _authService.LogoutAsync(int.Parse(userId));
         return Ok(new { message = "Logout exitoso" });
     }
+
+    [HttpPost("verify-2fa")]
+    public async Task<IActionResult> Verify2FA([FromBody] Verify2FARequest request)
+    {
+        try
+        {
+            var result = await _authService.VerifyTwoFactorCodeAsync(request.Email, request.TwoFactorCode);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
