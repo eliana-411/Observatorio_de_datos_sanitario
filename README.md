@@ -115,3 +115,9 @@ dotnetrestore
 
 - System.IdentityModel.Tokens.Jwt (8.16.0)
 - Microsoft.Extensions.Configuration (8.0.0)
+
+## Configuracion ETL
+- pip install pandas
+- pip install openpyxl
+- py -3.11 -m venv .venv
+- pip install -r requirements.txt
