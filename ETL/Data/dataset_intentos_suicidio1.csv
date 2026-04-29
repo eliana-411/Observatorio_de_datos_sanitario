@@ -7,9 +7,9 @@
 6,2020-01-03,Aguadas,Aguadas,Rural disperso,Masculino,56,2,Adultez (29-59),Casado/a,Sin pareja,Ahorcamiento,No,Remisión a psiquiatría,TEPT,Cannabis
 7,2020-01-04,Manzanares,Manzanares,Urbana,Femenino,37,2,Adultez (29-59),Casado/a,Sin pareja,Intoxicación por medicamentos,Sí,En tratamiento ambulatorio,Ninguno,Ninguno
 8,2020-01-04,Marulanda,Marulanda,Urbana,Femenino,16,1,Adolescencia (12-17),No reportado,Ruptura reciente,Intoxicación por medicamentos,Sí,Alta médica,TEPT,Benzodiacepinas sin prescripción
-9,2020-01-05,Anserma,Anserma,Urbana,Femenino,28,2,Juventud (18-28),Soltero/a,Duelo por pérdida de pareja,Intoxicación por plaguicidas,No,Alta médica,Intento previo + Depresión,Alcohol
+9,2020-01-05,Anserma,Anserma,Urbana,Femenino,128,2,Juventud (18-28),Soltero/a,Duelo por pérdida de pareja,Intoxicación por plaguicidas,No,Alta médica,Intento previo + Depresión,Alcohol
 10,2020-01-06,Samaná,Samaná,Rural,Femenino,15,3,Adolescencia (12-17),Soltero/a,Sin pareja,Intoxicación por plaguicidas,No,Alta médica,Trastorno de personalidad,Benzodiacepinas sin prescripción
-11,2020-01-06,Victoria,Victoria,Urbana,Masculino,64,2,Persona mayor (60+),Viudo/a,Con pareja estable,Lesión por arma cortopunzante,Sí,Hospitalización prolongada,Depresión,Alcohol
+11,2020-01-06,Victoria,Victoria,Urbana,Masculino,64,8,Persona mayor (60+),Viudo/a,Con pareja estable,Lesión por arma cortopunzante,Sí,Hospitalización prolongada,Depresión,Alcohol
 12,2020-01-06,Pácora,Salamina,Urbana,Masculino,43,2,Víctima del conflicto,Soltero/a,Duelo por pérdida de pareja,Lesión por arma cortopunzante,No,Hospitalización prolongada,Ninguno,Cocaína/Bazuco
 13,2020-01-06,Manzanares,Manzanares,Rural,Masculino,54,2,Víctima del conflicto,Soltero/a,Sin pareja,Intoxicación por medicamentos,Sí,Alta voluntaria,Trastorno de personalidad,Cannabis
 14,2020-01-06,Manizales,Manizales,Urbana,Femenino,14,1,Adolescencia (12-17),Separado/a,Ruptura reciente,Intoxicación por medicamentos,Sí,Alta médica,TEPT,Alcohol
@@ -82,7 +82,7 @@
 81,2020-02-04,Filadelfia,Filadelfia,Urbana,Femenino,17,4,Adolescencia (12-17),Unión libre,Ruptura reciente,Intoxicación por plaguicidas,Sí,Alta médica,Depresión,Cocaína/Bazuco
 82,2020-02-05,Filadelfia,Filadelfia,Rural disperso,Masculino,19,2,Juventud (18-28),Casado/a,Ruptura reciente,Ahorcamiento,Sí,Alta médica,Ninguno,Ninguno
 83,2020-02-05,Supía,Supía,Urbana,Masculino,20,2,Juventud (18-28),Soltero/a,Ruptura reciente,Intoxicación por medicamentos,Sí,Alta médica,Intento previo,Alcohol
-84,2020-02-07,Supía,Supía,Rural,Femenino,36,5,Adultez (29-59),Soltero/a,Sin pareja,Intoxicación por plaguicidas,No,Hospitalización prolongada,Depresión + Ansiedad,Ninguno
+84,2020-02-07,Supía,Manizales,Rural,Femenino,36,5,Adultez (29-59),Soltero/a,Sin pareja,Intoxicación por plaguicidas,No,Hospitalización prolongada,Depresión + Ansiedad,Ninguno
 85,2020-02-08,Pensilvania,Pensilvania,Rural,Masculino,16,3,Adolescencia (12-17),Soltero/a,Con pareja estable,Intoxicación por medicamentos,No,En tratamiento ambulatorio,Ninguno,Alcohol
 86,2020-02-08,Manzanares,Manzanares,Urbana,Femenino,43,2,Adultez (29-59),Divorciado/a,Ruptura reciente,Lesión por arma de fuego,Sí,Alta voluntaria,Trastorno de ansiedad,Alcohol + Cannabis
 87,2020-02-08,La Merced,La Merced,Urbana,Masculino,33,1,Discapacidad,Divorciado/a,Ruptura reciente,Intoxicación por otras sustancias,Sí,Alta médica,Trastorno de personalidad,Alcohol + Cannabis

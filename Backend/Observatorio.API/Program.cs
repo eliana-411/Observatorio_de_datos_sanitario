@@ -20,6 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
 builder.Services.AddDbContext<ObservatorioDbContext>(options => options.UseNpgsql(connectionString));

@@ -1,6 +1,6 @@
 -- ============================================================
---  OBSERVATORIO DE SALUD PÚBLICA - CALDAS
---  Paso 7: Dimensión de contexto clínico
+--  OBSERVATORIO 
+--  Dimensión de contexto clínico
 --  Fuente   : antecedentes_salud_mental, consumo_sustancias
 --  Derivadas: tiene_antecedente, consume_sustancias_flag
 --
