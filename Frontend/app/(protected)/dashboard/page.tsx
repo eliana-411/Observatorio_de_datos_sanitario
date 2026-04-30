@@ -1,49 +1,72 @@
 'use client';
 
-import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { useAuth } from '@/hooks/useAuth';
+import { FilterBar } from '@/components/Dashboard/FilterBar';
+import { KPICard } from '@/components/Dashboard/KPICard';
+import { MapContainer } from '@/components/Dashboard/MapContainer';
+import { TimeSeriesChart } from '@/components/Dashboard/TimeSeriesChart';
+import { AIAlert } from '@/components/Dashboard/AIAlert';
+import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
 
 export default function DashboardPage() {
-    const isAuthenticated = useProtectedRoute();
-    const { user } = useAuth();
-
-    if (!isAuthenticated) {
-        return <div className="text-center py-8">Redirigiendo...</div>;
-    }
-
     return (
-        <div>
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-900">
-                    ¡Bienvenido, {user?.name}! 👋
-                </h1>
-                <p className="text-gray-600 mt-2">
-                    En el Observatorio de Datos Sanitarios
-                </p>
-            </div>
+        <div className="bg-[#f7f9ff] min-h-screen pt-6 px-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Filter Bar */}
+                <FilterBar />
 
-            <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Tu Perfil</h2>
-                    <div className="space-y-2">
-                        <p>
-                            <span className="font-medium text-gray-700">Nombre:</span>{' '}
-                            {user?.name}
-                        </p>
-                        <p>
-                            <span className="font-medium text-gray-700">Email:</span> {user?.email}
-                        </p>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <KPICard
+                        label="Total de Casos Reportados"
+                        value="14.282"
+                        trend="+12.4%"
+                        trendType="positive"
+                        icon="monitoring"
+                        subtitle="vs semana anterior"
+                    />
+                    <KPICard
+                        label="Brotes Activos"
+                        value="08"
+                        trend="Riesgo Alto"
+                        trendType="negative"
+                        icon="emergency"
+                        subtitle="3 requieren intervención"
+                    />
+                    <KPICard
+                        label="Tasa de Mortalidad"
+                        value="0,42%"
+                        trend="-0,05%"
+                        trendType="positive"
+                        icon="medical_services"
+                        subtitle="Estable"
+                    />
+                    <KPICard
+                        label="Tendencia de Recuperación"
+                        value="92,8%"
+                        trend="Fuerte"
+                        trendType="positive"
+                        icon="health_and_safety"
+                        subtitle="+2,1% de mejora"
+                    />
+                </div>
+
+                {/* Asymmetric Grid Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Main Heat Map */}
+                    <div className="lg:col-span-8">
+                        <MapContainer />
+                    </div>
+
+                    {/* Secondary Column */}
+                    <div className="lg:col-span-4 space-y-6 flex flex-col">
+                        <TimeSeriesChart />
+                        <AIAlert />
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Información</h2>
-                    <p className="text-gray-600">
-                        Este es tu panel de control. Aquí podrás acceder a todos los datos del
-                        observatorio.
-                    </p>
-                </div>
+                {/* Table Section */}
             </div>
+            <OutbreakTable />
         </div>
     );
 }
