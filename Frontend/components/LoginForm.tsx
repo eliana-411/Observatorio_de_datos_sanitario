@@ -11,6 +11,7 @@ import { useFormError } from '@/hooks/useFormError';
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [justLoggedIn, setJustLoggedIn] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
     const router = useRouter();
     const { login, isLoading, error, requiresTwoFactor } = useAuth();
     const {
@@ -27,86 +28,80 @@ export function LoginForm() {
     // Monitorear cambios en requiresTwoFactor después del login
     useEffect(() => {
         if (justLoggedIn && requiresTwoFactor) {
-            console.log('🔐 Redirigiendo a /verify-2fa');
             router.push('/verify-2fa');
         } else if (justLoggedIn && !requiresTwoFactor && !error) {
-            console.log('✅ Redirigiendo a /dashboard');
             router.push('/dashboard');
         }
     }, [requiresTwoFactor, error, justLoggedIn, router]);
 
     const onSubmit = async (data: LoginFormData) => {
         try {
-            console.log('📝 Iniciando login...');
             await login(data.email, data.password);
-            console.log('✅ Login completado, esperando actualización de estado...');
-
-            // Marcar que se acaba de loguear para que useEffect maneje la redirección
             setJustLoggedIn(true);
         } catch (err) {
-            // El error ya está en el estado de useAuth
             console.error('❌ Login error:', err);
             setJustLoggedIn(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded text-red-800 text-sm">
-                    <p className="font-semibold mb-1">Error de autenticación:</p>
-                    <p>{error}</p>
-                </div>
-            )}
-
-            <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-2">
+                <label htmlFor="email" className="text-xs font-bold uppercase  text-on-surface-variant ml-1 text-gray-700">
+                    Correo Institucional
                 </label>
-                <input
-                    {...register('email')}
-                    id="email"
-                    type="email"
-                    className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none text-gray-900 placeholder-gray-400"
-                />
+                <div className="relative group">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary text-gray-600 transition-colors">mail</span>
+                    <input
+                        {...register('email')}
+                        id="email"
+                        type="email"
+                        placeholder="usuario@institucion.gob"
+                        className="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-xl text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-gray-600"
+                    />
+                </div>
                 {(zodErrors.email || emailErrors.length > 0) && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="text-sm text-red-600 ml-1">
                         {zodErrors.email?.message || emailErrors[0]}
                     </p>
                 )}
             </div>
 
-            <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Contraseña
-                </label>
-                <div className="relative">
+            <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                    <label htmlFor="password" className="text-xs font-bold uppercase  text-on-surface-variant text-gray-700">
+                        Contraseña
+                    </label>
+                    <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); router.push('/reset-password'); }}
+                        className="text-sm font-semibold text-blue-600 dark:hover:text-primary-container transition-colors hover:cursor-pointer"
+                    >
+                        Olvidé mi contraseña
+                    </button>
+                </div>
+                <div className="relative group">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary text-gray-600 transition-colors">lock</span>
                     <input
                         {...register('password')}
                         id="password"
                         type={showPassword ? 'text' : 'password'}
-                        className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 pr-10 shadow-sm focus:border-blue-500 focus:outline-none text-gray-900 placeholder-gray-400"
+                        placeholder="••••••••"
+                        className="w-full pl-12 pr-12 py-4 bg-surface-container-highest border-none rounded-xl text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-gray-600"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface focus:outline-none transition-colors text-gray-700"
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
-                        {showPassword ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20" strokeWidth="2">
-                                <path d="M3 10c0 0 2 4 7 4s7-4 7-4" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        )}
+                        <span className="material-symbols-outlined text-xl">
+                            {showPassword ? 'visibility' : 'visibility_off'}
+                        </span>
                     </button>
                 </div>
                 {(zodErrors.password || passwordErrors.length > 0) && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="text-sm text-red-600 ml-1">
                         {zodErrors.password?.message || passwordErrors[0]}
                     </p>
                 )}
@@ -114,10 +109,31 @@ export function LoginForm() {
 
             <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full rounded bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                disabled={isLoading || googleLoading}
+                className=" bg-blue-600 px-4 hover:bg-blue-700  w-full py-4 bg-linear-to-r from-primary to-primary-container text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
             >
-                {isLoading ? 'Ingresando...' : 'Ingresar'}
+                {isLoading ? (
+                    <>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="40"
+                            height="40"
+                            viewBox="0 0 24 24"
+                            className="animate-spin"
+                        >
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeWidth="2"
+                                d="M12 7C9.2 7 7 9.2 7 12c0 2.5 2 5 5 5 2.8 0 5-2.2 5-5"
+                            />
+                        </svg>
+                        Ingresando
+                    </>
+                ) : (
+                    "Ingresar"
+                )}
             </button>
         </form>
     );

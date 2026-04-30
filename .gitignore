@@ -1,6 +1,7 @@
 # ENV
 .env
 .env.* 
+.venv
 
 # .NET
 bin/
@@ -19,3 +20,9 @@ Thumbs.db
 
 # yml
 *.yml
+
+# datasets
+.csv
+.xlsx
+
+**/__pycache__/
