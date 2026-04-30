@@ -44,11 +44,11 @@ def transformar_datos(df):
     print(f"✓ Dimensión Contexto: {len(dim_contexto)} registros únicos")
     
     # Crear tabla de hechos
-    print("\n📈 Creando tabla de hechos...")
+    print("\n Creando tabla de hechos...")
     fact_evento = crear_fact_evento(df, dim_persona, dim_tiempo, dim_lugar, dim_metodo, dim_atencion, dim_contexto)
     print(f"✓ Tabla de Hechos: {len(fact_evento)} registros")
     
-    print("\n✅ TRANSFORMACIONES COMPLETADAS\n")
+    print("\n TRANSFORMACIONES COMPLETADAS\n")
     
     return {
         'dim_persona': dim_persona,
