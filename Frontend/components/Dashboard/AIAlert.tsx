@@ -2,7 +2,7 @@
 
 export function AIAlert() {
     return (
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-xl shadow-xl text-white">
+        <div className="bg-linear-to-br from-gray-900 to-gray-800 p-6 rounded-xl shadow-xl text-white">
             <div className="flex items-center gap-3 mb-4">
                 <span
                     className="material-symbols-outlined text-secondary-container"

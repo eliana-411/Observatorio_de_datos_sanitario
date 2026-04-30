@@ -49,7 +49,7 @@ export function Sidebar() {
             </nav>
 
             <div className="pt-4 mt-4 border-t border-[#d2e4fb]/30">
-                <button className="w-full bg-gradient-to-br from-[#0059bb] to-[#0070ea] text-white py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform">
+                <button className="w-full bg-linear-to-br from-[#0059bb] to-[#0070ea] text-white py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform">
                     Alerta de Emergencia
                 </button>
                 <div className="mt-4 space-y-1">
