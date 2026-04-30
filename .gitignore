@@ -19,3 +19,9 @@ Thumbs.db
 
 # yml
 *.yml
+
+# Python cache
+*_pycache__/
+
+Entorno virtual
+*venv2/ 
