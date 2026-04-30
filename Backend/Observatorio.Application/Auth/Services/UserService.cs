@@ -14,6 +14,17 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
+    public async Task LogoutAsync(int userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user != null)
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryDate = null;
+            await _userRepository.UpdateAsync(user);
+        }
+    }
+
     public async Task<UserResponse?> GetUserByIdAsync(int id)
     {
         var user = await _userRepository.GetByIdAsync(id);

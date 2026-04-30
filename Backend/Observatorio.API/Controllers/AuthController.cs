@@ -41,6 +41,13 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+        return Ok(result);
+    }
+
     [Authorize]
     [HttpGet("me")]
     public IActionResult GetMe()
@@ -55,5 +62,31 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { id = sub, email, name });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await _authService.LogoutAsync(int.Parse(userId));
+        return Ok(new { message = "Logout exitoso" });
+    }
+
+    [HttpPost("verify-2fa")]
+    public async Task<IActionResult> Verify2FA([FromBody] Verify2FARequest request)
+    {
+        try
+        {
+            var result = await _authService.VerifyTwoFactorCodeAsync(request.Email, request.TwoFactorCode);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
