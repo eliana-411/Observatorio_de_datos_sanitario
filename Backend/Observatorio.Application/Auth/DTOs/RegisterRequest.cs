@@ -1,4 +1,8 @@
 namespace Observatorio.Application.Auth.DTOs;
+
+/// <summary>
+/// DTO para registro de usuario
+/// </summary>
 public class RegisterRequest
 {
     public string Name { get; set; } = string.Empty;
