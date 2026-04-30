@@ -19,12 +19,14 @@ export function setToken(token: string): void {
 
     // Guardar en localStorage para acceso desde cliente
     localStorage.setItem(TOKEN_KEY, token);
+    console.log('💾 Token guardado en localStorage:', token.substring(0, 20) + '...');
 
     // Guardar en cookie para acceso desde middleware (servidor)
     // Expira en 60 minutos (mismo que el token)
     const expiresInMs = 60 * 60 * 1000;
     const expiryDate = new Date(Date.now() + expiresInMs).toUTCString();
     document.cookie = `${TOKEN_KEY}=${token}; path=/; expires=${expiryDate}; SameSite=Lax`;
+    console.log('🍪 Cookie establecida (SameSite=Lax)');
 }
 
 /** Elimina el token de localStorage Y cookies */

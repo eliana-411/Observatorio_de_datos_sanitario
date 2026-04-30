@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,8 +10,9 @@ import { useFormError } from '@/hooks/useFormError';
 
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
+    const [justLoggedIn, setJustLoggedIn] = useState(false);
     const router = useRouter();
-    const { login, isLoading, error } = useAuth();
+    const { login, isLoading, error, requiresTwoFactor } = useAuth();
     const {
         register,
         handleSubmit,
@@ -23,16 +24,29 @@ export function LoginForm() {
     const emailErrors = useFormError('email');
     const passwordErrors = useFormError('password');
 
+    // Monitorear cambios en requiresTwoFactor después del login
+    useEffect(() => {
+        if (justLoggedIn && requiresTwoFactor) {
+            console.log('🔐 Redirigiendo a /verify-2fa');
+            router.push('/verify-2fa');
+        } else if (justLoggedIn && !requiresTwoFactor && !error) {
+            console.log('✅ Redirigiendo a /dashboard');
+            router.push('/dashboard');
+        }
+    }, [requiresTwoFactor, error, justLoggedIn, router]);
+
     const onSubmit = async (data: LoginFormData) => {
         try {
+            console.log('📝 Iniciando login...');
             await login(data.email, data.password);
+            console.log('✅ Login completado, esperando actualización de estado...');
 
-            // Pequeño delay para asegurar que la cookie se establezca
-            await new Promise(resolve => setTimeout(resolve, 200));
-            router.push('/dashboard');
+            // Marcar que se acaba de loguear para que useEffect maneje la redirección
+            setJustLoggedIn(true);
         } catch (err) {
             // El error ya está en el estado de useAuth
-            console.error('Login error:', err);
+            console.error('❌ Login error:', err);
+            setJustLoggedIn(false);
         }
     };
 
