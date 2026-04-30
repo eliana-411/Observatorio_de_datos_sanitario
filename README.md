@@ -42,6 +42,10 @@ password: admin123
 ## Requisitos previos
 
 ### Frontend
+**Instalar dependencias**
+- cd frontend
+- npm install
+- Crear archivo .env.local
 
 **Ejecución**
 
