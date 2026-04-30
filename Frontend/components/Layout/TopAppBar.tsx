@@ -63,18 +63,21 @@ export function TopAppBar() {
                 <div className="h-8 w-px bg-[#d2e4fb] mx-2"></div>
 
                 <div className="flex items-center gap-3 relative">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-[12px] font-bold text-on-surface leading-none">
+                    <button
+                        onClick={() => setShowProfileMenu(!showProfileMenu)}
+                        className="text-right hidden sm:block min-w-max hover:opacity-70 transition-opacity"
+                    >
+                        <p className="text-[16px] font-bold text-on-surface leading-tight">
                             {user?.name || 'Usuario'}
                         </p>
-                        <p className="text-[10px] text-on-surface-variant font-medium">
+                        <p className="text-[14px] text-on-surface-variant font-medium">
                             Usuario
                         </p>
-                    </div>
+                    </button>
 
                     <button
                         onClick={() => setShowProfileMenu(!showProfileMenu)}
-                        className="w-10 h-10 rounded-full bg-primary text-white font-bold flex items-center justify-center border-2 border-primary-container hover:opacity-90 transition-opacity"
+                        className="w-10 h-10 rounded-full bg-primary text-white font-bold flex items-center justify-center border-2 border-primary-container hover:opacity-90 transition-opacity shrink-0"
                     >
                         {getInitials(user?.name)}
                     </button>
@@ -82,8 +85,20 @@ export function TopAppBar() {
                     {showProfileMenu && (
                         <div className="absolute right-0 top-full mt-2 bg-white dark:bg-[#1a2b3b] rounded-xl shadow-lg border border-white/20 dark:border-[#1a2b3b] w-48 py-2 z-50">
                             <button
+                                onClick={() => {
+                                    router.push('/profile');
+                                    setShowProfileMenu(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-base text-on-surface hover:bg-[#e4efff] dark:hover:bg-[#324d66] transition-colors flex items-center gap-3 font-medium cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-sm" data-icon="account_circle">
+                                    account_circle
+                                </span>
+                                Perfil
+                            </button>
+                            <button
                                 onClick={handleLogout}
-                                className="w-full text-left px-4 py-3 text-sm text-error hover:bg-error-container/20 transition-colors flex items-center gap-3 font-medium"
+                                className="w-full text-left px-4 py-3 text-base text-error hover:bg-[#ff0000]/40 transition-colors flex items-center gap-3 font-medium cursor-pointer"
                             >
                                 <span className="material-symbols-outlined text-sm" data-icon="logout">
                                     logout
