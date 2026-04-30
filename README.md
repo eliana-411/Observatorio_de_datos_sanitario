@@ -42,7 +42,9 @@ password: admin123
 ## Requisitos previos
 
 ### Frontend
+
 **Ejecución**
+
 ```bash
 npm run dev
 # or
@@ -112,6 +114,7 @@ dotnetrestore
 - Microsoft.Extensions.Configuration (8.0.0)
 
 ## Configuracion ETL
+
 - pip install pandas
 - pip install openpyxl
 - py -3.11 -m venv .venv
