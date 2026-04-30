@@ -73,55 +73,30 @@ export function TwoFAForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Información del usuario */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">
-                    Verificando acceso para:
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                    {twoFAEmail}
-                </p>
-            </div>
-
-            {/* Mensaje de error */}
-            {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded text-red-800 text-sm">
-                    <p className="font-semibold mb-1">Error de verificación:</p>
-                    <p>{error}</p>
-                </div>
-            )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
 
             {/* Timer */}
-            <div className="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center justify-between bg-yellow-50 border rounded-lg p-4">
                 <div>
                     <p className="text-sm text-gray-600">
-                        Tiempo restante:
-                    </p>
-                    <p className={`text-2xl font-bold ${isExpired ? 'text-red-600' : 'text-yellow-600'}`}>
-                        {formatTime(timeRemaining)}
-                    </p>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs text-gray-500">
-                        Código válido por {OTP_EXPIRY_MINUTES} minutos
+                        Código válido por {OTP_EXPIRY_MINUTES} minutos:
                     </p>
                     {isExpired && (
                         <p className="text-sm font-semibold text-red-600 mt-1">
                             Código expirado
                         </p>
                     )}
+
+                </div>
+                <div className="text-right">
+                    <p className={`text-xl font-bold ${isExpired ? 'text-red-600' : 'text-yellow-600'}`}>
+                        {formatTime(timeRemaining)}
+                    </p>
                 </div>
             </div>
 
             {/* Input para código OTP */}
             <div>
-                <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-700">
-                    Código de autenticación
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                    Ingresa el código de 6 dígitos enviado a tu email
-                </p>
                 <input
                     {...register('twoFactorCode')}
                     id="twoFactorCode"
@@ -131,25 +106,10 @@ export function TwoFAForm() {
                     placeholder="000000"
                     className="mt-1 block w-full rounded border-2 border-gray-300 px-4 py-3 text-center text-2xl tracking-widest font-mono shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-900 placeholder-gray-400 transition-all"
                 />
-                {(zodErrors.twoFactorCode || codeErrors.length > 0) && (
+                {(zodErrors.twoFactorCode || codeErrors.length > 0 || error) && (
                     <p className="mt-2 text-sm text-red-600">
-                        {zodErrors.twoFactorCode?.message || codeErrors[0]}
+                        {zodErrors.twoFactorCode?.message || codeErrors[0] || error}
                     </p>
-                )}
-
-                {/* Indicador de progreso */}
-                {codeValue && codeValue.length > 0 && (
-                    <div className="mt-2 flex gap-1">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className={`h-2 flex-1 rounded-full transition-colors ${i < codeValue.length
-                                        ? 'bg-blue-500'
-                                        : 'bg-gray-300'
-                                    }`}
-                            />
-                        ))}
-                    </div>
                 )}
             </div>
 
@@ -158,28 +118,32 @@ export function TwoFAForm() {
                 <button
                     type="submit"
                     disabled={isLoading || isExpired}
-                    className="flex-1 rounded bg-blue-600 px-4 py-3 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="bg-blue-600 px-4 hover:bg-blue-700  w-full py-4 bg-linear-to-r from-primary to-primary-container text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
                 >
-                    {isLoading ? 'Verificando...' : 'Verificar'}
+                    {isLoading ? (
+                    <>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="40"
+                            height="40"
+                            viewBox="0 0 24 24"
+                            className="animate-spin"
+                        >
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeWidth="2"
+                                d="M12 7C9.2 7 7 9.2 7 12c0 2.5 2 5 5 5 2.8 0 5-2.2 5-5"
+                            />
+                        </svg>
+                        Verificando
+                    </>
+                ) : (
+                    "Verificar"
+                )}
                 </button>
-                <button
-                    type="button"
-                    onClick={handleBackToLogin}
-                    disabled={isLoading}
-                    className="flex-1 rounded bg-gray-200 px-4 py-3 text-gray-800 font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                    Volver
-                </button>
-            </div>
 
-            {/* Información adicional */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs text-gray-600">
-                    📧 <strong>¿No recibiste el código?</strong>
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                    Revisa tu bandeja de spam o intenta volver a iniciar sesión para recibir un nuevo código.
-                </p>
             </div>
         </form>
     );

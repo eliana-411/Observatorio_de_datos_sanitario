@@ -24,12 +24,14 @@ class DatabaseLoader:
         """Conecta a la base de datos SQL Server"""
         try:
             connection_string = (
-                f"Driver={{ODBC Driver 17 for SQL Server}};"
+                f"Driver={{SQL Server}};"
+                #f"Driver={{ODBC Driver 17 for SQL Server}};"
                 f"Server={self.config['server']},{self.config['port']};"
                 f"Database={self.config['database']};"
                 f"UID={self.config['user']};"
                 f"PWD={self.config['password']}"
             )
+            print(f"Conectando a BD con: {connection_string}")  # DEBUG: mostrar string de conexión (sin password)
             self.connection = pyodbc.connect(connection_string)
             self.cursor = self.connection.cursor()
             logger.info(f" Conectado a BD: {self.config['database']} en {self.config['server']}")
