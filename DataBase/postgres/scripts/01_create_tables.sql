@@ -8,11 +8,3 @@ CREATE TABLE usuarios (
     rol VARCHAR(50)
 );
 
-
-CREATE TABLE datos_anonimizados (
-    id SERIAL PRIMARY KEY,
-    municipio VARCHAR(100),
-    fecha DATE,
-    cantidad_casos INT
-);
-
