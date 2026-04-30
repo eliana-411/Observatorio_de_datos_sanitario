@@ -35,3 +35,18 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Leaflet */
+.leaflet-container {
+  background: #f3f4f6;
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  background: white;
+  border-radius: 8px;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
