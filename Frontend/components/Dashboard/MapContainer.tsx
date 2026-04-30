@@ -2,7 +2,7 @@
 
 export function MapContainer() {
     return (
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
+        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-150">
             <div className="p-6 border-b border-surface-container flex justify-between items-center bg-white/50 backdrop-blur-md">
                 <div>
                     <h2 className="text-lg font-black text-on-surface tracking-tight">

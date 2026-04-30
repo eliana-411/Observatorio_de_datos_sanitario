@@ -60,7 +60,7 @@ export function TopAppBar() {
                     </span>
                 </button>
 
-                <div className="h-8 w-[1px] bg-[#d2e4fb] mx-2"></div>
+                <div className="h-8 w-px bg-[#d2e4fb] mx-2"></div>
 
                 <div className="flex items-center gap-3 relative">
                     <div className="text-right hidden sm:block">
