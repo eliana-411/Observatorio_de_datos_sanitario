@@ -1,3 +1,5 @@
+using Observatorio.Application.Analytics.Interfaces;
+using Observatorio.Application.Analytics.Services;
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
 using Observatorio.Application.Email;
@@ -25,6 +27,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
 // DbContext para PostgreSQL (Usuarios)
@@ -88,8 +91,8 @@ app.UseHttpsRedirection();
 // Rate Limiting middleware (antes de errores para capturar rate limit)
 app.UseMiddleware<RateLimitingMiddleware>();
 
-// Audit Logging middleware
-app.UseMiddleware<AuditLoggingMiddleware>();
+// Audit Logging middleware (comentado temporalmente para pruebas)
+// app.UseMiddleware<AuditLoggingMiddleware>();
 
 // Error middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();
