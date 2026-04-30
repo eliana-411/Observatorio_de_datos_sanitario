@@ -25,3 +25,10 @@ Thumbs.db
 
 Entorno virtual
 *venv2/ 
+# datasets
+*.csv
+*.xlsx
+
+#Archivos 
+*.md
+.md
