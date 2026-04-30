@@ -22,4 +22,10 @@ public class User
 
     public DateTime? RefreshTokenExpiryDate { get; set; } // Expiración del refresh token
 
+    public bool IsTwoFactorEnabled { get; set; } = true; // Habilitar 2FA por defecto
+
+    public string? TwoFactorCode { get; set; } // Código para autenticación de doble factor
+
+    public DateTime? TwoFactorCodeExpiry { get; set; } // Expiración del código 2FA
+
 }
