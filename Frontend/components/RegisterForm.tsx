@@ -38,12 +38,21 @@ export function RegisterForm() {
         }
     };
 
+    // Personalizar mensaje de error si el email ya existe
+    const getErrorMessage = () => {
+        if (!error) return null;
+        if (error.includes('El usuario ya existe')) {
+            return 'Este email ya está registrado. Por favor, intenta con otro email o inicia sesión con tu cuenta.';
+        }
+        return error;
+    };
+
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
+            {getErrorMessage() && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded text-red-800 text-sm">
                     <p className="font-semibold mb-1">Error en el registro:</p>
-                    <p>{error}</p>
+                    <p>{getErrorMessage()}</p>
                 </div>
             )}
 
