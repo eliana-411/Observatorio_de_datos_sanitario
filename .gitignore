@@ -19,3 +19,11 @@ Thumbs.db
 
 # yml
 *.yml
+
+# datasets
+*.csv
+*.xlsx
+
+#Archivos 
+*.md
+.md
