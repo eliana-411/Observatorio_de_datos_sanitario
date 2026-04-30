@@ -33,11 +33,20 @@ export function decodeToken(token: string): JwtPayload | null {
         // Decodificar - funciona en cliente y servidor
         let decoded;
         try {
-            // Intentar atob() primero (cliente)
-            if (typeof atob !== 'undefined') {
+            // Intentar atob() con TextDecoder para UTF-8 (cliente moderno)
+            if (typeof atob !== 'undefined' && typeof TextDecoder !== 'undefined') {
+                const binaryString = atob(padded);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const utf8String = new TextDecoder('utf-8').decode(bytes);
+                decoded = JSON.parse(utf8String);
+            } else if (typeof atob !== 'undefined') {
+                // Fallback a atob simple (menos seguro para UTF-8)
                 decoded = JSON.parse(atob(padded));
             } else {
-                // Fallback a Buffer (servidor)
+                // Fallback a Buffer (servidor Node.js)
                 decoded = JSON.parse(Buffer.from(padded, 'base64').toString('utf-8'));
             }
         } catch (e) {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api/client';
 import { setToken, removeToken, getStoredUser } from '@/lib/auth/storage';
-import type { AuthResponse } from '@/lib/validation/schemas';
+import type { AuthResponse, LoginResponse } from '@/lib/validation/schemas';
 
 export interface User {
     id: string;
@@ -16,6 +16,8 @@ export interface AuthStore {
     isLoading: boolean;
     error: string | null;
     validationErrors: Record<string, string[]> | null;
+    requiresTwoFactor: boolean;
+    twoFAEmail: string | null;
 
     // Computed
     isAuthenticated: boolean;
@@ -24,6 +26,7 @@ export interface AuthStore {
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     loginWithGoogle: (googleToken: string) => Promise<void>;
+    verify2FA: (email: string, twoFactorCode: string) => Promise<void>;
     logout: () => void;
     checkTokenValidity: () => void;
     restoreFromStorage: () => void;
@@ -37,6 +40,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     isLoading: false,
     error: null,
     validationErrors: null,
+    requiresTwoFactor: false,
+    twoFAEmail: null,
 
     // Computed property
     get isAuthenticated() {
@@ -47,7 +52,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     login: async (email: string, password: string) => {
         set({ isLoading: true, error: null, validationErrors: null });
 
-        const response = await api.post<AuthResponse>('/auth/login', {
+        const response = await api.post<LoginResponse>('/auth/login', {
             email,
             password,
         });
@@ -70,17 +75,31 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
 
         if (response.data) {
-            const { token, email, name } = response.data;
-            setToken(token);
-            set({
-                token,
-                user: {
-                    id: email,
-                    email,
-                    name,
-                },
-                isLoading: false,
-            });
+            // Si requiere 2FA, guardar email y estado
+            if (response.data.requiresTwoFactor) {
+                set({
+                    requiresTwoFactor: true,
+                    twoFAEmail: email,
+                    isLoading: false,
+                    error: response.data.message || 'Se requiere verificación de dos factores',
+                });
+                return;
+            }
+
+            // Si no requiere 2FA, login directo
+            const { token, name } = response.data;
+            if (token) {
+                setToken(token);
+                set({
+                    token,
+                    user: {
+                        id: email,
+                        email,
+                        name: name || 'Usuario',
+                    },
+                    isLoading: false,
+                });
+            }
         }
     },
 
@@ -158,6 +177,40 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
     },
 
+    // Verify 2FA code
+    verify2FA: async (email: string, twoFactorCode: string) => {
+        set({ isLoading: true, error: null });
+
+        const response = await api.post<AuthResponse>('/auth/verify-2fa', {
+            email,
+            twoFactorCode,
+        });
+
+        if (response.error) {
+            const errorMsg = response.error.message || '2FA verification failed';
+            set({
+                error: errorMsg,
+                isLoading: false,
+            });
+            throw new Error(errorMsg);
+        }
+
+        if (response.data && response.data.token) {
+            setToken(response.data.token);
+            set({
+                token: response.data.token,
+                user: {
+                    id: email,
+                    email,
+                    name: response.data.name || 'Usuario',
+                },
+                requiresTwoFactor: false,
+                twoFAEmail: null,
+                isLoading: false,
+            });
+        }
+    },
+
     // Logout
     logout: () => {
         removeToken();
@@ -166,6 +219,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             user: null,
             error: null,
             validationErrors: null,
+            requiresTwoFactor: false,
+            twoFAEmail: null,
         });
     },
 
@@ -202,6 +257,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     // Clear error messages
     clearError: () => {
-        set({ error: null, validationErrors: null });
+        set({ error: null, validationErrors: null, requiresTwoFactor: false, twoFAEmail: null });
     },
 }));
