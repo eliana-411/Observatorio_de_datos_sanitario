@@ -26,3 +26,15 @@ Thumbs.db
 .xlsx
 
 **/__pycache__/
+# Python cache
+*_pycache__/
+
+Entorno virtual
+*venv2/ 
+# datasets
+*.csv
+*.xlsx
+
+#Archivos 
+*.md
+.md

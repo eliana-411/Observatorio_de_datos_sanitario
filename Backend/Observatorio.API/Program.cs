@@ -1,9 +1,12 @@
+using Observatorio.Application.Analytics.Interfaces;
+using Observatorio.Application.Analytics.Services;
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
 using Observatorio.Application.Email;
 using Observatorio.API.Middleware;
 using Observatorio.Infrastructure.Data;
 using Observatorio.Infrastructure.Data.Repositories;
+using Observatorio.Infrastructure.Sanitario;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -16,16 +19,23 @@ DotNetEnv.Env.Load();
 
 // Cargar configuration después de cargar el .env
 builder.Configuration.AddEnvironmentVariables();
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+var connectionStringPostgres = Environment.GetEnvironmentVariable("DATABASE_URL");
+var connectionStringSqlServer = Environment.GetEnvironmentVariable("DATABASE_SQL_URL");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
-builder.Services.AddDbContext<ObservatorioDbContext>(options => options.UseNpgsql(connectionString));
+// DbContext para PostgreSQL (Usuarios)
+builder.Services.AddDbContext<ObservatorioDbContext>(options => options.UseNpgsql(connectionStringPostgres));
+
+// DbContext para SQL Server (Datos Sanitarios)
+builder.Services.AddDbContext<SanitarioDbContext>(options => options.UseSqlServer(connectionStringSqlServer));
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Agregar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -77,6 +87,12 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
+
+// Rate Limiting middleware (antes de errores para capturar rate limit)
+app.UseMiddleware<RateLimitingMiddleware>();
+
+// Audit Logging middleware (comentado temporalmente para pruebas)
+// app.UseMiddleware<AuditLoggingMiddleware>();
 
 // Error middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();
