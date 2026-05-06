@@ -5,6 +5,19 @@ namespace Observatorio.Application.Analytics.Interfaces;
 public interface IAnalyticsService
 {
     /// <summary>
+    /// Obtiene datos de la vista de distribución por género
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
+    Task<VistaDistribucionGeneroResponseDto> GetDataFromVistaAsync(CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene datos de la vista de distribución por grupo etario
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
+    /// <remarks>Se pueden agregar parámetros de filtro si la vista los soporta</remarks>
+    Task<VistaDistribucionGrupoEtarioResponseDto> GetDataFromVistaGrupoEtarioAsync(CancellationToken cancelToken = default);
+
+    /// <summary>
     /// Obtiene la tendencia de eventos agrupada por año/mes
     /// </summary>
     /// <param name="anio">Año específico (nulo para todos los años)</param>
