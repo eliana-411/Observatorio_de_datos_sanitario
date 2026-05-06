@@ -32,7 +32,6 @@ class DatabaseLoader:
             )
             self.connection = pyodbc.connect(connection_string)
             self.cursor = self.connection.cursor()
-            logger.info(f" Conectado a BD: {self.config['database']} en {self.config['server']}")
         except Exception as e:
             logger.error(f" Error al conectar a BD: {str(e)}")
             raise
