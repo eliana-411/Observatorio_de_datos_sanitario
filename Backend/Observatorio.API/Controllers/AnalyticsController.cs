@@ -18,6 +18,44 @@ public class AnalyticsController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    [HttpGet("vista-distribucion-genero")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDataFromVista(CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation("Consultando vista de distribución por género");
+            var result = await _analyticsService.GetDataFromVistaAsync(cancelToken);
+            _logger.LogInformation("Datos obtenidos exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar la vista de distribución por género");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
+    [HttpGet("vista-distribucion-grupo-etario")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDataFromVistaGrupoEtario(CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation("Consultando vista de distribución por grupo etario");
+            var result = await _analyticsService.GetDataFromVistaGrupoEtarioAsync(cancelToken);
+            _logger.LogInformation("Datos obtenidos exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar la vista de distribución por grupo etario");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
     /// <summary>
     /// Obtiene la tendencia de eventos agrupada por año/mes
     /// </summary>

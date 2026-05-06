@@ -18,6 +18,45 @@ public class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>
+    /// Obtiene los datos de la vista de distribución por género
+    /// </summary>
+    /// <returns>Respuesta con datos de la vista</returns>
+    public async Task<VistaDistribucionGeneroResponseDto> GetDataFromVistaAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVista: Consultando vista");
+
+        FormattableString query = $@"
+    SELECT genero, total
+    FROM vw_distribucion_genero
+    ORDER BY total DESC
+";
+
+        var data = await _dbContext.Database.SqlQuery<VistaDistribucionGeneroDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new VistaDistribucionGeneroResponseDto { Data = data };
+    }
+
+    /// <summary>
+    /// Obtiene datos de la vista de distribución por grupo etario
+    /// </summary>
+    public async Task<VistaDistribucionGrupoEtarioResponseDto> GetDataFromVistaGrupoEtarioAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVistaGrupoEtario: Consultando vista");
+
+        FormattableString query = $@"
+    SELECT grupoEtario, total
+    FROM vw_distribucion_grupo_etario
+    ORDER BY total DESC
+";
+
+        var data = await _dbContext.Database.SqlQuery<VistaDistribucionGrupoEtarioDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new VistaDistribucionGrupoEtarioResponseDto { Data = data };
+    }
+
+    /// <summary>
     /// Obtiene la tendencia agrupada por año/mes
     /// </summary>
     public async Task<TimeSeriesByYearResponseDto> GetTimeSeriesByYearAsync(int? anio = null, CancellationToken cancelToken = default)
@@ -115,10 +154,10 @@ public class AnalyticsService : IAnalyticsService
 
         _logger?.LogInformation("GetTimeSeriesByDateRange: agrupacion={Agrupacion}, filas={RowCount}", agrupacion, series.Count);
 
-        return new TimeSeriesByDateRangeResponseDto 
-        { 
-            Agrupacion = agrupacion, 
-            Series = series 
+        return new TimeSeriesByDateRangeResponseDto
+        {
+            Agrupacion = agrupacion,
+            Series = series
         };
     }
 
