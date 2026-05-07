@@ -57,6 +57,27 @@ public class AnalyticsService : IAnalyticsService
     }
 
     /// <summary>
+    /// Obtiene los métodos más usados
+    /// </summary>
+    /// <returns>Respuesta con datos de la vista</returns>
+    /// <remarks>Se asume que la vista se llama vw_metodos_mas_usados y tiene columnas 'metodo' y 'total'</remarks>
+    public async Task<VistaMetodosMasUsadosResponseDto> GetDataFromVistaMetodosMasUsadosAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVistaMetodosMasUsados: Consultando vista");
+
+        FormattableString query = $@"
+    SELECT metodo, total
+    FROM vw_metodos_mas_usados
+    ORDER BY total DESC
+";
+
+        var data = await _dbContext.Database.SqlQuery<VistaMetodosMasUsadosDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new VistaMetodosMasUsadosResponseDto { Data = data };
+    }
+
+    /// <summary>
     /// Obtiene la tendencia agrupada por año/mes
     /// </summary>
     public async Task<TimeSeriesByYearResponseDto> GetTimeSeriesByYearAsync(int? anio = null, CancellationToken cancelToken = default)
