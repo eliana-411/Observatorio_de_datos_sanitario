@@ -57,6 +57,29 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene datos de la vista de métodos más usados en eventos
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
+    [HttpGet("vista-metodos-mas-usados")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDataFromVistaMetodosMasUsados(CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation("Consultando vista de métodos más usados en eventos");
+            var result = await _analyticsService.GetDataFromVistaMetodosMasUsadosAsync(cancelToken);
+            _logger.LogInformation("Datos obtenidos exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar la vista de métodos más usados en eventos");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Obtiene la tendencia de eventos agrupada por año/mes
     /// </summary>
     /// <param name="anio">Año específico (opcional)</param>

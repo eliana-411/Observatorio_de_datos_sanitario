@@ -18,6 +18,12 @@ public interface IAnalyticsService
     Task<VistaDistribucionGrupoEtarioResponseDto> GetDataFromVistaGrupoEtarioAsync(CancellationToken cancelToken = default);
 
     /// <summary>
+    /// Obtiene datos de la vista de métodos más usados en eventos
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
+    Task<VistaMetodosMasUsadosResponseDto> GetDataFromVistaMetodosMasUsadosAsync(CancellationToken cancelToken = default);
+
+    /// <summary>
     /// Obtiene la tendencia de eventos agrupada por año/mes
     /// </summary>
     /// <param name="anio">Año específico (nulo para todos los años)</param>
