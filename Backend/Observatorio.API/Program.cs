@@ -24,6 +24,13 @@ var connectionStringSqlServer = Environment.GetEnvironmentVariable("DATABASE_SQL
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+// Agregar caché en memoria
+builder.Services.AddMemoryCache();
+
+// Registrar servicios
+builder.Services.AddScoped<IMunicipiosService, MunicipiosService>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
