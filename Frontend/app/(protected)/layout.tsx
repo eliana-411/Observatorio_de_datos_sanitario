@@ -22,7 +22,7 @@ export default function ProtectedLayout({
             <TopAppBar />
 
             {/* Main content */}
-            <main className="md:pl-64 pt-6 pb-24 md:pb-12 px-6 min-h-screen">
+            <main className="md:pl-64 pb-0 md:pb-0 min-h-screen">
                 {children}
             </main>
 
