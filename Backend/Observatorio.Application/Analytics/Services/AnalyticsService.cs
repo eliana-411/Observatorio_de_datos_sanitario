@@ -9,210 +9,176 @@ namespace Observatorio.Application.Analytics.Services;
 public class AnalyticsService : IAnalyticsService
 {
     private readonly SanitarioDbContext _dbContext;
+    private readonly IMunicipiosService _municipiosService;
     private readonly ILogger<AnalyticsService>? _logger;
 
-    public AnalyticsService(SanitarioDbContext dbContext, ILogger<AnalyticsService>? logger = null)
+    public AnalyticsService(SanitarioDbContext dbContext, IMunicipiosService municipiosService, ILogger<AnalyticsService>? logger = null)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _municipiosService = municipiosService ?? throw new ArgumentNullException(nameof(municipiosService));
         _logger = logger;
     }
 
     /// <summary>
-    /// Obtiene la tendencia agrupada por año/mes
+    /// Obtiene los datos de la vista de distribución por género
     /// </summary>
-    public async Task<TimeSeriesByYearResponseDto> GetTimeSeriesByYearAsync(int? anio = null, CancellationToken cancelToken = default)
+    /// <returns>Respuesta con datos de la vista</returns>
+    public async Task<VistaDistribucionGeneroResponseDto> GetDataFromVistaAsync(CancellationToken cancelToken = default)
     {
-        _logger?.LogInformation("GetTimeSeriesByYear: anio={Anio}", anio ?? 0);
+        _logger?.LogInformation("GetDataFromVista: Consultando vista");
 
-        FormattableString query;
+        FormattableString query = $@"
+    SELECT genero, total
+    FROM vw_distribucion_genero
+    ORDER BY total DESC
+";
 
-        if (anio.HasValue)
-        {
-            query = $@"
-                SELECT 
-                    dt.anio,
-                    dt.mes,
-                    dt.nombre_mes,
-                    COUNT(fe.id_registro) AS cantidad_eventos,
-                    COALESCE(SUM(fe.cantidad_intentos), 0) AS total_intentos,
-                    COUNT(CASE WHEN fe.hospitalizado = 1 THEN 1 END) AS casos_hospitalizados
-                FROM fact_evento fe
-                JOIN dim_tiempo dt ON fe.id_tiempo = dt.id_tiempo
-                WHERE dt.anio = {anio}
-                GROUP BY dt.anio, dt.mes, dt.nombre_mes
-                ORDER BY dt.anio, dt.mes
-            ";
-        }
-        else
-        {
-            query = $@"
-                SELECT 
-                    dt.anio,
-                    dt.mes,
-                    dt.nombre_mes,
-                    COUNT(fe.id_registro) AS cantidad_eventos,
-                    COALESCE(SUM(fe.cantidad_intentos), 0) AS total_intentos,
-                    COUNT(CASE WHEN fe.hospitalizado = 1 THEN 1 END) AS casos_hospitalizados
-                FROM fact_evento fe
-                JOIN dim_tiempo dt ON fe.id_tiempo = dt.id_tiempo
-                GROUP BY dt.anio, dt.mes, dt.nombre_mes
-                ORDER BY dt.anio, dt.mes
-            ";
-        }
-
-        var seriesRaw = await _dbContext.Database.SqlQuery<TimeSeriesByYearRawDto>(query)
+        var data = await _dbContext.Database.SqlQuery<VistaDistribucionGeneroDto>(query)
             .ToListAsync(cancelToken);
 
-        _logger?.LogInformation("GetTimeSeriesByYear: filas retornadas={RowCount}", seriesRaw.Count);
+        return new VistaDistribucionGeneroResponseDto { Data = data };
+    }
 
-        var series = new List<TimeSeriesByYearDto>();
+    /// <summary>
+    /// Obtiene datos de la vista de distribución por grupo etario
+    /// </summary>
+    public async Task<VistaDistribucionGrupoEtarioResponseDto> GetDataFromVistaGrupoEtarioAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVistaGrupoEtario: Consultando vista");
 
-        foreach (var row in seriesRaw)
+        FormattableString query = $@"
+    SELECT grupoEtario, total
+    FROM vw_distribucion_grupo_etario
+    ORDER BY total DESC
+";
+
+        var data = await _dbContext.Database.SqlQuery<VistaDistribucionGrupoEtarioDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new VistaDistribucionGrupoEtarioResponseDto { Data = data };
+    }
+
+    /// <summary>
+    /// Obtiene los métodos más usados
+    /// </summary>
+    /// <returns>Respuesta con datos de la vista</returns>
+    /// <remarks>Se asume que la vista se llama vw_metodos_mas_usados y tiene columnas 'metodo' y 'total'</remarks>
+    public async Task<VistaMetodosMasUsadosResponseDto> GetDataFromVistaMetodosMasUsadosAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVistaMetodosMasUsados: Consultando vista");
+
+        FormattableString query = $@"
+    SELECT metodo, total
+    FROM vw_metodos_mas_usados
+    ORDER BY total DESC
+";
+
+        var data = await _dbContext.Database.SqlQuery<VistaMetodosMasUsadosDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new VistaMetodosMasUsadosResponseDto { Data = data };
+    }
+
+    /// <summary>
+    /// Obtiene datos de la vista de hospitalización
+    /// </summary>
+    public async Task<VistaHospitalizacionResponseDto> GetDataFromVistaHospitalizacionAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDataFromVistaHospitalizacion: Consultando vista");
+
+        FormattableString query = $@"
+        SELECT hospitalizado, total
+        FROM vw_hospitalizacion
+        ORDER BY total DESC
+    ";
+
+        var rawData = await _dbContext.Database.SqlQuery<VistaHospitalizacionRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        // Mapear los valores bool a descripciones legibles
+        var data = rawData.Select(row => new VistaHospitalizacionDto
         {
-            series.Add(new TimeSeriesByYearDto
+            Hospitalizado = row.hospitalizado ? 1 : 0,
+            Estado = row.hospitalizado ? "Hospitalizado" : "No Hospitalizado",
+            Total = row.total
+        }).ToList();
+
+        return new VistaHospitalizacionResponseDto { Data = data };
+    }
+
+    /// <summary>
+    /// Obtiene casos por municipio para un año específico
+    /// </summary>
+    public async Task<CasosPorMunicipioResponseDto> GetCasosPorMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetCasosPorMunicipio: Consultando casos para el año {anio}", anio);
+
+        // Query para obtener casos por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                COUNT(*) as TotalEventos
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento
+            ORDER BY TotalEventos DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<CasosPorMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetCasosPorMunicipio: No se encontraron casos para el año {anio}", anio);
+            return new CasosPorMunicipioResponseDto
             {
-                Anio = row.anio,
-                Mes = row.mes,
-                NombreMes = row.nombre_mes,
-                TotalEventos = row.cantidad_eventos,
-                TotalIntentos = row.total_intentos,
-                TotalHospitalizados = row.casos_hospitalizados
+                Periodo = new PeriodoDto { Anio = anio },
+                TotalGeneral = 0,
+                Maximo = 0,
+                Minimo = 0,
+                Series = new List<CasosPorMunicipioRegistroDto>()
+            };
+        }
+
+        int totalGeneral = resultados.Sum(r => r.TotalEventos);
+        int maximo = resultados.Max(r => r.TotalEventos);
+        int minimo = resultados.Min(r => r.TotalEventos);
+
+        // Mapear a DTOs y obtener códigos DANE
+        var series = new List<CasosPorMunicipioRegistroDto>();
+        foreach (var resultado in resultados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(resultado.Municipio ?? "", cancelToken);
+            
+            series.Add(new CasosPorMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = resultado.Municipio,
+                TotalEventos = resultado.TotalEventos,
+                Porcentaje = (decimal)resultado.TotalEventos / totalGeneral * 100
             });
         }
 
-        return new TimeSeriesByYearResponseDto { Series = series };
-    }
+        _logger?.LogInformation("GetCasosPorMunicipio: {count} municipios encontrados", series.Count);
 
-    /// <summary>
-    /// Obtiene la tendencia con agrupación dinámica según rango de fechas
-    /// </summary>
-    public async Task<TimeSeriesByDateRangeResponseDto> GetTimeSeriesByDateRangeAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancelToken = default)
-    {
-        _logger?.LogInformation("GetTimeSeriesByDateRange: inicio={FechaInicio}, fin={FechaFin}", fechaInicio, fechaFin);
-
-        // Calcular días entre fechas
-        var diasDiferencia = (fechaFin - fechaInicio).Days;
-
-        // Determinar tipo de agrupación
-        string agrupacion;
-        List<TimeSeriesByDateDto> series;
-
-        if (diasDiferencia <= 90)
+        return new CasosPorMunicipioResponseDto
         {
-            agrupacion = "dia";
-            series = await GetSeriesByDayAsync(fechaInicio, fechaFin, cancelToken);
-        }
-        else if (diasDiferencia <= 365)
-        {
-            agrupacion = "mes";
-            series = await GetSeriesByMonthAsync(fechaInicio, fechaFin, cancelToken);
-        }
-        else
-        {
-            agrupacion = "año";
-            series = await GetSeriesByYearRangeAsync(fechaInicio, fechaFin, cancelToken);
-        }
-
-        _logger?.LogInformation("GetTimeSeriesByDateRange: agrupacion={Agrupacion}, filas={RowCount}", agrupacion, series.Count);
-
-        return new TimeSeriesByDateRangeResponseDto 
-        { 
-            Agrupacion = agrupacion, 
-            Series = series 
+            Periodo = new PeriodoDto { Anio = anio },
+            TotalGeneral = totalGeneral,
+            Maximo = maximo,
+            Minimo = minimo,
+            Series = series
         };
     }
+}
 
-    /// <summary>
-    /// Agrupa por día
-    /// </summary>
-    private async Task<List<TimeSeriesByDateDto>> GetSeriesByDayAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancelToken)
-    {
-        FormattableString query = $@"
-            SELECT 
-                dt.fecha,
-                COUNT(fe.id_registro) AS cantidad_eventos,
-                COALESCE(SUM(fe.cantidad_intentos), 0) AS total_intentos,
-                COUNT(CASE WHEN fe.hospitalizado = 1 THEN 1 END) AS casos_hospitalizados
-            FROM fact_evento fe
-            JOIN dim_tiempo dt ON fe.id_tiempo = dt.id_tiempo
-            WHERE dt.fecha >= {fechaInicio} AND dt.fecha <= DATEADD(day, 1, {fechaFin})
-            GROUP BY dt.fecha
-            ORDER BY dt.fecha
-        ";
-
-        var seriesRaw = await _dbContext.Database.SqlQuery<TimeSeriesByDayRawDto>(query)
-            .ToListAsync(cancelToken);
-
-        return seriesRaw.Select(row => new TimeSeriesByDateDto
-        {
-            Fecha = row.fecha,
-            TotalEventos = row.cantidad_eventos,
-            TotalIntentos = row.total_intentos,
-            TotalHospitalizados = row.casos_hospitalizados
-        }).ToList();
-    }
-
-    /// <summary>
-    /// Agrupa por mes
-    /// </summary>
-    private async Task<List<TimeSeriesByDateDto>> GetSeriesByMonthAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancelToken)
-    {
-        FormattableString query = $@"
-            SELECT 
-                dt.anio,
-                dt.mes,
-                dt.nombre_mes,
-                COUNT(fe.id_registro) AS cantidad_eventos,
-                COALESCE(SUM(fe.cantidad_intentos), 0) AS total_intentos,
-                COUNT(CASE WHEN fe.hospitalizado = 1 THEN 1 END) AS casos_hospitalizados
-            FROM fact_evento fe
-            JOIN dim_tiempo dt ON fe.id_tiempo = dt.id_tiempo
-            WHERE dt.fecha >= {fechaInicio} AND dt.fecha <= DATEADD(day, 1, {fechaFin})
-            GROUP BY dt.anio, dt.mes, dt.nombre_mes
-            ORDER BY dt.anio, dt.mes
-        ";
-
-        var seriesRaw = await _dbContext.Database.SqlQuery<TimeSeriesByYearRawDto>(query)
-            .ToListAsync(cancelToken);
-
-        return seriesRaw.Select(row => new TimeSeriesByDateDto
-        {
-            Anio = row.anio,
-            Mes = row.mes,
-            NombreMes = row.nombre_mes,
-            TotalEventos = row.cantidad_eventos,
-            TotalIntentos = row.total_intentos,
-            TotalHospitalizados = row.casos_hospitalizados
-        }).ToList();
-    }
-
-    /// <summary>
-    /// Agrupa por año
-    /// </summary>
-    private async Task<List<TimeSeriesByDateDto>> GetSeriesByYearRangeAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancelToken)
-    {
-        FormattableString query = $@"
-            SELECT 
-                dt.anio,
-                COUNT(fe.id_registro) AS cantidad_eventos,
-                COALESCE(SUM(fe.cantidad_intentos), 0) AS total_intentos,
-                COUNT(CASE WHEN fe.hospitalizado = 1 THEN 1 END) AS casos_hospitalizados
-            FROM fact_evento fe
-            JOIN dim_tiempo dt ON fe.id_tiempo = dt.id_tiempo
-            WHERE dt.fecha >= {fechaInicio} AND dt.fecha <= DATEADD(day, 1, {fechaFin})
-            GROUP BY dt.anio
-            ORDER BY dt.anio
-        ";
-
-        var seriesRaw = await _dbContext.Database.SqlQuery<TimeSeriesByYearRangeRawDto>(query)
-            .ToListAsync(cancelToken);
-
-        return seriesRaw.Select(row => new TimeSeriesByDateDto
-        {
-            Anio = row.anio,
-            TotalEventos = row.cantidad_eventos,
-            TotalIntentos = row.total_intentos,
-            TotalHospitalizados = row.casos_hospitalizados
-        }).ToList();
-    }
+/// <summary>
+/// DTO para la query raw de casos por municipio
+/// </summary>
+internal class CasosPorMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public int TotalEventos { get; set; }
 }
