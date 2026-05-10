@@ -24,22 +24,17 @@ public interface IAnalyticsService
     Task<VistaMetodosMasUsadosResponseDto> GetDataFromVistaMetodosMasUsadosAsync(CancellationToken cancelToken = default);
 
     /// <summary>
-    /// Obtiene la tendencia de eventos agrupada por año/mes
+    /// Obtiene datos de la vista de hospitalización
     /// </summary>
-    /// <param name="anio">Año específico (nulo para todos los años)</param>
     /// <param name="cancelToken">Token de cancelación</param>
-    /// <returns>Respuesta con series agrupadas por año/mes</returns>
-    Task<TimeSeriesByYearResponseDto> GetTimeSeriesByYearAsync(int? anio = null, CancellationToken cancelToken = default);
-    
+    /// <returns>Respuesta con datos de hospitalización (1=Hospitalizado, 0=No Hospitalizado)</returns>
+    Task<VistaHospitalizacionResponseDto> GetDataFromVistaHospitalizacionAsync(CancellationToken cancelToken = default);
+
     /// <summary>
-    /// Obtiene la tendencia de eventos con agrupación dinámica según rango de fechas
-    /// - ≤ 90 días: agrupa por día
-    /// - 91-365 días: agrupa por mes
-    /// - > 365 días: agrupa por año
+    /// Obtiene casos por municipio para un año específico
     /// </summary>
-    /// <param name="fechaInicio">Fecha inicio del rango</param>
-    /// <param name="fechaFin">Fecha fin del rango</param>
+    /// <param name="anio">Año de los eventos</param>
     /// <param name="cancelToken">Token de cancelación</param>
-    /// <returns>Respuesta con series y tipo de agrupación</returns>
-    Task<TimeSeriesByDateRangeResponseDto> GetTimeSeriesByDateRangeAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancelToken = default);
+    /// <returns>Respuesta con casos distribuidos por municipio con código DANE</returns>
+    Task<CasosPorMunicipioResponseDto> GetCasosPorMunicipioAsync(int anio, CancellationToken cancelToken = default);
 }
