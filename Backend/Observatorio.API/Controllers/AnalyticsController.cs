@@ -18,6 +18,10 @@ public class AnalyticsController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Obtiene datos de la vista de distribución por género
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
     [HttpGet("vista-distribucion-genero")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -37,6 +41,10 @@ public class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtiene datos de la vista de distribución por grupo etario
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de la vista</returns>
     [HttpGet("vista-distribucion-grupo-etario")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -80,69 +88,58 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene la tendencia de eventos agrupada por año/mes
-    /// </summary>
-    /// <param name="anio">Año específico (opcional)</param>
-    /// <param name="cancelToken">Token de cancelación</param>
-    /// <returns>Series agrupadas por año/mes</returns>
-    [HttpGet("time-series/by-year")]
+    /// Obtiene datos de la vista de hospitalización
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con datos de hospitalización (1=Hospitalizado, 0=No Hospitalizado)</returns>
+    
+    [HttpGet("vista-hospitalizacion")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetTimeSeriesByYear([FromQuery] int? anio, CancellationToken cancelToken)
+    public async Task<IActionResult> GetDataFromVistaHospitalizacion(CancellationToken cancelToken)
     {
         try
         {
-            _logger.LogInformation("Obteniendo series por año. Año: {Anio}", anio);
-            
-            var result = await _analyticsService.GetTimeSeriesByYearAsync(anio, cancelToken);
-            
-            _logger.LogInformation("Series por año obtenidas exitosamente");
+            _logger.LogInformation("Consultando vista de hospitalización");
+            var result = await _analyticsService.GetDataFromVistaHospitalizacionAsync(cancelToken);
+            _logger.LogInformation("Datos de hospitalización obtenidos exitosamente");
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener las series por año");
+            _logger.LogError(ex, "Error al consultar la vista de hospitalización");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
     }
 
     /// <summary>
-    /// Obtiene la tendencia de eventos con agrupación dinámica según rango de fechas
-    /// - ≤ 90 días: agrupa por día
-    /// - 91-365 días: agrupa por mes
-    /// - > 365 días: agrupa por año
+    /// Obtiene casos por municipio para un año específico (para mapa de calor)
     /// </summary>
-    /// <param name="fechaInicio">Fecha inicio en formato ISO (YYYY-MM-DD)</param>
-    /// <param name="fechaFin">Fecha fin en formato ISO (YYYY-MM-DD)</param>
+    /// <param name="anio">Año de los eventos</param>
     /// <param name="cancelToken">Token de cancelación</param>
-    /// <returns>Series con tipo de agrupación dinámico</returns>
-    [HttpGet("time-series/by-date-range")]
+    /// <returns>Respuesta con casos distribuidos por municipio con código DANE</returns>
+    [HttpGet("casos-por-municipio")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetTimeSeriesByDateRange(
-        [FromQuery] DateTime fechaInicio,
-        [FromQuery] DateTime fechaFin,
-        CancellationToken cancelToken)
+    public async Task<IActionResult> GetCasosPorMunicipio([FromQuery] int anio, CancellationToken cancelToken)
     {
         try
         {
-            if (fechaFin < fechaInicio)
+            if (anio < 1900 || anio > DateTime.Now.Year)
             {
-                return BadRequest(new { message = "La fecha de fin no puede ser menor que la fecha de inicio" });
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
             }
 
-            _logger.LogInformation("Obteniendo series por rango de fechas: {FechaInicio} - {FechaFin}", 
-                fechaInicio, fechaFin);
-            
-            var result = await _analyticsService.GetTimeSeriesByDateRangeAsync(fechaInicio, fechaFin, cancelToken);
-            
-            _logger.LogInformation("Series por rango de fechas obtenidas exitosamente. Agrupación: {Agrupacion}", result.Agrupacion);
+            _logger.LogInformation("Consultando casos por municipio para el año {anio}", anio);
+            var result = await _analyticsService.GetCasosPorMunicipioAsync(anio, cancelToken);
+            _logger.LogInformation("Casos por municipio obtenidos exitosamente");
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener las series por rango de fechas");
+            _logger.LogError(ex, "Error al consultar casos por municipio");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
     }
+
+
 }
