@@ -53,4 +53,20 @@ public interface IAnalyticsService
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con distribución de grupo etario por municipio</returns>
     Task<DistribucionGrupoEtarioMunicipioResponseDto> GetDistribucionGrupoEtarioMunicipioAsync(int anio, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene distribución de métodos por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de métodos por municipio</returns>
+    Task<DistribucionMetodosMunicipioResponseDto> GetDistribucionMetodosMunicipioAsync(int anio, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene distribución de hospitalización por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de hospitalización por municipio</returns>
+    Task<DistribucionHospitalizacionMunicipioResponseDto> GetDistribucionHospitalizacionMunicipioAsync(int anio, CancellationToken cancelToken = default);
 }
