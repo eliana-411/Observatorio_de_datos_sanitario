@@ -37,4 +37,20 @@ public interface IAnalyticsService
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con casos distribuidos por municipio con código DANE</returns>
     Task<CasosPorMunicipioResponseDto> GetCasosPorMunicipioAsync(int anio, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene distribución de género por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de género por municipio</returns>
+    Task<DistribucionGeneroMunicipioResponseDto> GetDistribucionGeneroMunicipioAsync(int anio, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene distribución de grupo etario por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de grupo etario por municipio</returns>
+    Task<DistribucionGrupoEtarioMunicipioResponseDto> GetDistribucionGrupoEtarioMunicipioAsync(int anio, CancellationToken cancelToken = default);
 }
