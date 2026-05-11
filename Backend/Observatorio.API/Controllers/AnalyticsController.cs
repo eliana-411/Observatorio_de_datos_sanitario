@@ -201,5 +201,65 @@ public class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtiene distribución de métodos por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de métodos por municipio</returns>
+    [HttpGet("distribucion-metodos-municipio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDistribucionMetodosMunicipio([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando distribución de métodos por municipio para el año {anio}", anio);
+            var result = await _analyticsService.GetDistribucionMetodosMunicipioAsync(anio, cancelToken);
+            _logger.LogInformation("Distribución de métodos por municipio obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar distribución de métodos por municipio");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtiene distribución de hospitalización por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de hospitalización por municipio</returns>
+    [HttpGet("distribucion-hospitalizacion-municipio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDistribucionHospitalizacionMunicipio([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando distribución de hospitalización por municipio para el año {anio}", anio);
+            var result = await _analyticsService.GetDistribucionHospitalizacionMunicipioAsync(anio, cancelToken);
+            _logger.LogInformation("Distribución de hospitalización por municipio obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar distribución de hospitalización por municipio");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
 
 }
