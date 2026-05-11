@@ -141,5 +141,65 @@ public class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtiene distribución de género por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de género por municipio</returns>
+    [HttpGet("distribucion-genero-municipio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDistribucionGeneroMunicipio([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando distribución de género por municipio para el año {anio}", anio);
+            var result = await _analyticsService.GetDistribucionGeneroMunicipioAsync(anio, cancelToken);
+            _logger.LogInformation("Distribución de género por municipio obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar distribución de género por municipio");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtiene distribución de grupo etario por municipio para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución de grupo etario por municipio</returns>
+    [HttpGet("distribucion-grupo-etario-municipio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetDistribucionGrupoEtarioMunicipio([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando distribución de grupo etario por municipio para el año {anio}", anio);
+            var result = await _analyticsService.GetDistribucionGrupoEtarioMunicipioAsync(anio, cancelToken);
+            _logger.LogInformation("Distribución de grupo etario por municipio obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar distribución de grupo etario por municipio");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
 
 }
