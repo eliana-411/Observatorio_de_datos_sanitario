@@ -172,6 +172,146 @@ public class AnalyticsService : IAnalyticsService
             Series = series
         };
     }
+
+    /// <summary>
+    /// Obtiene distribución de género por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionGeneroMunicipioResponseDto> GetDistribucionGeneroMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionGeneroMunicipio: Consultando distribución de género para el año {anio}", anio);
+
+        // Query para obtener distribución de género por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                p.genero as Genero,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, p.genero
+            ORDER BY l.municipio_evento, Total DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionGeneroMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionGeneroMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionGeneroMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionGeneroMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionGeneroMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionGeneroMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                Generos = grupo
+                    .Select(g => new GeneroDistribucionDto
+                    {
+                        Genero = g.Genero,
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionGeneroMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionGeneroMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene distribución de grupo etario por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionGrupoEtarioMunicipioResponseDto> GetDistribucionGrupoEtarioMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionGrupoEtarioMunicipio: Consultando distribución de grupo etario para el año {anio}", anio);
+
+        // Query para obtener distribución de grupo etario por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                p.grupo_etario as GrupoEtario,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, p.grupo_etario
+            ORDER BY l.municipio_evento, Total DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionGrupoEtarioMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionGrupoEtarioMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionGrupoEtarioMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionGrupoEtarioMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionGrupoEtarioMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionGrupoEtarioMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                GruposEtarios = grupo
+                    .Select(g => new GrupoEtarioDistribucionDto
+                    {
+                        GrupoEtario = g.GrupoEtario,
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionGrupoEtarioMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionGrupoEtarioMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
 }
 
 /// <summary>
@@ -181,4 +321,24 @@ internal class CasosPorMunicipioRawDto
 {
     public string? Municipio { get; set; }
     public int TotalEventos { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de género por municipio
+/// </summary>
+internal class DistribucionGeneroMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public string? Genero { get; set; }
+    public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de grupo etario por municipio
+/// </summary>
+internal class DistribucionGrupoEtarioMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public string? GrupoEtario { get; set; }
+    public int Total { get; set; }
 }
