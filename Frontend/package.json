@@ -17,6 +17,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.48.0",
     "react-leaflet": "^5.0.0",
+    "recharts": "^3.8.1",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },

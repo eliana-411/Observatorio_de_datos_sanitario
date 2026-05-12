@@ -160,14 +160,14 @@ export function ChatPanel({ messages, isLoading, onSendMessage }: ChatPanelProps
             </div>
 
             {/* Input Area */}
-            <div className="p-6 backdrop-blur-md border-t sticky bottom-0" style={{ backgroundColor: '#ebf3fe', borderColor: '#e4efff' }}>
-                <div className="relative w-full max-w-2xl mx-auto">
+            <div className="mb-0 p-2 backdrop-blur-md border-t sticky bottom-0" style={{ backgroundColor: 'transparent', borderColor: '#e4efff' }}>
+                <div className="relative w-full max-w-3xl mx-auto">
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Pregunta lo que necesites"
-                        className="w-full rounded-2xl border-transparent outline-none focus:border-4 focus:border-black transition-all py-4 px-6 text-sm resize-none h-15 bg-[#d2e4fb] text-[#0b1d2d] shadow-xl shadow-black"
+                        className="w-full rounded-3xl border-transparent outline-none transition-all py-4 px-6 text-sm resize-none h-15 bg-[#d2e4fb] text-[#0b1d2d] shadow-md shadow-gray-400"
                     />
                     <button
                         onClick={handleSendMessage}
@@ -185,7 +185,7 @@ export function ChatPanel({ messages, isLoading, onSendMessage }: ChatPanelProps
                         </span>
                     </button>
                 </div>
-                <p className="text-[10px] text-center mt-3 opacity-60" style={{ color: '#414754' }}>
+                <p className="text-[10px] text-center mt-3 opacity-60 bg-[#ebf3fe]" style={{ color: '#414754' }}>
                     La IA proporciona orientación basada en fuentes oficiales RAG. Verifique dosis críticas en la práctica clínica.
                 </p>
             </div>

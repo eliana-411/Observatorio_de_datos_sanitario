@@ -38,3 +38,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Instalaciones individuales
 npm install leaflet react-leaflet
 npm install -D @types/leaflet
+npm install recharts

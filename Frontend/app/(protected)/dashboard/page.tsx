@@ -6,6 +6,7 @@ import { MapContainer } from '@/components/Dashboard/MapContainer';
 import { TimeSeriesChart } from '@/components/Dashboard/TimeSeriesChart';
 import { AIAlert } from '@/components/Dashboard/AIAlert';
 import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
+import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
 
 export default function DashboardPage() {
     return (
@@ -50,19 +51,26 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* Asymmetric Grid Section */}
+                {/* Map + Gender Distribution */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Main Heat Map */}
                     <div className="lg:col-span-8">
                         <MapContainer />
                     </div>
 
-                    {/* Secondary Column */}
-                    <div className="lg:col-span-4 space-y-6 flex flex-col">
-                        <TimeSeriesChart />
-                        <AIAlert />
+                    {/* Gender Distribution Pie Chart */}
+                    <div className="lg:col-span-4">
+                        <GenderDistributionChart />
                     </div>
                 </div>
+
+                {/* Time Series Chart */}
+                <div>
+                    <TimeSeriesChart />
+                </div>
+
+                {/* AI Alert */}
+                <AIAlert />
 
                 {/* Table Section */}
             </div>
