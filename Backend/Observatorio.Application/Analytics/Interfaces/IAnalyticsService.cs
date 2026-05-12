@@ -86,4 +86,12 @@ public interface IAnalyticsService
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con tendencia temporal de eventos y hospitalizados por mes y municipio</returns>
     Task<TendenciaTemporalMunicipioResponseDto> GetTendenciaTemporalMunicipioAsync(int anio, int? mes = null, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene el índice de severidad por método para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con índice de severidad agrupado por método</returns>
+    Task<IndiceSeveridadResponseDto> GetIndiceSeveridadAsync(int anio, CancellationToken cancelToken = default);
 }

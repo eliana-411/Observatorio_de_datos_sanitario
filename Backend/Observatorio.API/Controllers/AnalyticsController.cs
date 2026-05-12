@@ -333,5 +333,36 @@ public class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtiene el índice de severidad por método para un año específico
+    /// </summary>
+    /// <param name="anio">Año para el cual obtener el índice de severidad</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con índice de severidad agrupado por método</returns>
+    [HttpGet("indice-severidad")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetIndiceSeveridadAsync([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando índice de severidad para el año {anio}", anio);
+            var result = await _analyticsService.GetIndiceSeveridadAsync(anio, cancelToken);
+            _logger.LogInformation("Índice de severidad obtenido exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar índice de severidad");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
 }
+
 

@@ -652,6 +652,86 @@ public class AnalyticsService : IAnalyticsService
             Series = series
         };
     }
+
+    /// <summary>
+    /// Obtiene el índice de severidad por método para un año específico
+    /// </summary>
+    /// <remarks>
+    /// Fórmula de Índice de Severidad:
+    /// IndiceSeveridad = (PorcentajeHospitalización * 0.7) + (PromedioReincidencias * 10 * 0.3)
+    /// Donde:
+    /// - PorcentajeHospitalización = (Hospitalizados / TotalEventos) * 100
+    /// - PromedioReincidencias = cantidad de intentos promedio por persona
+    /// </remarks>
+    public async Task<IndiceSeveridadResponseDto> GetIndiceSeveridadAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetIndiceSeveridadAsync: Consultando índice de severidad para el año {anio}", anio);
+
+        // Query para obtener datos de severidad por método
+        FormattableString query = $@"
+            SELECT 
+                m.metodo as Metodo,
+                COUNT(DISTINCT f.id_registro) as TotalEventos,
+                SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) as Hospitalizados,
+                COUNT(DISTINCT f.id_persona) as TotalPersonas,
+                SUM(f.cantidad_intentos) as TotalIntentos
+            FROM fact_evento f
+            INNER JOIN dim_metodo m ON f.id_metodo = m.id_metodo
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY m.metodo
+            ORDER BY TotalEventos DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<IndiceSeveridadRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetIndiceSeveridadAsync: No se encontraron datos para el año {anio}", anio);
+            return new IndiceSeveridadResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<IndiceSeveridadRegistroDto>()
+            };
+        }
+
+        // Mapear a DTOs y calcular índice de severidad
+        var series = new List<IndiceSeveridadRegistroDto>();
+        foreach (var resultado in resultados)
+        {
+            // Calcular porcentaje de hospitalización
+            decimal porcentajeHospitalizacion = resultado.TotalEventos > 0 
+                ? (resultado.Hospitalizados / (decimal)resultado.TotalEventos) * 100 
+                : 0;
+
+            // Calcular promedio de reincidencias (intentos por persona)
+            decimal promedioReincidencias = resultado.TotalPersonas > 0 
+                ? resultado.TotalIntentos / (decimal)resultado.TotalPersonas 
+                : 0;
+
+            // Aplicar fórmula: IndiceSeveridad = (PorcentajeHospitalización * 0.7) + (PromedioReincidencias * 10 * 0.3)
+            decimal indiceSeveridad = (porcentajeHospitalizacion * 0.7m) + (promedioReincidencias * 10 * 0.3m);
+
+            series.Add(new IndiceSeveridadRegistroDto
+            {
+                Metodo = resultado.Metodo,
+                TotalEventos = resultado.TotalEventos,
+                Hospitalizados = resultado.Hospitalizados,
+                PorcentajeHospitalizacion = Math.Round(porcentajeHospitalizacion, 2),
+                PromedioReincidencias = Math.Round(promedioReincidencias, 2),
+                IndiceSeveridad = Math.Round(indiceSeveridad, 2)
+            });
+        }
+
+        _logger?.LogInformation("GetIndiceSeveridadAsync: {count} métodos encontrados", series.Count);
+
+        return new IndiceSeveridadResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
 }
 
 /// <summary>
@@ -701,4 +781,16 @@ internal class DistribucionHospitalizacionMunicipioRawDto
     public string? Municipio { get; set; }
     public bool Hospitalizado { get; set; }
     public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de índice de severidad
+/// </summary>
+internal class IndiceSeveridadRawDto
+{
+    public string? Metodo { get; set; }
+    public int TotalEventos { get; set; }
+    public int Hospitalizados { get; set; }
+    public int TotalPersonas { get; set; }
+    public int TotalIntentos { get; set; }
 }
