@@ -12,12 +12,43 @@ public class AnalyticsService : IAnalyticsService
     private readonly IMunicipiosService _municipiosService;
     private readonly ILogger<AnalyticsService>? _logger;
 
+    // Diccionario para convertir meses de inglés a español
+    private static readonly Dictionary<string, string> MesesEnglishToSpanish = new()
+    {
+        { "January", "Enero" },
+        { "February", "Febrero" },
+        { "March", "Marzo" },
+        { "April", "Abril" },
+        { "May", "Mayo" },
+        { "June", "Junio" },
+        { "July", "Julio" },
+        { "August", "Agosto" },
+        { "September", "Septiembre" },
+        { "October", "Octubre" },
+        { "November", "Noviembre" },
+        { "December", "Diciembre" }
+    };
+
     public AnalyticsService(SanitarioDbContext dbContext, IMunicipiosService municipiosService, ILogger<AnalyticsService>? logger = null)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _municipiosService = municipiosService ?? throw new ArgumentNullException(nameof(municipiosService));
         _logger = logger;
     }
+
+    /// <summary>
+    /// Convierte un nombre de mes de inglés a español
+    /// </summary>
+    private static string ConvertirMesAlEspanol(string? mesEnglish)
+    {
+        if (string.IsNullOrEmpty(mesEnglish))
+            return "Desconocido";
+
+        return MesesEnglishToSpanish.TryGetValue(mesEnglish, out var mesSpanish) 
+            ? mesSpanish 
+            : mesEnglish; // Si no encuentra, devuelve el original
+    }
+
 
     /// <summary>
     /// Obtiene los datos de la vista de distribución por género
@@ -172,6 +203,455 @@ public class AnalyticsService : IAnalyticsService
             Series = series
         };
     }
+
+    /// <summary>
+    /// Obtiene distribución de género por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionGeneroMunicipioResponseDto> GetDistribucionGeneroMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionGeneroMunicipio: Consultando distribución de género para el año {anio}", anio);
+
+        // Query para obtener distribución de género por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                p.genero as Genero,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, p.genero
+            ORDER BY l.municipio_evento, Total DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionGeneroMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionGeneroMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionGeneroMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionGeneroMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionGeneroMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionGeneroMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                Generos = grupo
+                    .Select(g => new GeneroDistribucionDto
+                    {
+                        Genero = g.Genero,
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionGeneroMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionGeneroMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene distribución de grupo etario por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionGrupoEtarioMunicipioResponseDto> GetDistribucionGrupoEtarioMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionGrupoEtarioMunicipio: Consultando distribución de grupo etario para el año {anio}", anio);
+
+        // Query para obtener distribución de grupo etario por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                p.grupo_etario as GrupoEtario,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, p.grupo_etario
+            ORDER BY l.municipio_evento, Total DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionGrupoEtarioMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionGrupoEtarioMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionGrupoEtarioMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionGrupoEtarioMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionGrupoEtarioMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionGrupoEtarioMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                GruposEtarios = grupo
+                    .Select(g => new GrupoEtarioDistribucionDto
+                    {
+                        GrupoEtario = g.GrupoEtario,
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionGrupoEtarioMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionGrupoEtarioMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene distribución de métodos por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionMetodosMunicipioResponseDto> GetDistribucionMetodosMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionMetodosMunicipio: Consultando distribución de métodos para el año {anio}", anio);
+
+        // Query para obtener distribución de métodos por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                m.metodo as Metodo,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            INNER JOIN dim_metodo m ON f.id_metodo = m.id_metodo
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, m.metodo
+            ORDER BY l.municipio_evento, Total DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionMetodosMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionMetodosMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionMetodosMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionMetodosMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionMetodosMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionMetodosMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                Metodos = grupo
+                    .Select(g => new MetodoDistribucionDto
+                    {
+                        Metodo = g.Metodo,
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionMetodosMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionMetodosMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene distribución de hospitalización por municipio para un año específico
+    /// </summary>
+    public async Task<DistribucionHospitalizacionMunicipioResponseDto> GetDistribucionHospitalizacionMunicipioAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetDistribucionHospitalizacionMunicipio: Consultando distribución de hospitalización para el año {anio}", anio);
+
+        // Query para obtener distribución de hospitalización por municipio y año
+        FormattableString query = $@"
+            SELECT 
+                l.municipio_evento as Municipio,
+                f.hospitalizado as Hospitalizado,
+                COUNT(*) as Total
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY l.municipio_evento, f.hospitalizado
+            ORDER BY l.municipio_evento, f.hospitalizado DESC
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<DistribucionHospitalizacionMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetDistribucionHospitalizacionMunicipio: No se encontraron datos para el año {anio}", anio);
+            return new DistribucionHospitalizacionMunicipioResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<DistribucionHospitalizacionMunicipioRegistroDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<DistribucionHospitalizacionMunicipioRegistroDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            var totalEventos = grupo.Sum(r => r.Total);
+
+            var registroMunicipio = new DistribucionHospitalizacionMunicipioRegistroDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                TotalEventos = totalEventos,
+                Estados = grupo
+                    .Select(g => new HospitalizacionDistribucionDto
+                    {
+                        Hospitalizado = g.Hospitalizado ? 1 : 0,
+                        Estado = g.Hospitalizado ? "Hospitalizado" : "No Hospitalizado",
+                        Total = g.Total
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetDistribucionHospitalizacionMunicipio: {count} municipios encontrados", series.Count);
+
+        return new DistribucionHospitalizacionMunicipioResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene tendencia temporal de eventos por mes para un año específico
+    /// </summary>
+    public async Task<TendenciaTemporalResponseDto> GetTendenciaTemporalAsync(int anio, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetTendenciaTemporalAsync: Consultando tendencia temporal para el año {anio}", anio);
+
+        // Query para obtener eventos y hospitalizados por mes
+        FormattableString query = $@"
+            SELECT 
+                YEAR(t.fecha) as Anio,
+                MONTH(t.fecha) as Mes,
+                t.nombre_mes as NombreMes,
+                COUNT(*) as TotalEventos,
+                SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) as Hospitalizados
+            FROM fact_evento f
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE YEAR(t.fecha) = {anio}
+            GROUP BY YEAR(t.fecha), MONTH(t.fecha), t.nombre_mes
+            ORDER BY Mes
+        ";
+
+        var resultados = await _dbContext.Database.SqlQuery<TendenciaTemporalRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetTendenciaTemporalAsync: No se encontraron datos para el año {anio}", anio);
+            return new TendenciaTemporalResponseDto
+            {
+                Periodo = new PeriodoDto { Anio = anio },
+                Series = new List<TendenciaTemporalRegistroDto>()
+            };
+        }
+
+        // Calcular totales para porcentajes
+        int totalEventosAnio = resultados.Sum(r => r.TotalEventos);
+        int totalHospitalizadosAnio = resultados.Sum(r => r.Hospitalizados);
+
+        var series = resultados
+            .Select(r => new TendenciaTemporalRegistroDto
+            {
+                Anio = r.Anio,
+                Mes = r.Mes,
+                NombreMes = ConvertirMesAlEspanol(r.NombreMes),
+                TotalEventos = r.TotalEventos,
+                PorcentajeEventos = totalEventosAnio > 0 ? (decimal)r.TotalEventos / totalEventosAnio * 100 : 0,
+                Hospitalizados = r.Hospitalizados,
+                PorcentajeHospitalizados = r.TotalEventos > 0 ? (decimal)r.Hospitalizados / r.TotalEventos * 100 : 0
+            })
+            .ToList();
+
+        _logger?.LogInformation("GetTendenciaTemporalAsync: {count} meses con datos encontrados", series.Count);
+
+        return new TendenciaTemporalResponseDto
+        {
+            Periodo = new PeriodoDto { Anio = anio },
+            Series = series
+        };
+    }
+
+    /// <summary>
+    /// Obtiene tendencia temporal de eventos por mes y municipio para un año específico (opcional: mes específico)
+    /// </summary>
+    public async Task<TendenciaTemporalMunicipioResponseDto> GetTendenciaTemporalMunicipioAsync(int anio, int? mes = null, CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetTendenciaTemporalMunicipioAsync: Consultando tendencia temporal por municipio para el año {anio}, mes: {mes}", anio, mes ?? 0);
+
+        // Validar mes si se proporciona
+        if (mes.HasValue && (mes < 1 || mes > 12))
+        {
+            _logger?.LogWarning("GetTendenciaTemporalMunicipioAsync: Mes inválido: {mes}", mes);
+            throw new ArgumentException("El mes debe estar entre 1 y 12", nameof(mes));
+        }
+
+        // Query para obtener eventos y hospitalizados por mes y municipio
+        FormattableString query;
+        
+        if (mes.HasValue)
+        {
+            query = $@"
+                SELECT 
+                    l.municipio_evento as Municipio,
+                    YEAR(t.fecha) as Anio,
+                    MONTH(t.fecha) as Mes,
+                    t.nombre_mes as NombreMes,
+                    COUNT(*) as TotalEventos,
+                    SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) as Hospitalizados
+                FROM fact_evento f
+                INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+                INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+                WHERE YEAR(t.fecha) = {anio} AND MONTH(t.fecha) = {mes}
+                GROUP BY l.municipio_evento, YEAR(t.fecha), MONTH(t.fecha), t.nombre_mes
+                ORDER BY l.municipio_evento, Mes
+            ";
+        }
+        else
+        {
+            query = $@"
+                SELECT 
+                    l.municipio_evento as Municipio,
+                    YEAR(t.fecha) as Anio,
+                    MONTH(t.fecha) as Mes,
+                    t.nombre_mes as NombreMes,
+                    COUNT(*) as TotalEventos,
+                    SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) as Hospitalizados
+                FROM fact_evento f
+                INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+                INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+                WHERE YEAR(t.fecha) = {anio}
+                GROUP BY l.municipio_evento, YEAR(t.fecha), MONTH(t.fecha), t.nombre_mes
+                ORDER BY l.municipio_evento, Mes
+            ";
+        }
+
+        var resultados = await _dbContext.Database.SqlQuery<TendenciaTemporalMunicipioRawDto>(query)
+            .ToListAsync(cancelToken);
+
+        if (resultados.Count == 0)
+        {
+            _logger?.LogWarning("GetTendenciaTemporalMunicipioAsync: No se encontraron datos para el año {anio}, mes: {mes}", anio, mes ?? 0);
+            return new TendenciaTemporalMunicipioResponseDto
+            {
+                Periodo = new PeriodoFiltroDto { Anio = anio, Mes = mes },
+                Series = new List<TendenciaTemporalMunicipioSerieDto>()
+            };
+        }
+
+        // Agrupar por municipio
+        var municipiosAgrupados = resultados.GroupBy(r => r.Municipio).ToList();
+        var series = new List<TendenciaTemporalMunicipioSerieDto>();
+
+        foreach (var grupo in municipiosAgrupados)
+        {
+            var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
+            
+            // Calcular totales del municipio para porcentajes
+            int totalEventosMunicipio = grupo.Sum(g => g.TotalEventos);
+            int totalHospitalizadosMunicipio = grupo.Sum(g => g.Hospitalizados);
+
+            var registroMunicipio = new TendenciaTemporalMunicipioSerieDto
+            {
+                CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
+                Municipio = grupo.Key,
+                Datos = grupo
+                    .Select(g => new TendenciaTemporalMesesDto
+                    {
+                        Mes = g.Mes,
+                        NombreMes = ConvertirMesAlEspanol(g.NombreMes),
+                        TotalEventos = g.TotalEventos,
+                        PorcentajeEventos = totalEventosMunicipio > 0 ? (decimal)g.TotalEventos / totalEventosMunicipio * 100 : 0,
+                        Hospitalizados = g.Hospitalizados,
+                        PorcentajeHospitalizados = g.TotalEventos > 0 ? (decimal)g.Hospitalizados / g.TotalEventos * 100 : 0
+                    })
+                    .ToList()
+            };
+
+            series.Add(registroMunicipio);
+        }
+
+        _logger?.LogInformation("GetTendenciaTemporalMunicipioAsync: {count} municipios con datos encontrados", series.Count);
+
+        return new TendenciaTemporalMunicipioResponseDto
+        {
+            Periodo = new PeriodoFiltroDto { Anio = anio, Mes = mes },
+            Series = series
+        };
+    }
 }
 
 /// <summary>
@@ -181,4 +661,44 @@ internal class CasosPorMunicipioRawDto
 {
     public string? Municipio { get; set; }
     public int TotalEventos { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de género por municipio
+/// </summary>
+internal class DistribucionGeneroMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public string? Genero { get; set; }
+    public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de grupo etario por municipio
+/// </summary>
+internal class DistribucionGrupoEtarioMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public string? GrupoEtario { get; set; }
+    public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de métodos por municipio
+/// </summary>
+internal class DistribucionMetodosMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public string? Metodo { get; set; }
+    public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución de hospitalización por municipio
+/// </summary>
+internal class DistribucionHospitalizacionMunicipioRawDto
+{
+    public string? Municipio { get; set; }
+    public bool Hospitalizado { get; set; }
+    public int Total { get; set; }
 }
