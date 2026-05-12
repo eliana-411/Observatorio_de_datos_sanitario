@@ -35,7 +35,7 @@ PostgreSQL - Chris Kolkman
 localhost:5434
 db: observatorio_public
 user: admin
-password: admin123
+password: ****
 
 # Observatorio de Datos Sanitarios
 
@@ -123,3 +123,6 @@ dotnetrestore
 - pip install openpyxl
 - py -3.11 -m venv .venv
 - pip install -r requirements.txt
+
+## Modelos predictivos
+pip install prophet mlflow

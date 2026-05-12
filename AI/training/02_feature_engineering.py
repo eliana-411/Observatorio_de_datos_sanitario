@@ -1,77 +1,113 @@
-from pathlib import Path
+# AI/training/02_feature_engineering.py
 
+import os
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
 
-RAW_DIR = Path("../data/raw").resolve()
-PROCESSED_DIR = Path("../data/processed").resolve()
-PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+# ── Rutas ────────────────────────────────────────────────────────────────────
+BASE_DIR      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RAW_PATH      = os.path.join(BASE_DIR, "data", "raw", "brotes.csv")
+PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
+PROCESSED_PATH = os.path.join(PROCESSED_DIR, "brotes_processed.csv")
+ENCODERS_DIR  = os.path.join(BASE_DIR, "models", "brotes")
 
-
-def build_time_features(df: pd.DataFrame, date_col: str = "fecha") -> pd.DataFrame:
-    df[date_col] = pd.to_datetime(df[date_col])
-    df["dia"] = df[date_col].dt.day
-    df["mes"] = df[date_col].dt.month
-    df["dia_semana"] = df[date_col].dt.dayofweek
-    df["trimester"] = df[date_col].dt.quarter
+# ── 1. Carga 
+def load_raw() -> pd.DataFrame:
+    df = pd.read_csv(RAW_PATH)
+    print(f"[load] Filas: {len(df)} | Columnas: {list(df.columns)}")
     return df
 
+# ── 2. Construcción de fecha 
+def build_fecha(df: pd.DataFrame) -> pd.DataFrame:
+    df["fecha"] = pd.to_datetime(
+        df["anio"].astype(str) + "-" + df["mes"].astype(str).str.zfill(2) + "-01"
+    )
+    print(f"[fecha] Rango: {df['fecha'].min()} → {df['fecha'].max()}")
+    return df
 
-def add_lag_features(df: pd.DataFrame, group_cols: list[str], value_col: str, lags: list[int]) -> pd.DataFrame:
-    for lag in lags:
-        df[f"lag_{value_col}_{lag}"] = (
-            df.groupby(group_cols)[value_col]
+# ── 3. Renombrar target 
+def rename_target(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.rename(columns={"total_eventos": "casos"})
+    print(f"[target] casos — min: {df['casos'].min()} | max: {df['casos'].max()} | media: {df['casos'].mean():.2f}")
+    return df
+
+# ── 4. Encoding de categóricas 
+CATEGORICAL_COLS = [
+    "municipio_evento",
+    "zona_evento",          # ← corregido
+    "metodo_predominante",
+    "nivel_letalidad_predominante",
+    "genero_predominante",
+    "grupo_etario_predominante",
+    "situacion_sentimental_predominante",
+    "nombre_mes",
+]
+
+def encode_categoricals(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    encoders = {}
+    for col in CATEGORICAL_COLS:
+        if col not in df.columns:
+            print(f"[warning] Columna '{col}' no encontrada, se omite.")
+            continue
+        le = LabelEncoder()
+        df[col] = df[col].fillna("Desconocido")
+        df[col + "_enc"] = le.fit_transform(df[col].astype(str))
+        encoders[col] = le
+        print(f"[encoding] {col} → {len(le.classes_)} categorías")
+    return df, encoders
+
+# ── 5. Lags por municipio ─────────────────────────────────────────────────────
+def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.sort_values(["municipio_evento", "fecha"]).reset_index(drop=True)
+
+    for lag in [1, 2, 3]:
+        col_name = f"lag_casos_{lag}"
+        df[col_name] = (
+            df.groupby("municipio_evento")["casos"]
             .shift(lag)
-            .fillna(0)
         )
+        print(f"[lag] {col_name} — nulos generados: {df[col_name].isna().sum()}")
+
+    # Eliminar filas sin lags (primeros meses de cada municipio)
+    before = len(df)
+    df = df.dropna(subset=["lag_casos_1", "lag_casos_2", "lag_casos_3"])
+    print(f"[lag] Filas eliminadas por NaN en lags: {before - len(df)} | Filas finales: {len(df)}")
     return df
 
+# ── 6. Variables temporales adicionales ───────────────────────────────────────
+def build_time_features(df: pd.DataFrame) -> pd.DataFrame:
+    df["es_fin_anio"]    = df["mes"].isin([11, 12]).astype(int)
+    df["es_inicio_anio"] = df["mes"].isin([1, 2]).astype(int)
+    print("[time] Variables temporales adicionales creadas.")
+    return df
 
-def process_brotes() -> None:
-    path = RAW_DIR / "brotes.csv"
-    if not path.exists():
-        print(f"Archivo no encontrado: {path}")
-        return
+# ── 7. Guardar ────────────────────────────────────────────────────────────────
+def save_processed(df: pd.DataFrame):
+    os.makedirs(PROCESSED_DIR, exist_ok=True)
+    df.to_csv(PROCESSED_PATH, index=False)
+    print(f"[saved] {PROCESSED_PATH}")
 
-    df = pd.read_csv(path)
-    df = build_time_features(df, "fecha")
-    df = add_lag_features(df, ["municipio"], "casos", [1, 7, 14])
-    output_path = PROCESSED_DIR / "brotes_processed.csv"
-    df.to_csv(output_path, index=False)
-    print(f"Brotes procesados en {output_path}")
+def save_encoders(encoders: dict):
+    import joblib
+    os.makedirs(ENCODERS_DIR, exist_ok=True)
+    for col, le in encoders.items():
+        path = os.path.join(ENCODERS_DIR, f"encoder_{col}.pkl")
+        joblib.dump(le, path)
+        print(f"[encoder saved] {path}")
 
-
-def process_demanda() -> None:
-    path = RAW_DIR / "demanda.csv"
-    if not path.exists():
-        print(f"Archivo no encontrado: {path}")
-        return
-
-    df = pd.read_csv(path)
-    df = build_time_features(df, "fecha")
-    df = add_lag_features(df, ["servicio"], "demanda", [1, 7, 14])
-    output_path = PROCESSED_DIR / "demanda_processed.csv"
-    df.to_csv(output_path, index=False)
-    print(f"Demanda procesada en {output_path}")
-
-
-def process_anomalias() -> None:
-    path = RAW_DIR / "anomalias.csv"
-    if not path.exists():
-        print(f"Archivo no encontrado: {path}")
-        return
-
-    df = pd.read_csv(path)
-    df = build_time_features(df, "fecha")
-    output_path = PROCESSED_DIR / "anomalias_processed.csv"
-    df.to_csv(output_path, index=False)
-    print(f"Anomalías procesadas en {output_path}")
-
-
-def main() -> None:
-    process_brotes()
-    process_demanda()
-    process_anomalias()
-
+# ── Main ──────────────────────────────────────────────────────────────────────
+def main():
+    df = load_raw()
+    df = build_fecha(df)
+    df = rename_target(df)
+    df = build_time_features(df)
+    df, encoders = encode_categoricals(df)
+    df = add_lag_features(df)
+    save_processed(df)
+    save_encoders(encoders)
+    print("\n Feature engineering completado.")
+    print(df.head())
 
 if __name__ == "__main__":
     main()
