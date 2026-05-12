@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Observatorio.Application.Analytics.DTOs;
 using Observatorio.Application.Analytics.Interfaces;
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 
 namespace Observatorio.Application.Analytics.Services;
@@ -21,6 +22,29 @@ public class MunicipiosService : IMunicipiosService
     {
         _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Normaliza una cadena removiendo tildes y acentos
+    /// </summary>
+    private static string NormalizarTexto(string? texto)
+    {
+        if (string.IsNullOrEmpty(texto))
+            return string.Empty;
+
+        var textoNormalizado = texto.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+
+        foreach (char c in textoNormalizado)
+        {
+            var info = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (info != UnicodeCategory.NonSpacingMark)
+            {
+                stringBuilder.Append(c);
+            }
+        }
+
+        return stringBuilder.ToString().Normalize(NormalizationForm.FormC).ToUpperInvariant();
     }
 
     /// <summary>
@@ -102,11 +126,14 @@ public class MunicipiosService : IMunicipiosService
     }
 
     /// <summary>
-    /// Obtiene un municipio por nombre (búsqueda case-insensitive)
+    /// Obtiene un municipio por nombre (búsqueda normalizada sin tildes)
     /// </summary>
     public async Task<MunicipioInfoDto?> GetMunicipioByNombreAsync(string nombreMunicipio, CancellationToken cancelToken = default)
     {
         var municipios = await GetMunicipiosAsync(cancelToken);
-        return municipios.FirstOrDefault(m => m.Municipio?.Equals(nombreMunicipio, StringComparison.OrdinalIgnoreCase) == true);
+        var nombreNormalizado = NormalizarTexto(nombreMunicipio);
+        
+        return municipios.FirstOrDefault(m => 
+            NormalizarTexto(m.Municipio) == nombreNormalizado);
     }
 }

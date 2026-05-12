@@ -261,5 +261,77 @@ public class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtiene tendencia temporal de eventos por mes para un año específico
+    /// </summary>
+    /// <param name="anio">Año de los eventos</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con tendencia temporal de eventos y hospitalizados por mes</returns>
+    [HttpGet("tendencia-temporal")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetTendenciaTemporalAsync([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            _logger.LogInformation("Consultando tendencia temporal para el año {anio}", anio);
+            var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
+            _logger.LogInformation("Tendencia temporal obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar tendencia temporal");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtiene tendencia temporal de eventos por mes y municipio para un año específico (opcional: mes específico)
+    /// </summary>
+    /// <param name="anio">Año de los eventos (requerido)</param>
+    /// <param name="mes">Mes opcional (1-12). Si no se proporciona, devuelve todos los meses</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con tendencia temporal de eventos y hospitalizados por mes y municipio</returns>
+    [HttpGet("tendencia-temporal-municipio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetTendenciaTemporalMunicipioAsync([FromQuery] int anio, [FromQuery] int? mes, CancellationToken cancelToken)
+    {
+        try
+        {
+            if (anio < 1900 || anio > DateTime.Now.Year)
+            {
+                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+            }
+
+            if (mes.HasValue && (mes < 1 || mes > 12))
+            {
+                return BadRequest(new { message = "Mes inválido", error = "El mes debe estar entre 1 y 12" });
+            }
+
+            var mesDesc = mes.HasValue ? mes.ToString() : "todos los meses";
+            _logger.LogInformation("Consultando tendencia temporal por municipio para el año {anio}, mes: {mes}", anio, mesDesc);
+            var result = await _analyticsService.GetTendenciaTemporalMunicipioAsync(anio, mes, cancelToken);
+            _logger.LogInformation("Tendencia temporal por municipio obtenida exitosamente");
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogError(ex, "Error de validación en tendencia temporal por municipio");
+            return BadRequest(new { message = "Error de validación", error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar tendencia temporal por municipio");
+            return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
+        }
+    }
 
 }
+
