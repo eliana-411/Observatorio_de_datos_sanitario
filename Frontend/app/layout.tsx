@@ -4,6 +4,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { ColorblindModeProvider } from "@/contexts/ColorblindModeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,9 +40,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <GoogleOAuthProvider clientId={googleClientId}>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <ColorblindModeProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ColorblindModeProvider>
         </GoogleOAuthProvider>
       </body>
     </html>

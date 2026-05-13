@@ -60,7 +60,7 @@ public class AnalyticsService : IAnalyticsService
 
         FormattableString query = $@"
     SELECT genero, total
-    FROM vw_distribucion_genero
+    FROM dbo.vw_distribucion_genero
     ORDER BY total DESC
 ";
 
