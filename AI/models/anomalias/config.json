@@ -1,0 +1,593 @@
+{
+  "features": [
+    "anio",
+    "mes",
+    "trimestre",
+    "genero_Femenino",
+    "genero_Masculino",
+    "genero_No Binario / Otro",
+    "genero_No Reportado",
+    "grupo_etario_Adolescente",
+    "grupo_etario_Adulto",
+    "grupo_etario_Adulto Mayor",
+    "grupo_etario_Joven",
+    "municipio_evento_Aguadas",
+    "municipio_evento_Anserma",
+    "municipio_evento_Belalcazar",
+    "municipio_evento_Chinchina",
+    "municipio_evento_Filadelfia",
+    "municipio_evento_La Dorada",
+    "municipio_evento_La Merced",
+    "municipio_evento_Manizales",
+    "municipio_evento_Manzanares",
+    "municipio_evento_Marmato",
+    "municipio_evento_Marquetalia",
+    "municipio_evento_Marulanda",
+    "municipio_evento_Neira",
+    "municipio_evento_Pacora",
+    "municipio_evento_Palestina",
+    "municipio_evento_Pensilvania",
+    "municipio_evento_Riosucio",
+    "municipio_evento_Risaralda",
+    "municipio_evento_Salamina",
+    "municipio_evento_Samana",
+    "municipio_evento_San Jose",
+    "municipio_evento_Supia",
+    "municipio_evento_Victoria",
+    "municipio_evento_Villamaria",
+    "municipio_evento_Viterbo",
+    "municipio_origen_Aguadas",
+    "municipio_origen_Anserma",
+    "municipio_origen_Belalcazar",
+    "municipio_origen_Chinchina",
+    "municipio_origen_Filadelfia",
+    "municipio_origen_La Dorada",
+    "municipio_origen_La Merced",
+    "municipio_origen_Manizales",
+    "municipio_origen_Manzanares",
+    "municipio_origen_Marmato",
+    "municipio_origen_Marquetalia",
+    "municipio_origen_Marulanda",
+    "municipio_origen_Neira",
+    "municipio_origen_Pacora",
+    "municipio_origen_Palestina",
+    "municipio_origen_Pensilvania",
+    "municipio_origen_Riosucio",
+    "municipio_origen_Risaralda",
+    "municipio_origen_Salamina",
+    "municipio_origen_Samana",
+    "municipio_origen_San Jose",
+    "municipio_origen_Supia",
+    "municipio_origen_Victoria",
+    "municipio_origen_Villamaria",
+    "municipio_origen_Viterbo",
+    "zona_evento_Rural",
+    "zona_evento_Rural Disperso",
+    "zona_evento_Urbana",
+    "departamento_Caldas",
+    "metodo_Ahogamiento",
+    "metodo_Ahorcamiento",
+    "metodo_Intoxicacion Por Medicamentos",
+    "metodo_Intoxicacion Por Otras Sustancias",
+    "metodo_Intoxicacion Por Plaguicidas",
+    "metodo_Lesion Por Arma Cortopunzante",
+    "metodo_Lesion Por Arma De Fuego",
+    "metodo_Otro",
+    "metodo_Precipitacion (Caida Desde Altura)",
+    "metodo_Quemadura",
+    "tipo_metodo_Mecanico",
+    "tipo_metodo_Otro",
+    "tipo_metodo_Quimico",
+    "tipo_metodo_Violento",
+    "nivel_letalidad_Alto",
+    "nivel_letalidad_Bajo",
+    "resultado_atencion_Alta Medica",
+    "resultado_atencion_Alta Voluntaria",
+    "resultado_atencion_En Tratamiento Ambulatorio",
+    "resultado_atencion_Fallecido",
+    "resultado_atencion_Hospitalizacion Prolongada",
+    "resultado_atencion_Remision A Psiquiatria",
+    "resultado_atencion_Traslado A Otro Centro",
+    "tipo_resultado_Grave",
+    "tipo_resultado_Otro",
+    "tipo_resultado_Recuperado",
+    "tipo_resultado_Remitido",
+    "estado_civil_Casado/A",
+    "estado_civil_Divorciado/A",
+    "estado_civil_No Reportado",
+    "estado_civil_Separado/A",
+    "estado_civil_Soltero/A",
+    "estado_civil_Union Libre",
+    "estado_civil_Viudo/A",
+    "grupo_poblacional_Adolescencia (12-17)",
+    "grupo_poblacional_Adultez (29-59)",
+    "grupo_poblacional_Comunidad Lgbtiq+",
+    "grupo_poblacional_Discapacidad",
+    "grupo_poblacional_Habitante De Calle",
+    "grupo_poblacional_Juventud (18-28)",
+    "grupo_poblacional_Persona Mayor (60+)",
+    "grupo_poblacional_Victima Del Conflicto",
+    "situacion_sentimental_Con Pareja Estable",
+    "situacion_sentimental_Duelo Por Perdida De Pareja",
+    "situacion_sentimental_En Proceso De Separacion",
+    "situacion_sentimental_No Reportado",
+    "situacion_sentimental_Relacion Conflictiva",
+    "situacion_sentimental_Ruptura Reciente",
+    "situacion_sentimental_Sin Pareja",
+    "antecedentes_salud_mental_Depresion",
+    "antecedentes_salud_mental_Depresion + Ansiedad",
+    "antecedentes_salud_mental_Esquizofrenia",
+    "antecedentes_salud_mental_Intento Previo",
+    "antecedentes_salud_mental_Intento Previo + Depresion",
+    "antecedentes_salud_mental_Ninguno",
+    "antecedentes_salud_mental_Otro Trastorno",
+    "antecedentes_salud_mental_Tept",
+    "antecedentes_salud_mental_Trastorno Bipolar",
+    "antecedentes_salud_mental_Trastorno De Ansiedad",
+    "antecedentes_salud_mental_Trastorno De Personalidad",
+    "consumo_sustancias_Alcohol",
+    "consumo_sustancias_Alcohol + Cannabis",
+    "consumo_sustancias_Benzodiacepinas Sin Prescripcion",
+    "consumo_sustancias_Cannabis",
+    "consumo_sustancias_Cocaina/Bazuco",
+    "consumo_sustancias_Multiples Sustancias",
+    "consumo_sustancias_Ninguno",
+    "consumo_sustancias_No Reportado",
+    "dia_semana_Friday",
+    "dia_semana_Monday",
+    "dia_semana_Saturday",
+    "dia_semana_Sunday",
+    "dia_semana_Thursday",
+    "dia_semana_Tuesday",
+    "dia_semana_Wednesday",
+    "edad",
+    "estrato",
+    "cantidad_intentos",
+    "es_fin_de_semana",
+    "mismo_municipio",
+    "requirio_hospitalizacion",
+    "hospitalizado",
+    "tiene_antecedente",
+    "consume_sustancias_flag"
+  ],
+  "n_features": 149,
+  "model_type": "IsolationForest",
+  "encoding_method": "one-hot",
+  "encoding_info": {
+    "genero": {
+      "categories": [
+        "Femenino",
+        "Masculino",
+        "No Reportado",
+        "No Binario / Otro"
+      ],
+      "n_categories": 4,
+      "columns": [
+        "genero_Femenino",
+        "genero_Masculino",
+        "genero_No Binario / Otro",
+        "genero_No Reportado"
+      ]
+    },
+    "grupo_etario": {
+      "categories": [
+        "Joven",
+        "Adulto",
+        "Adolescente",
+        "Adulto Mayor"
+      ],
+      "n_categories": 4,
+      "columns": [
+        "grupo_etario_Adolescente",
+        "grupo_etario_Adulto",
+        "grupo_etario_Adulto Mayor",
+        "grupo_etario_Joven"
+      ]
+    },
+    "municipio_evento": {
+      "categories": [
+        "Victoria",
+        "Belalcazar",
+        "Palestina",
+        "La Merced",
+        "Viterbo",
+        "Risaralda",
+        "Manizales",
+        "Chinchina",
+        "Manzanares",
+        "Salamina",
+        "Supia",
+        "Pacora",
+        "Samana",
+        "Filadelfia",
+        "Marmato",
+        "Villamaria",
+        "Riosucio",
+        "La Dorada",
+        "San Jose",
+        "Anserma",
+        "Aguadas",
+        "Pensilvania",
+        "Neira",
+        "Marulanda",
+        "Marquetalia"
+      ],
+      "n_categories": 25,
+      "columns": [
+        "municipio_evento_Aguadas",
+        "municipio_evento_Anserma",
+        "municipio_evento_Belalcazar",
+        "municipio_evento_Chinchina",
+        "municipio_evento_Filadelfia",
+        "municipio_evento_La Dorada",
+        "municipio_evento_La Merced",
+        "municipio_evento_Manizales",
+        "municipio_evento_Manzanares",
+        "municipio_evento_Marmato",
+        "municipio_evento_Marquetalia",
+        "municipio_evento_Marulanda",
+        "municipio_evento_Neira",
+        "municipio_evento_Pacora",
+        "municipio_evento_Palestina",
+        "municipio_evento_Pensilvania",
+        "municipio_evento_Riosucio",
+        "municipio_evento_Risaralda",
+        "municipio_evento_Salamina",
+        "municipio_evento_Samana",
+        "municipio_evento_San Jose",
+        "municipio_evento_Supia",
+        "municipio_evento_Victoria",
+        "municipio_evento_Villamaria",
+        "municipio_evento_Viterbo"
+      ]
+    },
+    "municipio_origen": {
+      "categories": [
+        "Marquetalia",
+        "Supia",
+        "Pacora",
+        "Chinchina",
+        "Salamina",
+        "Aguadas",
+        "Manzanares",
+        "Marulanda",
+        "Samana",
+        "Manizales",
+        "La Dorada",
+        "Viterbo",
+        "Risaralda",
+        "Neira",
+        "Palestina",
+        "Marmato",
+        "La Merced",
+        "Villamaria",
+        "Pensilvania",
+        "Filadelfia",
+        "Anserma",
+        "Victoria",
+        "Riosucio",
+        "Belalcazar",
+        "San Jose"
+      ],
+      "n_categories": 25,
+      "columns": [
+        "municipio_origen_Aguadas",
+        "municipio_origen_Anserma",
+        "municipio_origen_Belalcazar",
+        "municipio_origen_Chinchina",
+        "municipio_origen_Filadelfia",
+        "municipio_origen_La Dorada",
+        "municipio_origen_La Merced",
+        "municipio_origen_Manizales",
+        "municipio_origen_Manzanares",
+        "municipio_origen_Marmato",
+        "municipio_origen_Marquetalia",
+        "municipio_origen_Marulanda",
+        "municipio_origen_Neira",
+        "municipio_origen_Pacora",
+        "municipio_origen_Palestina",
+        "municipio_origen_Pensilvania",
+        "municipio_origen_Riosucio",
+        "municipio_origen_Risaralda",
+        "municipio_origen_Salamina",
+        "municipio_origen_Samana",
+        "municipio_origen_San Jose",
+        "municipio_origen_Supia",
+        "municipio_origen_Victoria",
+        "municipio_origen_Villamaria",
+        "municipio_origen_Viterbo"
+      ]
+    },
+    "zona_evento": {
+      "categories": [
+        "Urbana",
+        "Rural",
+        "Rural Disperso"
+      ],
+      "n_categories": 3,
+      "columns": [
+        "zona_evento_Rural",
+        "zona_evento_Rural Disperso",
+        "zona_evento_Urbana"
+      ]
+    },
+    "departamento": {
+      "categories": [
+        "Caldas"
+      ],
+      "n_categories": 1,
+      "columns": [
+        "departamento_Caldas"
+      ]
+    },
+    "metodo": {
+      "categories": [
+        "Lesion Por Arma De Fuego",
+        "Ahorcamiento",
+        "Otro",
+        "Intoxicacion Por Medicamentos",
+        "Intoxicacion Por Plaguicidas",
+        "Lesion Por Arma Cortopunzante",
+        "Precipitacion (Caida Desde Altura)",
+        "Intoxicacion Por Otras Sustancias",
+        "Ahogamiento",
+        "Quemadura"
+      ],
+      "n_categories": 10,
+      "columns": [
+        "metodo_Ahogamiento",
+        "metodo_Ahorcamiento",
+        "metodo_Intoxicacion Por Medicamentos",
+        "metodo_Intoxicacion Por Otras Sustancias",
+        "metodo_Intoxicacion Por Plaguicidas",
+        "metodo_Lesion Por Arma Cortopunzante",
+        "metodo_Lesion Por Arma De Fuego",
+        "metodo_Otro",
+        "metodo_Precipitacion (Caida Desde Altura)",
+        "metodo_Quemadura"
+      ]
+    },
+    "tipo_metodo": {
+      "categories": [
+        "Violento",
+        "Mecanico",
+        "Otro",
+        "Quimico"
+      ],
+      "n_categories": 4,
+      "columns": [
+        "tipo_metodo_Mecanico",
+        "tipo_metodo_Otro",
+        "tipo_metodo_Quimico",
+        "tipo_metodo_Violento"
+      ]
+    },
+    "nivel_letalidad": {
+      "categories": [
+        "Alto",
+        "Bajo"
+      ],
+      "n_categories": 2,
+      "columns": [
+        "nivel_letalidad_Alto",
+        "nivel_letalidad_Bajo"
+      ]
+    },
+    "resultado_atencion": {
+      "categories": [
+        "Alta Medica",
+        "Hospitalizacion Prolongada",
+        "Traslado A Otro Centro",
+        "Remision A Psiquiatria",
+        "En Tratamiento Ambulatorio",
+        "Alta Voluntaria",
+        "Fallecido"
+      ],
+      "n_categories": 7,
+      "columns": [
+        "resultado_atencion_Alta Medica",
+        "resultado_atencion_Alta Voluntaria",
+        "resultado_atencion_En Tratamiento Ambulatorio",
+        "resultado_atencion_Fallecido",
+        "resultado_atencion_Hospitalizacion Prolongada",
+        "resultado_atencion_Remision A Psiquiatria",
+        "resultado_atencion_Traslado A Otro Centro"
+      ]
+    },
+    "tipo_resultado": {
+      "categories": [
+        "Recuperado",
+        "Grave",
+        "Remitido",
+        "Otro"
+      ],
+      "n_categories": 4,
+      "columns": [
+        "tipo_resultado_Grave",
+        "tipo_resultado_Otro",
+        "tipo_resultado_Recuperado",
+        "tipo_resultado_Remitido"
+      ]
+    },
+    "estado_civil": {
+      "categories": [
+        "Soltero/A",
+        "Divorciado/A",
+        "Casado/A",
+        "No Reportado",
+        "Separado/A",
+        "Union Libre",
+        "Viudo/A"
+      ],
+      "n_categories": 7,
+      "columns": [
+        "estado_civil_Casado/A",
+        "estado_civil_Divorciado/A",
+        "estado_civil_No Reportado",
+        "estado_civil_Separado/A",
+        "estado_civil_Soltero/A",
+        "estado_civil_Union Libre",
+        "estado_civil_Viudo/A"
+      ]
+    },
+    "grupo_poblacional": {
+      "categories": [
+        "Victima Del Conflicto",
+        "Habitante De Calle",
+        "Adultez (29-59)",
+        "Comunidad Lgbtiq+",
+        "Adolescencia (12-17)",
+        "Persona Mayor (60+)",
+        "Juventud (18-28)",
+        "Discapacidad"
+      ],
+      "n_categories": 8,
+      "columns": [
+        "grupo_poblacional_Adolescencia (12-17)",
+        "grupo_poblacional_Adultez (29-59)",
+        "grupo_poblacional_Comunidad Lgbtiq+",
+        "grupo_poblacional_Discapacidad",
+        "grupo_poblacional_Habitante De Calle",
+        "grupo_poblacional_Juventud (18-28)",
+        "grupo_poblacional_Persona Mayor (60+)",
+        "grupo_poblacional_Victima Del Conflicto"
+      ]
+    },
+    "situacion_sentimental": {
+      "categories": [
+        "En Proceso De Separacion",
+        "Ruptura Reciente",
+        "Sin Pareja",
+        "Con Pareja Estable",
+        "Duelo Por Perdida De Pareja",
+        "No Reportado",
+        "Relacion Conflictiva"
+      ],
+      "n_categories": 7,
+      "columns": [
+        "situacion_sentimental_Con Pareja Estable",
+        "situacion_sentimental_Duelo Por Perdida De Pareja",
+        "situacion_sentimental_En Proceso De Separacion",
+        "situacion_sentimental_No Reportado",
+        "situacion_sentimental_Relacion Conflictiva",
+        "situacion_sentimental_Ruptura Reciente",
+        "situacion_sentimental_Sin Pareja"
+      ]
+    },
+    "antecedentes_salud_mental": {
+      "categories": [
+        "Depresion",
+        "Trastorno De Personalidad",
+        "Tept",
+        "Ninguno",
+        "Trastorno Bipolar",
+        "Intento Previo + Depresion",
+        "Trastorno De Ansiedad",
+        "Esquizofrenia",
+        "Intento Previo",
+        "Depresion + Ansiedad",
+        "Otro Trastorno"
+      ],
+      "n_categories": 11,
+      "columns": [
+        "antecedentes_salud_mental_Depresion",
+        "antecedentes_salud_mental_Depresion + Ansiedad",
+        "antecedentes_salud_mental_Esquizofrenia",
+        "antecedentes_salud_mental_Intento Previo",
+        "antecedentes_salud_mental_Intento Previo + Depresion",
+        "antecedentes_salud_mental_Ninguno",
+        "antecedentes_salud_mental_Otro Trastorno",
+        "antecedentes_salud_mental_Tept",
+        "antecedentes_salud_mental_Trastorno Bipolar",
+        "antecedentes_salud_mental_Trastorno De Ansiedad",
+        "antecedentes_salud_mental_Trastorno De Personalidad"
+      ]
+    },
+    "consumo_sustancias": {
+      "categories": [
+        "Ninguno",
+        "Alcohol",
+        "Cannabis",
+        "Benzodiacepinas Sin Prescripcion",
+        "Cocaina/Bazuco",
+        "Multiples Sustancias",
+        "Alcohol + Cannabis",
+        "No Reportado"
+      ],
+      "n_categories": 8,
+      "columns": [
+        "consumo_sustancias_Alcohol",
+        "consumo_sustancias_Alcohol + Cannabis",
+        "consumo_sustancias_Benzodiacepinas Sin Prescripcion",
+        "consumo_sustancias_Cannabis",
+        "consumo_sustancias_Cocaina/Bazuco",
+        "consumo_sustancias_Multiples Sustancias",
+        "consumo_sustancias_Ninguno",
+        "consumo_sustancias_No Reportado"
+      ]
+    },
+    "dia_semana": {
+      "categories": [
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Monday",
+        "Tuesday",
+        "Sunday"
+      ],
+      "n_categories": 7,
+      "columns": [
+        "dia_semana_Friday",
+        "dia_semana_Monday",
+        "dia_semana_Saturday",
+        "dia_semana_Sunday",
+        "dia_semana_Thursday",
+        "dia_semana_Tuesday",
+        "dia_semana_Wednesday"
+      ]
+    }
+  },
+  "version": "2.0",
+  "description": "Detecci\u00f3n de anomal\u00edas multivariadas en intentos de suicidio",
+  "anomaly_threshold": -0.01,
+  "anomaly_stats": {
+    "n_anomalies": 250,
+    "pct_anomalies": 5.00400320256205,
+    "score_min": -0.0338151418798594,
+    "score_max": 0.06987106885212946,
+    "score_mean": 0.02658724574709087,
+    "score_median": 0.027399706960310438,
+    "score_std": 0.01537002563890306,
+    "threshold": -0.01
+  },
+  "trained_at": "2026-05-13T03:12:11.921493",
+  "isolation_forest_params": {
+    "contamination": 0.03,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "scaler_type": "StandardScaler",
+  "metrics": {
+    "n_anomalies": 150,
+    "pct_anomalies": 3.00240192153723,
+    "score_min": -0.025179003005799117,
+    "score_max": 0.06504169959087769,
+    "score_mean": 0.025983460773814446,
+    "score_median": 0.026622289582827613,
+    "score_std": 0.013187351211720629,
+    "threshold": -0.01
+  },
+  "reliability": {
+    "separability": 1.0,
+    "stability": 0.8491242866296551,
+    "consistency": 0.99919935948759,
+    "reliability": 0.9494412153724151,
+    "reliability_pct": 94.94412153724151,
+    "mean_normal_score": 0.026987159585395475,
+    "mean_anomaly_score": -0.006442702165663061,
+    "skewness": -0.3017514267406899
+  }
+}
