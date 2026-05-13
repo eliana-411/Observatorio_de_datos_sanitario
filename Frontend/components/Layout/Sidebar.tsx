@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
+    { id: 'brotes', icon: 'warning', label: 'Predicción de Brotes', href: '/brotes' },
     { id: 'ai-assistant', icon: 'psychiatry', label: 'Asistente IA', href: '/ai-assistant' },
     { id: 'analytics', icon: 'query_stats', label: 'Análisis Predictivo', href: '/analytics' },
     { id: 'maps', icon: 'map', label: 'Mapas de Salud', href: '/maps' },
