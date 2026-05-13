@@ -7,6 +7,7 @@ import { TimeSeriesChart } from '@/components/Dashboard/TimeSeriesChart';
 import { AIAlert } from '@/components/Dashboard/AIAlert';
 import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
 import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
+import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 
 export default function DashboardPage() {
     return (
@@ -51,16 +52,17 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* Map + Gender Distribution */}
+                {/* Map + Distribution Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Main Heat Map */}
                     <div className="lg:col-span-8">
                         <MapContainer />
                     </div>
 
-                    {/* Gender Distribution Pie Chart */}
-                    <div className="lg:col-span-4">
+                    {/* Distribution Charts Stack */}
+                    <div className="lg:col-span-4 space-y-6">
                         <GenderDistributionChart />
+                        <AgeGroupDistributionChart />
                     </div>
                 </div>
 
