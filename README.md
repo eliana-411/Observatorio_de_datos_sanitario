@@ -126,3 +126,6 @@ dotnetrestore
 
 ## AI
 uvicorn AI.api.main:app --reload --port 8001
+## Modelos predictivos
+pip install prophet mlflow
+pip install xgboost
