@@ -8,6 +8,7 @@ import { AIAlert } from '@/components/Dashboard/AIAlert';
 import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
 import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
+import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
 
 export default function DashboardPage() {
     return (
@@ -64,6 +65,11 @@ export default function DashboardPage() {
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
                     </div>
+                </div>
+
+                {/* Methods Distribution Chart */}
+                <div>
+                    <MethodsDistributionChart />
                 </div>
 
                 {/* Time Series Chart */}

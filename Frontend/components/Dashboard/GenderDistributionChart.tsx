@@ -3,14 +3,26 @@
 import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchDistribucionGenero, GeneroDistribution } from '@/lib/api/analytics';
+import { useColorblindMode } from '@/contexts/ColorblindModeContext';
 
 const COLORS = ['#3B82F6', '#EC4899', '#8B5CF6', '#14B8A6', '#F59E0B', '#6366F1'];
+
+// Patrones SVG para accesibilidad (inclusive para daltónicos)
+const PATTERNS = [
+    'url(#patternGender0)',
+    'url(#patternGender1)',
+    'url(#patternGender2)',
+    'url(#patternGender3)',
+    'url(#patternGender4)',
+    'url(#patternGender5)',
+];
 
 export function GenderDistributionChart() {
     const [data, setData] = useState<GeneroDistribution[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [outerRadius, setOuterRadius] = useState(80);
+    const { isColorblindMode } = useColorblindMode();
 
     useEffect(() => {
         async function loadData() {
@@ -86,6 +98,38 @@ export function GenderDistributionChart() {
             <div className="flex-1 flex items-center justify-center overflow-hidden">
                 <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
+                        <defs>
+                            {/* Líneas diagonales - Pattern 0 */}
+                            <pattern id="patternGender0" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="8" height="8" fill={COLORS[0]} />
+                                <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+                            </pattern>
+                            {/* Líneas diagonales inversas - Pattern 1 */}
+                            <pattern id="patternGender1" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="8" height="8" fill={COLORS[1]} />
+                                <path d="M2,-2 l4,4 M8,0 l-8,8 M10,6 l4,4" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+                            </pattern>
+                            {/* Puntos - Pattern 2 */}
+                            <pattern id="patternGender2" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="8" height="8" fill={COLORS[2]} />
+                                <circle cx="4" cy="4" r="2" fill="rgba(255,255,255,0.4)" />
+                            </pattern>
+                            {/* Líneas verticales - Pattern 3 */}
+                            <pattern id="patternGender3" x="0" y="0" width="6" height="8" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="6" height="8" fill={COLORS[3]} />
+                                <path d="M2,0 v8" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+                            </pattern>
+                            {/* Líneas horizontales - Pattern 4 */}
+                            <pattern id="patternGender4" x="0" y="0" width="8" height="6" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="8" height="6" fill={COLORS[4]} />
+                                <path d="M0,3 h8" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+                            </pattern>
+                            {/* Cruces - Pattern 5 */}
+                            <pattern id="patternGender5" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                                <rect x="0" y="0" width="8" height="8" fill={COLORS[5]} />
+                                <path d="M4,0 v8 M0,4 h8" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                            </pattern>
+                        </defs>
                         <Pie
                             data={data}
                             dataKey="total"
@@ -97,7 +141,10 @@ export function GenderDistributionChart() {
                             onClick={() => { }}
                         >
                             {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={isColorblindMode ? PATTERNS[index % PATTERNS.length] : COLORS[index % COLORS.length]}
+                                />
                             ))}
                         </Pie>
                         <Tooltip

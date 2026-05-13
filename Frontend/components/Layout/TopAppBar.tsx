@@ -3,11 +3,13 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useColorblindMode } from '@/contexts/ColorblindModeContext';
 
 export function TopAppBar() {
     const { user, logout } = useAuth();
     const router = useRouter();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const { isColorblindMode, toggleColorblindMode } = useColorblindMode();
 
     const handleLogout = () => {
         logout();
@@ -52,6 +54,18 @@ export function TopAppBar() {
                 <button className="p-2 rounded-full hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb] transition-colors">
                     <span className="material-symbols-outlined" data-icon="smart_toy">
                         smart_toy
+                    </span>
+                </button>
+                <button
+                    onClick={toggleColorblindMode}
+                    className={`p-2 rounded-full transition-colors ${isColorblindMode
+                            ? 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                            : 'hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb]'
+                        }`}
+                    title={isColorblindMode ? 'Desactivar modo daltónico' : 'Activar modo daltónico'}
+                >
+                    <span className="material-symbols-outlined" data-icon="visibility">
+                        visibility
                     </span>
                 </button>
                 <button className="p-2 rounded-full hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb] transition-colors">
