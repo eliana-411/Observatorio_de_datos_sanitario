@@ -123,3 +123,6 @@ dotnetrestore
 - pip install openpyxl
 - py -3.11 -m venv .venv
 - pip install -r requirements.txt
+
+## AI
+uvicorn AI.api.main:app --reload --port 8001
