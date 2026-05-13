@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
-    { id: 'analytics', icon: 'query_stats', label: 'Analítica Predictiva', href: '/analytics' },
+    { id: 'brotes', icon: 'warning', label: 'Predicción de Brotes', href: '/brotes' },
+    { id: 'ai-assistant', icon: 'psychiatry', label: 'Asistente IA', href: '/ai-assistant' },
+    { id: 'analytics', icon: 'query_stats', label: 'Análisis Predictivo', href: '/analytics' },
     { id: 'maps', icon: 'map', label: 'Mapas de Salud', href: '/maps' },
-    { id: 'protocols', icon: 'psychiatry', label: 'Protocolos IA', href: '/protocols' },
     { id: 'reports', icon: 'description', label: 'Informes', href: '/reports' },
 ];
 

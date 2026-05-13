@@ -23,6 +23,16 @@ def extract_brotes(engine) -> pd.DataFrame:
     print(f"[brotes] Columnas: {list(df.columns)}")
     return df
 
+def extract_anomalias(engine) -> pd.DataFrame:
+    """Extrae datos de la vista vw_anomalias para detección de anomalías."""
+    query = "SELECT * FROM dbo.vw_anomalias"
+    df = pd.read_sql(query, engine)
+    print(f"[anomalias] Filas extraídas: {len(df)}")
+    print(f"[anomalias] Columnas: {len(df.columns)}")
+    print(f"[anomalias] Lista de columnas:")
+    for i, col in enumerate(df.columns, 1):
+        print(f"  {i:2d}. {col}")
+    return df
 def extract_demanda_mensual(engine) -> pd.DataFrame:
     query = "SELECT * FROM dbo.vw_demanda"
     df = pd.read_sql(query, engine)
@@ -38,6 +48,7 @@ def extract_demanda_semanal(engine) -> pd.DataFrame:
     return df
 
 def save_raw(df: pd.DataFrame, filename: str):
+    """Guarda el DataFrame en CSV."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     output_dir = os.path.join(base_dir, "data", "raw")
     os.makedirs(output_dir, exist_ok=True)
@@ -69,6 +80,20 @@ def main():
     print(df_demanda_mensual.head())
     print("\n--- demanda semanal (muestra) ---")
     print(df_demanda_semanal.head())
+
+    print("Extrayendo vw_anomalias...")
+    df_anomalias = extract_anomalias(engine)
+    save_raw(df_anomalias, "anomalias.csv")
+
+    print("Extracción anomalias completada.")
+    print(df_anomalias.head())
+
+    print("Extrayendo vw_anomalias...")
+    df_anomalias = extract_anomalias(engine)
+    save_raw(df_anomalias, "anomalias.csv")
+
+    print("Extracción anomalias completada.")
+    print(df_anomalias.head())
 
 
 if __name__ == "__main__":
