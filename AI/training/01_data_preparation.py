@@ -23,6 +23,19 @@ def extract_brotes(engine) -> pd.DataFrame:
     print(f"[brotes] Columnas: {list(df.columns)}")
     return df
 
+def extract_demanda_mensual(engine) -> pd.DataFrame:
+    query = "SELECT * FROM dbo.vw_demanda"
+    df = pd.read_sql(query, engine)
+    print(f"[demanda_mensual] Filas extraídas: {len(df)}")
+    print(f"[demanda_mensual] Columnas: {list(df.columns)}")
+    return df
+ 
+def extract_demanda_semanal(engine) -> pd.DataFrame:
+    query = "SELECT * FROM dbo.vw_demanda_semanal"
+    df = pd.read_sql(query, engine)
+    print(f"[demanda_semanal] Filas extraídas: {len(df)}")
+    print(f"[demanda_semanal] Columnas: {list(df.columns)}")
+    return df
 
 def save_raw(df: pd.DataFrame, filename: str):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,8 +54,21 @@ def main():
     df_brotes = extract_brotes(engine)
     save_raw(df_brotes, "brotes.csv")
 
-    print("Extracción completada.")
+    print("\nExtrayendo vw_demanda (mensual)...")
+    df_demanda_mensual = extract_demanda_mensual(engine)
+    save_raw(df_demanda_mensual, "demanda_mensual.csv")
+ 
+    print("\nExtrayendo vw_demanda_semanal...")
+    df_demanda_semanal = extract_demanda_semanal(engine)
+    save_raw(df_demanda_semanal, "demanda_semanal.csv")
+
+    print("\nExtracción completada.")
+    print("\n--- brotes (muestra) ---")
     print(df_brotes.head())
+    print("\n--- demanda mensual (muestra) ---")
+    print(df_demanda_mensual.head())
+    print("\n--- demanda semanal (muestra) ---")
+    print(df_demanda_semanal.head())
 
 
 if __name__ == "__main__":

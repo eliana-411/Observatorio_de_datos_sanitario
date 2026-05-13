@@ -123,3 +123,7 @@ dotnetrestore
 - pip install openpyxl
 - py -3.11 -m venv .venv
 - pip install -r requirements.txt
+
+## Modelos predictivos
+pip install prophet mlflow
+pip install xgboost
