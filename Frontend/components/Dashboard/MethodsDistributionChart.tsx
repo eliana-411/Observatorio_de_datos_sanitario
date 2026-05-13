@@ -78,7 +78,7 @@ export function MethodsDistributionChart() {
                     <BarChart
                         data={data}
                         layout="vertical"
-                        margin={{ top: 5, right: 30, left: 220, bottom: 5 }}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                         <defs>
                             {/* Líneas diagonales - Pattern 0 */}
@@ -127,8 +127,8 @@ export function MethodsDistributionChart() {
                         <YAxis
                             dataKey="metodo"
                             type="category"
-                            width={210}
-                            tick={{ fontSize: 14, fill: '#6b7280', fontWeight: 500 }}
+                            width={170}
+                            tick={{ fontSize: 15, fill: '#6b7280', fontWeight: 500 }}
                         />
                         <Tooltip
                             content={({ active, payload }) => {

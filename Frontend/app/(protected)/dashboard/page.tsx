@@ -9,6 +9,7 @@ import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
 import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
+import { HospitalizationChart } from '@/components/Dashboard/HospitalizationChart';
 
 export default function DashboardPage() {
     return (
@@ -67,9 +68,14 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Methods Distribution Chart */}
-                <div>
-                    <MethodsDistributionChart />
+                {/* Methods Distribution Chart and Hospitalization Chart */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-8">
+                        <MethodsDistributionChart />
+                    </div>
+                    <div className="lg:col-span-4">
+                        <HospitalizationChart />
+                    </div>
                 </div>
 
                 {/* Time Series Chart */}
