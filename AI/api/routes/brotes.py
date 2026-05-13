@@ -6,7 +6,6 @@ from AI.prediction.brotes_predictor import predecir_brotes
 
 router = APIRouter(prefix="/api/v1/predict", tags=["Brotes"])
 
-
 class BrotesMes(BaseModel):
     municipio:       str
     anio:            int
@@ -15,8 +14,6 @@ class BrotesMes(BaseModel):
     media_historica: float
     umbral_alerta:   float
     nivel_alerta:    str
-
-
 class PerfilHistorico(BaseModel):
     zona_mayor_incidencia:                  str
     distribucion_por_zona:                  dict
@@ -34,7 +31,6 @@ class PerfilHistorico(BaseModel):
     nivel_letalidad_predominante:           str
     tendencia_reciente:                     str
 
-
 class BrotesPayload(BaseModel):
     municipio:          Optional[str] = Field(default=None, example="Manizales")
     meses_a_predecir:   int = Field(default=3, ge=1, le=12)
@@ -47,7 +43,6 @@ class BrotesPayload(BaseModel):
                 "meses_a_predecir": 3
             }
         }
-
 
 class BrotesPrediction(BaseModel):
     status:           str
@@ -312,65 +307,65 @@ def get_variables_importancia():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    @router.get("/brotes/variacion", response_model=list[VariacionMunicipio])
-    def get_variacion():
-        """
-        Devuelve la variación de casos vs mes anterior
-        para todos los municipios — usado en la tabla del dashboard.
-        """
-        try:
-            import pandas as pd
-            import os
+@router.get("/brotes/variacion", response_model=list[VariacionMunicipio])
+def get_variacion():
+    """
+    Devuelve la variación de casos vs mes anterior
+    para todos los municipios — usado en la tabla del dashboard.
+    """
+    try:
+        import pandas as pd
+        import os
 
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
-            df = pd.read_csv(processed_path)
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
+        df = pd.read_csv(processed_path)
 
-            resultado = []
-            for municipio in sorted(df["municipio_evento"].unique()):
-                df_m = df[df["municipio_evento"] == municipio].copy()
-                df_m = df_m.sort_values(["anio", "mes"])
+        resultado = []
+        for municipio in sorted(df["municipio_evento"].unique()):
+            df_m = df[df["municipio_evento"] == municipio].copy()
+            df_m = df_m.sort_values(["anio", "mes"])
 
-                # Agrupar por mes
-                df_agg = df_m.groupby(["anio", "mes"])["casos"].sum().reset_index()
+            # Agrupar por mes
+            df_agg = df_m.groupby(["anio", "mes"])["casos"].sum().reset_index()
 
-                if len(df_agg) < 2:
-                    continue
+            if len(df_agg) < 2:
+                continue
 
-                casos_actual   = float(df_agg.iloc[-1]["casos"])
-                casos_anterior = float(df_agg.iloc[-2]["casos"])
-                media          = float(df_agg["casos"].mean())
+            casos_actual   = float(df_agg.iloc[-1]["casos"])
+            casos_anterior = float(df_agg.iloc[-2]["casos"])
+            media          = float(df_agg["casos"].mean())
 
-                # Variación vs mes anterior
-                if casos_anterior > 0:
-                    variacion_pct = round((casos_actual - casos_anterior) / casos_anterior * 100, 1)
-                else:
-                    variacion_pct = 0.0
+            # Variación vs mes anterior
+            if casos_anterior > 0:
+                variacion_pct = round((casos_actual - casos_anterior) / casos_anterior * 100, 1)
+            else:
+                variacion_pct = 0.0
 
-                # Desviación vs media histórica
-                if media > 0:
-                    desviacion_pct = round((casos_actual - media) / media * 100, 1)
-                else:
-                    desviacion_pct = 0.0
+            # Desviación vs media histórica
+            if media > 0:
+                desviacion_pct = round((casos_actual - media) / media * 100, 1)
+            else:
+                desviacion_pct = 0.0
 
-                # Tendencia
-                if variacion_pct > 5:
-                    tendencia = "Alza"
-                elif variacion_pct < -5:
-                    tendencia = "Baja"
-                else:
-                    tendencia = "Estable"
+            # Tendencia
+            if variacion_pct > 5:
+                tendencia = "Alza"
+            elif variacion_pct < -5:
+                tendencia = "Baja"
+            else:
+                tendencia = "Estable"
 
-                resultado.append(VariacionMunicipio(
-                    municipio=municipio,
-                    casos_mes_actual=casos_actual,
-                    casos_mes_anterior=casos_anterior,
-                    variacion_pct=variacion_pct,
-                    desviacion_pct=desviacion_pct,
-                    tendencia=tendencia
-                ))
+            resultado.append(VariacionMunicipio(
+                municipio=municipio,
+                casos_mes_actual=casos_actual,
+                casos_mes_anterior=casos_anterior,
+                variacion_pct=variacion_pct,
+                desviacion_pct=desviacion_pct,
+                tendencia=tendencia
+            ))
 
-            return resultado
+        return resultado
 
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
