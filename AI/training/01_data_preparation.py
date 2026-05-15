@@ -33,6 +33,7 @@ def extract_anomalias(engine) -> pd.DataFrame:
     for i, col in enumerate(df.columns, 1):
         print(f"  {i:2d}. {col}")
     return df
+
 def extract_demanda_mensual(engine) -> pd.DataFrame:
     query = "SELECT * FROM dbo.vw_demanda"
     df = pd.read_sql(query, engine)
@@ -76,8 +77,10 @@ def main():
     print("\nExtracción completada.")
     print("\n--- brotes (muestra) ---")
     print(df_brotes.head())
+
     print("\n--- demanda mensual (muestra) ---")
     print(df_demanda_mensual.head())
+
     print("\n--- demanda semanal (muestra) ---")
     print(df_demanda_semanal.head())
 
@@ -87,14 +90,6 @@ def main():
 
     print("Extracción anomalias completada.")
     print(df_anomalias.head())
-
-    print("Extrayendo vw_anomalias...")
-    df_anomalias = extract_anomalias(engine)
-    save_raw(df_anomalias, "anomalias.csv")
-
-    print("Extracción anomalias completada.")
-    print(df_anomalias.head())
-
 
 if __name__ == "__main__":
     main()

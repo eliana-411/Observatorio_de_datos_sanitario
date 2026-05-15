@@ -10,8 +10,17 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
+
+import mlflow
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MLFLOW_PATH = os.path.join(BASE_DIR, "mlruns")
+
+mlflow.set_tracking_uri(f"file:///{MLFLOW_PATH}")
 # ── Rutas ─────────────────────────────────────────────────────────────────────
-BASE_DIR       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#BASE_DIR       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROCESSED_PATH = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
 MODEL_DIR      = os.path.join(BASE_DIR, "models", "brotes")
 MLFLOW_DIR     = os.path.join(BASE_DIR, "mlflow")
@@ -112,7 +121,7 @@ def train(df: pd.DataFrame):
     print(f"   R²   : {r2:.4f}")
 
     importances = pd.Series(model.feature_importances_, index=available)
-    print(f"\n🔍 Top 10 variables más importantes:")
+    print(f"\n Top 10 variables más importantes:")
     print(importances.sort_values(ascending=False).head(10).to_string())
 
     return model, scaler, available, metrics, params
@@ -157,7 +166,10 @@ def main():
         mlflow.log_metrics(metrics)
         mlflow.log_param("n_features", len(features))
         mlflow.log_param("features", str(features))
-        mlflow.sklearn.log_model(model, "brotes_model")
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            name="brotes_model"
+        )
 
         save_artifacts(model, scaler, features, metrics, params)
 

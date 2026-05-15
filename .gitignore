@@ -38,3 +38,6 @@ Entorno virtual
 #Archivos 
 *.md
 .md
+mlruns/
+*.pkl
+mlflow.db
