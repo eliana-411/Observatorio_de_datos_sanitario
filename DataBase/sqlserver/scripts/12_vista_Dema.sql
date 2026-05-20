@@ -4,7 +4,7 @@ GO
 CREATE OR ALTER VIEW dbo.vw_demanda AS
 SELECT
     dt.anio,
-    dt.mes,
+    dt.mes, 
     dt.trimestre,
     dt.nombre_mes,
     dl.municipio_evento,

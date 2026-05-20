@@ -156,8 +156,8 @@
   "encoding_info": {
     "genero": {
       "categories": [
-        "Femenino",
         "Masculino",
+        "Femenino",
         "No Reportado",
         "No Binario / Otro"
       ],
@@ -186,31 +186,31 @@
     },
     "municipio_evento": {
       "categories": [
-        "Victoria",
-        "Belalcazar",
-        "Palestina",
-        "La Merced",
-        "Viterbo",
-        "Risaralda",
-        "Manizales",
-        "Chinchina",
-        "Manzanares",
-        "Salamina",
-        "Supia",
-        "Pacora",
-        "Samana",
-        "Filadelfia",
-        "Marmato",
-        "Villamaria",
-        "Riosucio",
-        "La Dorada",
-        "San Jose",
-        "Anserma",
-        "Aguadas",
-        "Pensilvania",
         "Neira",
         "Marulanda",
-        "Marquetalia"
+        "Palestina",
+        "La Merced",
+        "Supia",
+        "Samana",
+        "Riosucio",
+        "Manzanares",
+        "Salamina",
+        "Pacora",
+        "Pensilvania",
+        "Belalcazar",
+        "Villamaria",
+        "Marmato",
+        "Anserma",
+        "Marquetalia",
+        "Viterbo",
+        "San Jose",
+        "Chinchina",
+        "Filadelfia",
+        "Aguadas",
+        "Manizales",
+        "Victoria",
+        "Risaralda",
+        "La Dorada"
       ],
       "n_categories": 25,
       "columns": [
@@ -243,31 +243,31 @@
     },
     "municipio_origen": {
       "categories": [
-        "Marquetalia",
-        "Supia",
-        "Pacora",
-        "Chinchina",
-        "Salamina",
-        "Aguadas",
+        "Filadelfia",
         "Manzanares",
-        "Marulanda",
+        "La Merced",
+        "Victoria",
+        "San Jose",
+        "Pensilvania",
+        "Belalcazar",
         "Samana",
+        "Pacora",
+        "Marulanda",
+        "Salamina",
+        "Viterbo",
+        "Villamaria",
+        "Neira",
+        "Anserma",
         "Manizales",
         "La Dorada",
-        "Viterbo",
+        "Supia",
+        "Aguadas",
+        "Chinchina",
         "Risaralda",
-        "Neira",
         "Palestina",
+        "Marquetalia",
         "Marmato",
-        "La Merced",
-        "Villamaria",
-        "Pensilvania",
-        "Filadelfia",
-        "Anserma",
-        "Victoria",
-        "Riosucio",
-        "Belalcazar",
-        "San Jose"
+        "Riosucio"
       ],
       "n_categories": 25,
       "columns": [
@@ -300,8 +300,8 @@
     },
     "zona_evento": {
       "categories": [
-        "Urbana",
         "Rural",
+        "Urbana",
         "Rural Disperso"
       ],
       "n_categories": 3,
@@ -322,16 +322,16 @@
     },
     "metodo": {
       "categories": [
-        "Lesion Por Arma De Fuego",
-        "Ahorcamiento",
-        "Otro",
-        "Intoxicacion Por Medicamentos",
         "Intoxicacion Por Plaguicidas",
+        "Intoxicacion Por Otras Sustancias",
         "Lesion Por Arma Cortopunzante",
         "Precipitacion (Caida Desde Altura)",
-        "Intoxicacion Por Otras Sustancias",
-        "Ahogamiento",
-        "Quemadura"
+        "Intoxicacion Por Medicamentos",
+        "Ahorcamiento",
+        "Otro",
+        "Lesion Por Arma De Fuego",
+        "Quemadura",
+        "Ahogamiento"
       ],
       "n_categories": 10,
       "columns": [
@@ -349,10 +349,10 @@
     },
     "tipo_metodo": {
       "categories": [
-        "Violento",
-        "Mecanico",
         "Otro",
-        "Quimico"
+        "Violento",
+        "Quimico",
+        "Mecanico"
       ],
       "n_categories": 4,
       "columns": [
@@ -364,8 +364,8 @@
     },
     "nivel_letalidad": {
       "categories": [
-        "Alto",
-        "Bajo"
+        "Bajo",
+        "Alto"
       ],
       "n_categories": 2,
       "columns": [
@@ -376,12 +376,12 @@
     "resultado_atencion": {
       "categories": [
         "Alta Medica",
-        "Hospitalizacion Prolongada",
-        "Traslado A Otro Centro",
-        "Remision A Psiquiatria",
         "En Tratamiento Ambulatorio",
+        "Hospitalizacion Prolongada",
         "Alta Voluntaria",
-        "Fallecido"
+        "Fallecido",
+        "Remision A Psiquiatria",
+        "Traslado A Otro Centro"
       ],
       "n_categories": 7,
       "columns": [
@@ -397,9 +397,9 @@
     "tipo_resultado": {
       "categories": [
         "Recuperado",
+        "Otro",
         "Grave",
-        "Remitido",
-        "Otro"
+        "Remitido"
       ],
       "n_categories": 4,
       "columns": [
@@ -412,11 +412,11 @@
     "estado_civil": {
       "categories": [
         "Soltero/A",
-        "Divorciado/A",
         "Casado/A",
-        "No Reportado",
-        "Separado/A",
         "Union Libre",
+        "Divorciado/A",
+        "Separado/A",
+        "No Reportado",
         "Viudo/A"
       ],
       "n_categories": 7,
@@ -432,13 +432,13 @@
     },
     "grupo_poblacional": {
       "categories": [
-        "Victima Del Conflicto",
-        "Habitante De Calle",
-        "Adultez (29-59)",
         "Comunidad Lgbtiq+",
+        "Adultez (29-59)",
+        "Juventud (18-28)",
         "Adolescencia (12-17)",
         "Persona Mayor (60+)",
-        "Juventud (18-28)",
+        "Habitante De Calle",
+        "Victima Del Conflicto",
         "Discapacidad"
       ],
       "n_categories": 8,
@@ -458,10 +458,10 @@
         "En Proceso De Separacion",
         "Ruptura Reciente",
         "Sin Pareja",
-        "Con Pareja Estable",
+        "Relacion Conflictiva",
         "Duelo Por Perdida De Pareja",
-        "No Reportado",
-        "Relacion Conflictiva"
+        "Con Pareja Estable",
+        "No Reportado"
       ],
       "n_categories": 7,
       "columns": [
@@ -476,17 +476,17 @@
     },
     "antecedentes_salud_mental": {
       "categories": [
-        "Depresion",
+        "Depresion + Ansiedad",
+        "Otro Trastorno",
         "Trastorno De Personalidad",
-        "Tept",
-        "Ninguno",
+        "Depresion",
+        "Trastorno De Ansiedad",
         "Trastorno Bipolar",
         "Intento Previo + Depresion",
-        "Trastorno De Ansiedad",
-        "Esquizofrenia",
+        "Tept",
         "Intento Previo",
-        "Depresion + Ansiedad",
-        "Otro Trastorno"
+        "Ninguno",
+        "Esquizofrenia"
       ],
       "n_categories": 11,
       "columns": [
@@ -505,13 +505,13 @@
     },
     "consumo_sustancias": {
       "categories": [
-        "Ninguno",
-        "Alcohol",
-        "Cannabis",
-        "Benzodiacepinas Sin Prescripcion",
         "Cocaina/Bazuco",
-        "Multiples Sustancias",
+        "Ninguno",
+        "Cannabis",
         "Alcohol + Cannabis",
+        "Multiples Sustancias",
+        "Alcohol",
+        "Benzodiacepinas Sin Prescripcion",
         "No Reportado"
       ],
       "n_categories": 8,
@@ -528,13 +528,13 @@
     },
     "dia_semana": {
       "categories": [
-        "Wednesday",
         "Thursday",
-        "Friday",
         "Saturday",
-        "Monday",
+        "Sunday",
+        "Wednesday",
         "Tuesday",
-        "Sunday"
+        "Friday",
+        "Monday"
       ],
       "n_categories": 7,
       "columns": [
@@ -560,23 +560,23 @@
   },
   "scaler_type": "StandardScaler",
   "metrics": {
-    "n_anomalies": 150,
-    "pct_anomalies": 3.00240192153723,
-    "score_min": -0.025179003005799117,
-    "score_max": 0.06504169959087769,
-    "score_mean": 0.025983460773814446,
-    "score_median": 0.026622289582827613,
-    "score_std": 0.013187351211720629,
+    "n_anomalies": 13251,
+    "pct_anomalies": 2.995490149537147,
+    "score_min": -0.03208574167602363,
+    "score_max": 0.06557154139893112,
+    "score_mean": 0.025790006530313395,
+    "score_median": 0.02657077751877679,
+    "score_std": 0.013104601193009364,
     "threshold": -0.01
   },
   "reliability": {
     "separability": 1.0,
-    "stability": 0.8491242866296551,
-    "consistency": 0.99919935948759,
-    "reliability": 0.9494412153724151,
-    "reliability_pct": 94.94412153724151,
-    "mean_normal_score": 0.026987159585395475,
-    "mean_anomaly_score": -0.006442702165663061,
-    "skewness": -0.3017514267406899
+    "stability": 0.8564557937228713,
+    "consistency": 0.9984967165123823,
+    "reliability": 0.9516508367450845,
+    "reliability_pct": 95.16508367450845,
+    "mean_normal_score": 0.02676004040953807,
+    "mean_anomaly_score": -0.005623103276465016,
+    "skewness": -0.2870884125542574
   }
 }
