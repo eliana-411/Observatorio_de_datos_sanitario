@@ -550,18 +550,7 @@
   },
   "version": "2.0",
   "description": "Detecci\u00f3n de anomal\u00edas multivariadas en intentos de suicidio",
-  "anomaly_threshold": -0.01,
-  "anomaly_stats": {
-    "n_anomalies": 250,
-    "pct_anomalies": 5.00400320256205,
-    "score_min": -0.0338151418798594,
-    "score_max": 0.06987106885212946,
-    "score_mean": 0.02658724574709087,
-    "score_median": 0.027399706960310438,
-    "score_std": 0.01537002563890306,
-    "threshold": -0.01
-  },
-  "trained_at": "2026-05-13T03:12:11.921493",
+  "trained_at": "2026-05-13T10:42:59.702512",
   "isolation_forest_params": {
     "contamination": 0.03,
     "n_estimators": 200,

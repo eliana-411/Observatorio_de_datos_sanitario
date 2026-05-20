@@ -1,7 +1,7 @@
 USE ObservatorioDW;
 GO
 
-ALTER VIEW dbo.vw_demanda AS
+CREATE OR ALTER VIEW dbo.vw_demanda AS
 SELECT
     dt.anio,
     dt.mes,
