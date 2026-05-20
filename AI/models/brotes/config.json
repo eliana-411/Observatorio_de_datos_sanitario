@@ -31,9 +31,9 @@
     "n_jobs": -1
   },
   "metrics": {
-    "rmse": 65.2398,
-    "mae": 43.6889,
-    "r2": 0.6354
+    "rmse": 0.6597,
+    "mae": 0.3949,
+    "r2": 0.7003
   },
   "aggregation": "municipio+zona+mes"
 }

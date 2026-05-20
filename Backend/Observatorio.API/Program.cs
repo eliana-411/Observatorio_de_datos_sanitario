@@ -21,6 +21,8 @@ DotNetEnv.Env.Load();
 builder.Configuration.AddEnvironmentVariables();
 var connectionStringPostgres = Environment.GetEnvironmentVariable("DATABASE_URL");
 var connectionStringSqlServer = Environment.GetEnvironmentVariable("DATABASE_SQL_URL");
+var aiBaseUrl = Environment.GetEnvironmentVariable("AI_BASE_URL") ?? "http://localhost:8001";
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
@@ -44,6 +46,12 @@ builder.Services.AddDbContext<ObservatorioDbContext>(options => options.UseNpgsq
 builder.Services.AddDbContext<SanitarioDbContext>(options => options.UseSqlServer(connectionStringSqlServer));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// HttpClient para consumir microservicio de AI
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<HttpClient>();
+builder.Services.AddSingleton(aiBaseUrl);
+
 // Agregar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
