@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Hangfire;
+using Hangfire.SqlServer;
+using Observatorio.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.AddSingleton(aiBaseUrl);
+builder.Services
+       .AddScoped<ETLJobService>();
 
 // Agregar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -74,6 +79,38 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Agregar autorización
 builder.Services.AddAuthorization();
+builder.Services.AddHangfire(config =>
+
+    config.UseSqlServerStorage(
+
+        connectionStringSqlServer,
+
+        new SqlServerStorageOptions
+        {
+
+            CommandBatchMaxTimeout =
+                TimeSpan.FromMinutes(5),
+
+            SlidingInvisibilityTimeout =
+                TimeSpan.FromMinutes(5),
+
+            QueuePollInterval =
+                TimeSpan.Zero,
+
+            UseRecommendedIsolationLevel =
+                true,
+
+            DisableGlobalLocks =
+                true
+
+        }
+
+    )
+
+);
+
+builder.Services
+       .AddHangfireServer();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -89,7 +126,9 @@ builder.Services.AddCors(options =>
 // Console.WriteLine(builder.Configuration["Jwt:Key"]);
 
 var app = builder.Build();
-
+app.UseHangfireDashboard(
+    "/hangfire"
+);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -114,6 +153,11 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+RecurringJob.AddOrUpdate<ETLJobService>(
+    "etl-observatorio",
+    job => job.EjecutarETL(),
+    Cron.Daily()
+);
 
 app.MapControllers();
 
