@@ -2,29 +2,43 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from api.schemas.anomalias_schema import AnomaliasPayload, AnomaliaResult
 from api.middleware.auth import jwt_required
 from prediction.anomalia_detector import AnomaliaDetector
+from pydantic import BaseModel, Field
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/detect", tags=["Anomalias"])
 
-try:
-    anomalias_detector = AnomaliaDetector()
-except Exception as exc:
-    anomalias_detector = None
-    detector_error = str(exc)
 
-@router.post("/detect/anomalias", response_model=AnomaliaResult, tags=["anomalias"])
-def detect_anomalias(payload: AnomaliasPayload, token: str = Depends(jwt_required)):
-    """Detecta anomalías en una entidad usando medidas actuales e históricas."""
-    if anomalias_detector is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Modelo de anomalías no disponible: {detector_error}",
+class IncrementoMunicipio(BaseModel):
+    municipio: str
+    promedio_historico: float
+    intentos_actuales: int
+    incremento_porcentaje: float
+    nivel_alerta: str
+
+
+class IncrementosMunicipioResponse(BaseModel):
+    total_municipios: int
+    municipios_con_anomalia: int
+    series: list[IncrementoMunicipio]
+
+@router.get("/incremento_municipio", response_model=IncrementosMunicipioResponse)
+def detectar_incremento_municipio(
+    user=Depends(jwt_required)
+):
+    try:
+        detector = AnomaliaDetector()
+        resultados = detector.detectar_incremento_municipio()
+        return IncrementosMunicipioResponse(
+            total_municipios=resultados["total_municipios"],
+            municipios_con_anomalia=resultados["municipios_con_anomalia"],
+            series=[
+                IncrementoMunicipio(
+                    municipio=serie["municipio"],
+                    promedio_historico=serie["promedio_historico"],
+                    intentos_actuales=serie["intentos_actuales"],
+                    incremento_porcentaje=serie["incremento_porcentaje"],
+                    nivel_alerta=serie["nivel_alerta"]
+                ) for serie in resultados["series"]
+            ]
         )
-
-    result = anomalias_detector.detect(payload.medidas)
-    return AnomaliaResult(
-        entidad=payload.entidad,
-        fecha=payload.fecha,
-        es_anomalia=result["es_anomalia"],
-        puntuacion=result["puntuacion"],
-        detalles=result["detalles"],
-    )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

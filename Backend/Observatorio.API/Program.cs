@@ -1,5 +1,7 @@
 using Observatorio.Application.Analytics.Interfaces;
 using Observatorio.Application.Analytics.Services;
+using Observatorio.Application.Anomalias.Interfaces;
+using Observatorio.Application.Anomalias.Services;
 using Observatorio.Application.Auth.Interfaces;
 using Observatorio.Application.Auth.Services;
 using Observatorio.Application.Email;
@@ -37,6 +39,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAnomalasService, AnomalasService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
 // DbContext para PostgreSQL (Usuarios)
