@@ -526,7 +526,7 @@
   },
   "version": "2.1",
   "description": "Detecci\u00f3n de anomal\u00edas multivariadas en intentos de suicidio",
-  "trained_at": "2026-06-07T12:17:19.375787",
+  "trained_at": "2026-06-07T18:20:59.403466",
   "isolation_forest_params": {
     "contamination": 0.2,
     "n_estimators": 200,
