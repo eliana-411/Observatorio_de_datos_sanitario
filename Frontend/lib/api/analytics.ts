@@ -44,6 +44,11 @@ export interface GeneroDistribucion {
     total: number;
 }
 
+export interface GrupoEtarioDistribucion {
+    grupoEtario: string;
+    total: number;
+}
+
 export interface DistribucionGeneroMunicipioData {
     codigoMunicipio: string;
     municipio: string;
@@ -51,9 +56,21 @@ export interface DistribucionGeneroMunicipioData {
     generos: GeneroDistribucion[];
 }
 
+export interface DistribucionGrupoEtarioMunicipioData {
+    codigoMunicipio: string;
+    municipio: string;
+    totalEventos: number;
+    gruposEtarios: GrupoEtarioDistribucion[];
+}
+
 interface DistribucionGeneroMunicipioResponse {
     periodo?: { anio: number };
     series: DistribucionGeneroMunicipioData[];
+}
+
+interface DistribucionGrupoEtarioMunicipioResponse {
+    periodo?: { anio: number };
+    series: DistribucionGrupoEtarioMunicipioData[];
 }
 
 export async function fetchDistribucionGeneroMunicipio(
@@ -73,6 +90,28 @@ export async function fetchDistribucionGeneroMunicipio(
         return {
             error: {
                 message: 'Error al cargar distribución de género por municipio'
+            }
+        };
+    }
+}
+
+export async function fetchDistribucionGrupoEtarioMunicipio(
+    anio: number
+): Promise<ApiResponse<DistribucionGrupoEtarioMunicipioData[]>> {
+    try {
+        const response = await api.get<DistribucionGrupoEtarioMunicipioResponse>(
+            `/analytics/distribucion-grupo-etario-municipio?anio=${anio}`
+        );
+
+        if (response.data) {
+            return { data: response.data.series };
+        }
+
+        return { error: response.error };
+    } catch (err) {
+        return {
+            error: {
+                message: 'Error al cargar distribución de grupo etario por municipio'
             }
         };
     }

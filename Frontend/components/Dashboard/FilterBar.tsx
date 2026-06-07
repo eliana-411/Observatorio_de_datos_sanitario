@@ -3,25 +3,27 @@
 import * as React from 'react';
 import { useFilterStore } from '@/store/filterStore';
 import {
-    MunicipioFilter,
-    GeneroFilter,
     AnioFilter,
+    MunicipioFilter,
     GrupoEtarioFilter,
-    EnfermedadFilter,
+    GeneroFilter,
+    HospitalizacionFilter,
+    MetodoFilter,
 } from './filters';
 
 interface FilterBarProps {
     onGeneroChange?: (genero: string) => void;
+    onGrupoEtarioChange?: (grupoEtario: string) => void;
     onAnioChange?: (anio: number) => void;
 }
 
-export function FilterBar({ onGeneroChange, onAnioChange }: FilterBarProps) {
-    const { selectedGenero, selectedAnio, setSelectedGenero, setSelectedAnio } = useFilterStore();
+export function FilterBar({ onGeneroChange, onGrupoEtarioChange, onAnioChange }: FilterBarProps) {
+    const { selectedGenero, selectedGrupoEtario, selectedAnio, setSelectedGenero, setSelectedGrupoEtario, setSelectedAnio } = useFilterStore();
 
     // Estados locales para filtros que no persisten en store
     const [municipioSeleccionado, setMunicipioSeleccionado] = React.useState("todos");
-    const [grupoEtarioSeleccionado, setGrupoEtarioSeleccionado] = React.useState("todos");
-    const [enfermedadSeleccionada, setEnfermedadSeleccionada] = React.useState("dengue");
+    const [hospitalizacionSeleccionada, setHospitalizacionSeleccionada] = React.useState("todos");
+    const [metodoSeleccionado, setMetodoSeleccionado] = React.useState("todos");
 
     // Manejadores de cambio
     const handleAnioChange = (value: number) => {
@@ -34,8 +36,19 @@ export function FilterBar({ onGeneroChange, onAnioChange }: FilterBarProps) {
         onGeneroChange?.(value);
     };
 
+    const handleGrupoEtarioChange = (value: string) => {
+        setSelectedGrupoEtario(value);
+        onGrupoEtarioChange?.(value);
+    };
+
     return (
-        <section className="bg-surface-container bg-[#e4efff] rounded-xl p-4 flex gap-4 items-center shadow-sm">
+        <section className="bg-surface-container bg-[#e4efff] rounded-xl p-4 flex gap-4 items-center shadow-sm overflow-x-auto pb-2 flex-nowrap">
+            {/* Año - Primer Filtro */}
+            <AnioFilter
+                value={selectedAnio}
+                onChange={handleAnioChange}
+            />
+
             {/* Municipios */}
             <MunicipioFilter
                 value={municipioSeleccionado}
@@ -44,8 +57,8 @@ export function FilterBar({ onGeneroChange, onAnioChange }: FilterBarProps) {
 
             {/* Grupo Etario */}
             <GrupoEtarioFilter
-                value={grupoEtarioSeleccionado}
-                onChange={setGrupoEtarioSeleccionado}
+                value={selectedGrupoEtario}
+                onChange={handleGrupoEtarioChange}
             />
 
             {/* Género */}
@@ -54,17 +67,18 @@ export function FilterBar({ onGeneroChange, onAnioChange }: FilterBarProps) {
                 onChange={handleGeneroChange}
             />
 
-            {/* Enfermedad */}
-            <EnfermedadFilter
-                value={enfermedadSeleccionada}
-                onChange={setEnfermedadSeleccionada}
+            {/* Método Usado */}
+            <MetodoFilter
+                value={metodoSeleccionado}
+                onChange={setMetodoSeleccionado}
             />
 
-            {/* Año */}
-            <AnioFilter
-                value={selectedAnio}
-                onChange={handleAnioChange}
+            {/* Hospitalización */}
+            <HospitalizacionFilter
+                value={hospitalizacionSeleccionada}
+                onChange={setHospitalizacionSeleccionada}
             />
+
         </section>
     );
 }

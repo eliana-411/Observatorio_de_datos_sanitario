@@ -110,14 +110,14 @@ export function LoginForm() {
             <button
                 type="submit"
                 disabled={isLoading || googleLoading}
-                className=" bg-blue-600 px-4 hover:bg-blue-700  w-full py-4 bg-linear-to-r from-primary to-primary-container text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
+                className=" bg-blue-600 px-3 hover:bg-blue-700 h-12 w-full py-3 text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
             >
                 {isLoading ? (
                     <>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="40"
-                            height="40"
+                            width="30"
+                            height="30"
                             viewBox="0 0 24 24"
                             className="animate-spin"
                         >

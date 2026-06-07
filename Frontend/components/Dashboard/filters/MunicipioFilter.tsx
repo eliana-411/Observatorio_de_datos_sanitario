@@ -98,8 +98,9 @@ export function MunicipioFilter({ value, onChange }: MunicipioFilterProps) {
             label="Municipio"
             icon="location_on"
             onChange={onChange}
+            minWidth="w-[220px]"
             loading={loading}
-            placeholder="Buscar municipio..."
+            placeholder="Buscar..."
             hasScroll={true}
         />
     );

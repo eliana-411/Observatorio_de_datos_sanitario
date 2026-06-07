@@ -16,4 +16,6 @@ export interface FilterComboboxProps {
     placeholder?: string;
     showSearch?: boolean;
     hasScroll?: boolean;
+    minWidth?: string; // e.g., "w-40", "w-48", "w-56"
+    popoverMinWidth?: string; // e.g., "480px", "500px" - min-width del PopoverContent
 }

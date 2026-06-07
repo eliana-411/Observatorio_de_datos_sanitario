@@ -19,11 +19,21 @@ interface MapContainerProps {
         totalEventos: number;
         generos: Array<{ genero: string; total: number }>;
     }>;
+    municipiosGrupoEtarioData?: Array<{
+        codigoMunicipio: string;
+        municipio: string;
+        totalEventos: number;
+        gruposEtarios: Array<{ grupoEtario: string; total: number }>;
+    }>;
     municipiosCoordenadas?: Map<string, Municipio>;
 }
 
-export function MapContainer({ municipiosData = [], municipiosCoordenadas }: MapContainerProps) {
-    const { selectedGenero } = useFilterStore();
+export function MapContainer({
+    municipiosData = [],
+    municipiosGrupoEtarioData = [],
+    municipiosCoordenadas
+}: MapContainerProps) {
+    const { selectedGenero, selectedGrupoEtario } = useFilterStore();
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const markersRef = useRef<L.CircleMarker[]>([]);
@@ -110,12 +120,18 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
         };
     }, []);
 
-    // Update markers when selectedGenero or municipiosData changes
+    // Update markers when selectedGenero, selectedGrupoEtario or data changes
     useEffect(() => {
         if (!mapInstanceRef.current) return;
 
         const map = mapInstanceRef.current;
-        console.log('MapContainer updating markers. selectedGenero:', selectedGenero, 'municipiosData:', municipiosData.length);
+
+        // Determinar cuál dataset usar
+        const usarGrupoEtario = selectedGrupoEtario !== 'todos';
+        const dataActual = usarGrupoEtario ? municipiosGrupoEtarioData : municipiosData;
+        const filtroActual = usarGrupoEtario ? selectedGrupoEtario : selectedGenero;
+
+        console.log('MapContainer updating markers. usarGrupoEtario:', usarGrupoEtario, 'filtro:', filtroActual, 'data:', dataActual.length);
 
         // Limpiar marcadores anteriores
         markersRef.current.forEach(marker => {
@@ -125,15 +141,27 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
 
         // Calcular el máximo de eventos para normalizar colores
         let maxEventos = 0;
-        municipiosData.forEach(municipio => {
-            let generosFilterados = municipio.generos || [];
-            if (selectedGenero !== 'Género: Todos') {
-                generosFilterados = generosFilterados.filter(
-                    g => g.genero?.toLowerCase() === selectedGenero.replace('Género: ', '').toLowerCase()
-                );
+        dataActual.forEach((municipio: any) => {
+            let datosFilterados: any[] = [];
+
+            if (usarGrupoEtario) {
+                datosFilterados = (municipio.gruposEtarios || []);
+                if (filtroActual !== 'todos') {
+                    datosFilterados = datosFilterados.filter(
+                        g => g.grupoEtario?.toLowerCase() === filtroActual.toLowerCase()
+                    );
+                }
+            } else {
+                datosFilterados = (municipio.generos || []);
+                if (filtroActual !== 'Género: Todos') {
+                    datosFilterados = datosFilterados.filter(
+                        g => g.genero?.toLowerCase() === filtroActual.replace('Género: ', '').toLowerCase()
+                    );
+                }
             }
-            if (generosFilterados.length > 0) {
-                const total = generosFilterados.reduce((sum, g) => sum + g.total, 0);
+
+            if (datosFilterados.length > 0) {
+                const total = datosFilterados.reduce((sum, d) => sum + d.total, 0);
                 maxEventos = Math.max(maxEventos, total);
             }
         });
@@ -143,9 +171,9 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
         // Función para obtener color según densidad
         const getColorByDensity = (eventos: number, max: number) => {
             if (max === 0) return { fill: '#3B82F6', stroke: '#1E40AF' };
-            
+
             const porcentaje = eventos / max; // 0 a 1
-            
+
             // Rojo (alto) -> Amarillo (medio) -> Azul (bajo)
             if (porcentaje >= 0.66) {
                 // Rojo (alto riesgo)
@@ -159,22 +187,36 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
             }
         };
 
-        // Agregar nuevos marcadores con el filtro de género
-        municipiosData.forEach(municipio => {
+        // Agregar nuevos marcadores con el filtro seleccionado
+        dataActual.forEach((municipio: any) => {
             const coordenada = municipiosCoordenadas?.get(municipio.codigoMunicipio);
             if (coordenada) {
-                // Filtrar géneros según la selección
-                let generosFilterados = municipio.generos || [];
-                if (selectedGenero !== 'Género: Todos') {
-                    generosFilterados = generosFilterados.filter(
-                        g => g.genero?.toLowerCase() === selectedGenero.replace('Género: ', '').toLowerCase()
-                    );
+                // Filtrar datos según la selección
+                let datosFilterados: any[] = [];
+                let labelFiltro = '';
+
+                if (usarGrupoEtario) {
+                    datosFilterados = (municipio.gruposEtarios || []);
+                    if (filtroActual !== 'todos') {
+                        datosFilterados = datosFilterados.filter(
+                            g => g.grupoEtario?.toLowerCase() === filtroActual.toLowerCase()
+                        );
+                    }
+                    labelFiltro = filtroActual === 'todos' ? 'Todos los grupos etarios' : filtroActual;
+                } else {
+                    datosFilterados = (municipio.generos || []);
+                    if (filtroActual !== 'Género: Todos') {
+                        datosFilterados = datosFilterados.filter(
+                            g => g.genero?.toLowerCase() === filtroActual.replace('Género: ', '').toLowerCase()
+                        );
+                    }
+                    labelFiltro = filtroActual;
                 }
 
                 // Solo mostrar marcador si hay datos después del filtro
-                if (generosFilterados.length > 0) {
-                    const totalEventosFiltrados = generosFilterados.reduce((sum, g) => sum + g.total, 0);
-                    
+                if (datosFilterados.length > 0) {
+                    const totalEventosFiltrados = datosFilterados.reduce((sum, d) => sum + d.total, 0);
+
                     // Obtener colores según densidad
                     const colors = getColorByDensity(totalEventosFiltrados, maxEventos);
 
@@ -194,7 +236,7 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
                             <div style="font-size: 14px;">
                                 <strong>${municipio.municipio}</strong><br>
                                 <span style="color: ${colors.fill}; font-weight: bold;">
-                                    ${selectedGenero}: ${totalEventosFiltrados} casos
+                                    ${labelFiltro}: ${totalEventosFiltrados} casos
                                 </span>
                             </div>
                         `);
@@ -203,7 +245,8 @@ export function MapContainer({ municipiosData = [], municipiosCoordenadas }: Map
                 }
             }
         });
-    }, [selectedGenero, municipiosData, municipiosCoordenadas]);
+    }, [selectedGenero, selectedGrupoEtario, municipiosData, municipiosGrupoEtarioData, municipiosCoordenadas]);
+
 
     const handleZoomIn = () => {
         if (mapInstanceRef.current) {

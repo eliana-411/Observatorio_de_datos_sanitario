@@ -10,9 +10,10 @@ interface GrupoEtarioFilterProps {
 
 const GRUPOS_ETARIOS: FilterOption[] = [
     { value: "todos", label: "Todos" },
-    { value: "pediatria", label: "0-12 Pediatría" },
-    { value: "adultos", label: "13-64 Adultos" },
-    { value: "geriatria", label: "65+ Geriatría" },
+    { value: "Adolescente", label: "Adolescente" },
+    { value: "Joven", label: "Jóven" },
+    { value: "Adulto", label: "Adulto" },
+    { value: "AdultoMayor", label: "Adulto Mayor" },
 ];
 
 export function GrupoEtarioFilter({ value, onChange }: GrupoEtarioFilterProps) {
@@ -24,6 +25,7 @@ export function GrupoEtarioFilter({ value, onChange }: GrupoEtarioFilterProps) {
             icon="person"
             onChange={onChange}
             showSearch={false}
+            minWidth="w-[190px]"
         />
     );
 }

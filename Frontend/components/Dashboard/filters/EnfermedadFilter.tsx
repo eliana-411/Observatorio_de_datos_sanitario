@@ -24,6 +24,7 @@ export function EnfermedadFilter({ value, onChange }: EnfermedadFilterProps) {
             icon="coronavirus"
             onChange={onChange}
             showSearch={false}
+            minWidth="w-56"
         />
     );
 }

@@ -24,6 +24,7 @@ export function GeneroFilter({ value, onChange }: GeneroFilterProps) {
             icon="diversity_3"
             onChange={onChange}
             showSearch={false}
+            minWidth="w-48"
         />
     );
 }

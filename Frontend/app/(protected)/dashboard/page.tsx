@@ -11,19 +11,27 @@ import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistribu
 import { HospitalizationChart } from '@/components/Dashboard/HospitalizationChart';
 import { useMunicipios } from '@/hooks/useMunicipios';
 import { useFilterStore } from '@/store/filterStore';
-import { fetchDistribucionGeneroMunicipio, DistribucionGeneroMunicipioData } from '@/lib/api/analytics';
+import { fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
 
 export default function DashboardPage() {
     const [municipiosData, setMunicipiosData] = useState<DistribucionGeneroMunicipioData[]>([]);
+    const [municipiosGrupoEtarioData, setMunicipiosGrupoEtarioData] = useState<DistribucionGrupoEtarioMunicipioData[]>([]);
     const [loading, setLoading] = useState(false);
     const { municipios: municipiosCoordenadas } = useMunicipios();
-    const { selectedGenero, selectedAnio } = useFilterStore();
+    const { selectedGenero, selectedGrupoEtario, selectedAnio } = useFilterStore();
 
     const loadMunicipiosData = async () => {
         setLoading(true);
-        const response = await fetchDistribucionGeneroMunicipio(selectedAnio);
-        if (response.data) {
-            setMunicipiosData(response.data);
+        const [responseGenero, responseGrupoEtario] = await Promise.all([
+            fetchDistribucionGeneroMunicipio(selectedAnio),
+            fetchDistribucionGrupoEtarioMunicipio(selectedAnio)
+        ]);
+
+        if (responseGenero.data) {
+            setMunicipiosData(responseGenero.data);
+        }
+        if (responseGrupoEtario.data) {
+            setMunicipiosGrupoEtarioData(responseGrupoEtario.data);
         }
         setLoading(false);
     };
@@ -37,6 +45,10 @@ export default function DashboardPage() {
         // El filtrado de género se hace automáticamente en MapContainer
     };
 
+    const handleGrupoEtarioChange = (grupoEtario: string) => {
+        // El filtrado de grupo etario se hace automáticamente en MapContainer
+    };
+
     const handleAnioChange = (anio: number) => {
         // El filtrado de año se hace automáticamente en MapContainer
     };
@@ -45,7 +57,7 @@ export default function DashboardPage() {
         <div className="bg-[#f7f9ff] min-h-screen pt-6 px-6">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Filter Bar */}
-                <FilterBar onGeneroChange={handleGeneroChange} onAnioChange={handleAnioChange} />
+                <FilterBar onGeneroChange={handleGeneroChange} onGrupoEtarioChange={handleGrupoEtarioChange} onAnioChange={handleAnioChange} />
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -89,6 +101,7 @@ export default function DashboardPage() {
                     <div className="lg:col-span-8">
                         <MapContainer
                             municipiosData={municipiosData}
+                            municipiosGrupoEtarioData={municipiosGrupoEtarioData}
                             municipiosCoordenadas={municipiosCoordenadas}
                         />
                     </div>
