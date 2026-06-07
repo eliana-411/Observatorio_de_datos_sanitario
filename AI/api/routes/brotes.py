@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-from AI.prediction.brotes_predictor import predecir_brotes
+from prediction.brotes_predictor import predecir_brotes
 
 router = APIRouter(prefix="/api/v1/predict", tags=["Brotes"])
 

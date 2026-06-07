@@ -27,6 +27,9 @@ def extract_anomalias(engine) -> pd.DataFrame:
     """Extrae datos de la vista vw_anomalias para detección de anomalías."""
     query = "SELECT * FROM dbo.vw_anomalias"
     df = pd.read_sql(query, engine)
+    if df.empty:
+        raise ValueError("La consulta a vw_anomalias no devolvió datos.")
+    
     print(f"[anomalias] Filas extraídas: {len(df)}")
     print(f"[anomalias] Columnas: {len(df.columns)}")
     print(f"[anomalias] Lista de columnas:")
