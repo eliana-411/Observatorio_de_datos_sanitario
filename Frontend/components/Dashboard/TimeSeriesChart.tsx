@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchTendenciaTemporal, TendenciaTemporalData } from '@/lib/api/analytics';
+import { useFilterStore } from '@/store/filterStore';
 
 export function TimeSeriesChart() {
     const [data, setData] = useState<TendenciaTemporalData[]>([]);
@@ -10,6 +11,7 @@ export function TimeSeriesChart() {
     const [error, setError] = useState<string | null>(null);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [availableYears, setAvailableYears] = useState<number[]>([]);
+    const { selectedAnio, setSelectedAnio } = useFilterStore();
 
     useEffect(() => {
         // Generar años disponibles desde 2020 hasta el año actual
@@ -17,6 +19,17 @@ export function TimeSeriesChart() {
         const years = Array.from({ length: currentYear - 2020 + 1 }, (_, i) => 2020 + i);
         setAvailableYears(years);
     }, []);
+
+    // Sincronizar con cambios del store global
+    useEffect(() => {
+        setSelectedYear(selectedAnio);
+    }, [selectedAnio]);
+
+    // Handler para cambios del selector local
+    const handleYearChange = (year: number) => {
+        setSelectedYear(year);
+        setSelectedAnio(year); // Actualizar también el estado global
+    };
 
     useEffect(() => {
         async function loadData() {
@@ -48,7 +61,7 @@ export function TimeSeriesChart() {
                 <div className="flex items-center gap-4">
                     <select
                         value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        onChange={(e) => handleYearChange(Number(e.target.value))}
                         className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         {availableYears.map(year => (

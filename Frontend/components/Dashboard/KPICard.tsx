@@ -55,7 +55,7 @@ export function KPICard({ label, value, trend, trendType = 'neutral', icon, subt
                             <button
                                 onMouseEnter={() => setShowTooltip(true)}
                                 onMouseLeave={() => setShowTooltip(false)}
-                                className="text-[#999] hover:text-[#0b1d2d] transition-colors flex-shrink-0"
+                                className="text-[#999] hover:text-[#0b1d2d] transition-colors shrink-0"
                                 aria-label="Información"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
