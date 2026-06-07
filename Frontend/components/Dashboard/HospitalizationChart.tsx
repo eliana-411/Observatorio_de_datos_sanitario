@@ -25,24 +25,12 @@ export function HospitalizationChart() {
                 setLoading(true);
                 const response = await fetchHospitalizacion();
                 if (response.data) {
-                    // Mapear valores: 1 = Hospitalizado, 0 = No Hospitalizado
+                    // Usar el estado que viene del backend, que ya tiene las etiquetas correctas
                     const mappedData = response.data
-                        .map(item => {
-                            const hospitalizacionStr = String(item.hospitalizacion).trim().toLowerCase();
-                            // Manejo robusto de múltiples formatos: '1', 1, 'si', 'true', 'yes'
-                            const isHospitalized =
-                                hospitalizacionStr === '1' ||
-                                hospitalizacionStr === 'si' ||
-                                hospitalizacionStr === 'true' ||
-                                hospitalizacionStr === 'yes' ||
-                                Number(item.hospitalizacion) === 1;
-
-                            return {
-                                ...item,
-                                hospitalizacion: String(item.hospitalizacion).trim(),
-                                nombre: isHospitalized ? 'Hospitalizado' : 'No Hospitalizado',
-                            };
-                        })
+                        .map(item => ({
+                            ...item,
+                            nombre: item.estado || (item.hospitalizado === 1 ? 'Hospitalizado' : 'No Hospitalizado'),
+                        }))
                         .sort((a, b) => b.total - a.total); // Ordenar por cantidad descendente
 
                     setData(mappedData);
@@ -89,14 +77,6 @@ export function HospitalizationChart() {
     // Componente para renderizar en el centro del doughnut
     const CenterLabel = () => {
         if (!máximo) return null;
-        const hospitalizacionStr = String(máximo.hospitalizacion).trim().toLowerCase();
-        const isHospitalized =
-            hospitalizacionStr === '1' ||
-            hospitalizacionStr === 'si' ||
-            hospitalizacionStr === 'true' ||
-            hospitalizacionStr === 'yes' ||
-            Number(máximo.hospitalizacion) === 1;
-        const nombre = isHospitalized ? 'Hospitalizado' : 'No Hospitalizado';
         return (
             <g>
                 <text
@@ -121,7 +101,7 @@ export function HospitalizationChart() {
                         fontWeight: '500'
                     }}
                 >
-                    {nombre}
+                    {máximo.nombre}
                 </text>
             </g>
         );
@@ -169,15 +149,8 @@ export function HospitalizationChart() {
                                 if (active && payload && payload.length) {
                                     const value = payload[0].value as number;
                                     const porcentaje = ((value / total) * 100).toFixed(1);
-                                    const hospitalizacionStr = String(payload[0].payload.hospitalizacion).trim().toLowerCase();
-                                    // Usar la misma lógica que en el mapeo
-                                    const isHospitalized =
-                                        hospitalizacionStr === '1' ||
-                                        hospitalizacionStr === 'si' ||
-                                        hospitalizacionStr === 'true' ||
-                                        hospitalizacionStr === 'yes' ||
-                                        Number(payload[0].payload.hospitalizacion) === 1;
-                                    const nombre = isHospitalized ? 'Hospitalizado' : 'No Hospitalizado';
+                                    const nombre = payload[0].payload.nombre;  // ← USÁ DIRECTAMENTE LO QUE YA ESTÁ MAPEADO
+                                    const isHospitalized = nombre === 'Hospitalizado';
                                     const color = isHospitalized ? COLORS[0] : COLORS[1];
                                     return (
                                         <div

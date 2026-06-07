@@ -42,3 +42,7 @@ npm install recharts
 npx shadcn@latest init
 npx shadcn@latest add card
 npx shadcn@latest add tooltip
+npx shadcn@latest add select
+npx shadcn@latest add popover
+npx shadcn@latest add command
+npx shadcn@latest add scroll-area

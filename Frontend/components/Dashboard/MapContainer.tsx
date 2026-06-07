@@ -3,11 +3,32 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useFilterStore } from '@/store/filterStore';
 
-export function MapContainer() {
+interface Municipio {
+    codigoMunicipio: string;
+    nombreMunicipio: string;
+    latitud: number;
+    longitud: number;
+}
+
+interface MapContainerProps {
+    municipiosData?: Array<{
+        codigoMunicipio: string;
+        municipio: string;
+        totalEventos: number;
+        generos: Array<{ genero: string; total: number }>;
+    }>;
+    municipiosCoordenadas?: Map<string, Municipio>;
+}
+
+export function MapContainer({ municipiosData = [], municipiosCoordenadas }: MapContainerProps) {
+    const { selectedGenero } = useFilterStore();
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const markersRef = useRef<L.CircleMarker[]>([]);
 
+    // Initialize map on mount
     useEffect(() => {
         if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -63,9 +84,11 @@ export function MapContainer() {
             .openPopup();
 
         // Forzar recalcular tamaño del mapa después de montaje
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 100);
+        requestAnimationFrame(() => {
+            if (mapInstanceRef.current && mapRef.current) {
+                mapInstanceRef.current.invalidateSize(false);
+            }
+        });
 
         mapInstanceRef.current = map;
 
@@ -86,6 +109,101 @@ export function MapContainer() {
             }
         };
     }, []);
+
+    // Update markers when selectedGenero or municipiosData changes
+    useEffect(() => {
+        if (!mapInstanceRef.current) return;
+
+        const map = mapInstanceRef.current;
+        console.log('MapContainer updating markers. selectedGenero:', selectedGenero, 'municipiosData:', municipiosData.length);
+
+        // Limpiar marcadores anteriores
+        markersRef.current.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        markersRef.current = [];
+
+        // Calcular el máximo de eventos para normalizar colores
+        let maxEventos = 0;
+        municipiosData.forEach(municipio => {
+            let generosFilterados = municipio.generos || [];
+            if (selectedGenero !== 'Género: Todos') {
+                generosFilterados = generosFilterados.filter(
+                    g => g.genero?.toLowerCase() === selectedGenero.replace('Género: ', '').toLowerCase()
+                );
+            }
+            if (generosFilterados.length > 0) {
+                const total = generosFilterados.reduce((sum, g) => sum + g.total, 0);
+                maxEventos = Math.max(maxEventos, total);
+            }
+        });
+
+        console.log('Max eventos:', maxEventos);
+
+        // Función para obtener color según densidad
+        const getColorByDensity = (eventos: number, max: number) => {
+            if (max === 0) return { fill: '#3B82F6', stroke: '#1E40AF' };
+            
+            const porcentaje = eventos / max; // 0 a 1
+            
+            // Rojo (alto) -> Amarillo (medio) -> Azul (bajo)
+            if (porcentaje >= 0.66) {
+                // Rojo (alto riesgo)
+                return { fill: '#DC2626', stroke: '#991B1B' };
+            } else if (porcentaje >= 0.33) {
+                // Amarillo/Naranja (riesgo medio)
+                return { fill: '#F59E0B', stroke: '#D97706' };
+            } else {
+                // Azul (bajo riesgo)
+                return { fill: '#3B82F6', stroke: '#1E40AF' };
+            }
+        };
+
+        // Agregar nuevos marcadores con el filtro de género
+        municipiosData.forEach(municipio => {
+            const coordenada = municipiosCoordenadas?.get(municipio.codigoMunicipio);
+            if (coordenada) {
+                // Filtrar géneros según la selección
+                let generosFilterados = municipio.generos || [];
+                if (selectedGenero !== 'Género: Todos') {
+                    generosFilterados = generosFilterados.filter(
+                        g => g.genero?.toLowerCase() === selectedGenero.replace('Género: ', '').toLowerCase()
+                    );
+                }
+
+                // Solo mostrar marcador si hay datos después del filtro
+                if (generosFilterados.length > 0) {
+                    const totalEventosFiltrados = generosFilterados.reduce((sum, g) => sum + g.total, 0);
+                    
+                    // Obtener colores según densidad
+                    const colors = getColorByDensity(totalEventosFiltrados, maxEventos);
+
+                    // Radio más grande y basado en densidad
+                    const radius = Math.max(10, Math.sqrt(totalEventosFiltrados) * 1.5);
+
+                    const marker = L.circleMarker([coordenada.latitud, coordenada.longitud], {
+                        radius: radius,
+                        fillColor: colors.fill,
+                        color: colors.stroke,
+                        weight: 3,
+                        opacity: 1,
+                        fillOpacity: 0.75
+                    })
+                        .addTo(map)
+                        .bindPopup(`
+                            <div style="font-size: 14px;">
+                                <strong>${municipio.municipio}</strong><br>
+                                <span style="color: ${colors.fill}; font-weight: bold;">
+                                    ${selectedGenero}: ${totalEventosFiltrados} casos
+                                </span>
+                            </div>
+                        `);
+
+                    markersRef.current.push(marker);
+                }
+            }
+        });
+    }, [selectedGenero, municipiosData, municipiosCoordenadas]);
 
     const handleZoomIn = () => {
         if (mapInstanceRef.current) {

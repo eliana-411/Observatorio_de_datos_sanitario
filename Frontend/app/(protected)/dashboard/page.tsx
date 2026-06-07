@@ -1,22 +1,51 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { FilterBar } from '@/components/Dashboard/FilterBar';
 import { KPICard } from '@/components/Dashboard/KPICard';
 import { MapContainer } from '@/components/Dashboard/MapContainer';
 import { TimeSeriesChart } from '@/components/Dashboard/TimeSeriesChart';
-import { AIAlert } from '@/components/Dashboard/AIAlert';
-import { OutbreakTable } from '@/components/Dashboard/OutbreakTable';
 import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
 import { HospitalizationChart } from '@/components/Dashboard/HospitalizationChart';
+import { useMunicipios } from '@/hooks/useMunicipios';
+import { useFilterStore } from '@/store/filterStore';
+import { fetchDistribucionGeneroMunicipio, DistribucionGeneroMunicipioData } from '@/lib/api/analytics';
 
 export default function DashboardPage() {
+    const [municipiosData, setMunicipiosData] = useState<DistribucionGeneroMunicipioData[]>([]);
+    const [loading, setLoading] = useState(false);
+    const { municipios: municipiosCoordenadas } = useMunicipios();
+    const { selectedGenero, selectedAnio } = useFilterStore();
+
+    const loadMunicipiosData = async () => {
+        setLoading(true);
+        const response = await fetchDistribucionGeneroMunicipio(selectedAnio);
+        if (response.data) {
+            setMunicipiosData(response.data);
+        }
+        setLoading(false);
+    };
+
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        loadMunicipiosData();
+    }, [selectedAnio]);
+
+    const handleGeneroChange = (genero: string) => {
+        // El filtrado de género se hace automáticamente en MapContainer
+    };
+
+    const handleAnioChange = (anio: number) => {
+        // El filtrado de año se hace automáticamente en MapContainer
+    };
+
     return (
         <div className="bg-[#f7f9ff] min-h-screen pt-6 px-6">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Filter Bar */}
-                <FilterBar />
+                <FilterBar onGeneroChange={handleGeneroChange} onAnioChange={handleAnioChange} />
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -58,7 +87,10 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Main Heat Map */}
                     <div className="lg:col-span-8">
-                        <MapContainer />
+                        <MapContainer
+                            municipiosData={municipiosData}
+                            municipiosCoordenadas={municipiosCoordenadas}
+                        />
                     </div>
 
                     {/* Distribution Charts Stack */}
@@ -83,12 +115,7 @@ export default function DashboardPage() {
                     <TimeSeriesChart />
                 </div>
 
-                {/* AI Alert */}
-                <AIAlert />
-
-                {/* Table Section */}
             </div>
-            <OutbreakTable />
         </div>
     );
 }
