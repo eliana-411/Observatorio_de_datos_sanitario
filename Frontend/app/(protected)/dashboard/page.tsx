@@ -63,35 +63,27 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <KPICard
                         label="Total de Casos Reportados"
-                        value="14.282"
-                        trend="+12.4%"
-                        trendType="positive"
+                        value="2.457"
                         icon="monitoring"
-                        subtitle="vs semana anterior"
+                        infoTooltip="Cantidad total de eventos sanitarios según los filtros aplicados."
                     />
                     <KPICard
-                        label="Brotes Activos"
-                        value="08"
-                        trend="Riesgo Alto"
-                        trendType="negative"
-                        icon="emergency"
-                        subtitle="3 requieren intervención"
+                        label="Tasa de Hospitalización"
+                        value="18,5%"
+                        icon="local_hospital"
+                        infoTooltip="Porcentaje de casos que requirieron hospitalización."
                     />
                     <KPICard
-                        label="Tasa de Mortalidad"
-                        value="0,42%"
-                        trend="-0,05%"
-                        trendType="positive"
-                        icon="medical_services"
-                        subtitle="Estable"
+                        label="Municipio con Mayor Incidencia"
+                        value="Córdoba"
+                        icon="location_on"
+                        infoTooltip="El municipio con más casos dentro de los filtros actuales."
                     />
                     <KPICard
-                        label="Tendencia de Recuperación"
-                        value="92,8%"
-                        trend="Fuerte"
-                        trendType="positive"
-                        icon="health_and_safety"
-                        subtitle="+2,1% de mejora"
+                        label="Índice de Severidad"
+                        value="7,2/10"
+                        icon="warning"
+                        infoTooltip="Hospitalización (70%) + Reincidencia (30%). Peso de hospitalización refleja gravedad clínica directa."
                     />
                 </div>
 

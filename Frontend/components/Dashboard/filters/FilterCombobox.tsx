@@ -81,7 +81,7 @@ export function FilterCombobox({
                         flexShrink: 0
                     }}
                 >
-                    <span className="material-symbols-outlined text-[#2e77c9] text-xl flex-shrink-0">
+                    <span className="material-symbols-outlined text-[#2e77c9] text-xl shrink-0">
                         {icon}
                     </span>
 
@@ -97,7 +97,7 @@ export function FilterCombobox({
                         </span>
                     </div>
 
-                    <ChevronsUpDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                    <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
                 </button>
             </PopoverTrigger>
 
