@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Observatorio.Application.Anomalias.Interfaces;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Observatorio.API.Controllers
 {
@@ -17,18 +14,15 @@ namespace Observatorio.API.Controllers
         private readonly HttpClient _httpClient;
         private readonly ILogger<BrotesController> _logger;
         private readonly string _aiBaseUrl;
-        private readonly IAnomalasService _anomalasService;
 
         public BrotesController(
             HttpClient httpClient,
             ILogger<BrotesController> logger,
-            string aiBaseUrl,
-            IAnomalasService anomalasService)
+            string aiBaseUrl)
         {
             _httpClient = httpClient;
             _logger = logger;
             _aiBaseUrl = aiBaseUrl;
-            _anomalasService = anomalasService;
         }
 
         /// <summary>

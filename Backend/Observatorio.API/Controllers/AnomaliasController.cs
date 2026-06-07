@@ -1,144 +1,142 @@
 using Microsoft.AspNetCore.Mvc;
+using Observatorio.Application.Anomalias.DTOs;
 using Observatorio.Application.Anomalias.Interfaces;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Observatorio.API.Controllers
 {
     /// <summary>
-    /// Controlador para endpoints relacionados con anomalías en los datos sanitarios
+    /// API Gateway para consumir microservicios de ML (AI)
+    /// Anomalías
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AnomaliasController : ControllerBase
     {
-        private readonly HttpClient _httpClient;
+        private readonly IAnomaliaService _anomaliaService;
         private readonly ILogger<AnomaliasController> _logger;
-        private readonly string _aiBaseUrl;
-        private readonly IAnomalasService _anomalasService;
+
         public AnomaliasController(
-            HttpClient httpClient,
-            ILogger<AnomaliasController> logger,
-            string aiBaseUrl,
-            IAnomalasService anomalasService)
+            IAnomaliaService anomaliaService,
+            ILogger<AnomaliasController> logger)
         {
-            _httpClient = httpClient;
+            _anomaliaService = anomaliaService;
             _logger = logger;
-            _aiBaseUrl = aiBaseUrl;
-            _anomalasService = anomalasService;
         }
 
         /// <summary>
-        /// Predice anomalías para un evento específico
+        /// Detecta si un caso individual es una anomalía
         /// </summary>
-        [HttpPost("detectar")]
-        public async Task<IActionResult> PredictAnomalias([FromBody] AnomalíasPayload payload)
+        [HttpPost("detect")]
+        [ProducesResponseType(typeof(AnomaliaResponseDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DetectarAnomalia([FromBody] AnomaliaPayloadDto payload)
         {
             try
             {
-                _logger.LogInformation($"Detección de anomalías para evento: {payload.Entidad}");
-
-                var url = $"{_aiBaseUrl}/api/v1/predict/anomalias";
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                };
-
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload, options),
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                );
-
-                var response = await _httpClient.PostAsync(url, content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Error en detección de anomalías: {response.StatusCode}");
-                    return StatusCode(
-                        (int)response.StatusCode,
-                        new { error = "Error al detectar anomalías", details = await response.Content.ReadAsStringAsync() }
-                    );
-                }
-
-                var result = await response.Content.ReadAsStringAsync();
-                return Ok(JsonSerializer.Deserialize<object>(result));
+                var result = await _anomaliaService.DetectarAnomaliaAsync(payload);
+                return Ok(result);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error de comunicación con FastAPI");
+                return StatusCode(502, new { error = "Error de comunicación con servicio de ML", details = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Excepción en detección de anomalías: {ex.Message}");
+                _logger.LogError(ex, "Error detectando anomalía");
                 return StatusCode(500, new { error = "Error interno", details = ex.Message });
             }
         }
 
+        /// <summary>
+        /// Lista anomalías detectadas con filtros opcionales
+        /// </summary>
+        [HttpGet("listado")]
+        [ProducesResponseType(typeof(AnomaliaListResponseDto), 200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> ListarAnomalias(
+            [FromQuery] string? tipo = null,
+            [FromQuery] string? severidad = null,
+            [FromQuery] string? categoria = null,
+            [FromQuery] int limite = 50,
+            [FromQuery] int offset = 0)
+        {
+            try
+            {
+                var result = await _anomaliaService.ListarAnomaliasAsync(tipo, severidad, categoria, limite, offset);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error listando anomalías");
+                return StatusCode(500, new { error = "Error interno", details = ex.Message });
+            }
+        }
 
         /// <summary>
-        /// Obtiene información del modelo de Anomalías
+        /// Obtiene el detalle de una anomalía específica
+        /// </summary>
+        [HttpGet("detalle/{idRegistro}")]
+        [ProducesResponseType(typeof(AnomaliaDetalleCompletoDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetAnomaliaDetalle(int idRegistro)
+        {
+            try
+            {
+                var result = await _anomaliaService.ObtenerDetalleAsync(idRegistro);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = $"Anomalía {idRegistro} no encontrada" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo detalle de anomalía {IdRegistro}", idRegistro);
+                return StatusCode(500, new { error = "Error interno", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene la distribución de anomalías por tipo (para gráficos)
+        /// </summary>
+        [HttpGet("distribucion")]
+        [ProducesResponseType(typeof(AnomaliaDistribucionDto), 200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetAnomaliasDistribucion()
+        {
+            try
+            {
+                var result = await _anomaliaService.ObtenerDistribucionAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo distribución");
+                return StatusCode(500, new { error = "Error interno", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene información del modelo (métricas, confiabilidad, CV)
         /// </summary>
         [HttpGet("info")]
-        public async Task<IActionResult> GetAnomalíasInfo()
-        {
-            try
-            {
-                var url = $"{_aiBaseUrl}/api/v1/predict/anomalias/model-info";
-                var response = await _httpClient.GetAsync(url);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return StatusCode((int)response.StatusCode, new { error = "No se pudo obtener información del modelo Anomalías" });
-                }
-
-                var result = await response.Content.ReadAsStringAsync();
-                return Ok(JsonSerializer.Deserialize<object>(result));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error obteniendo info de Anomalías: {ex.Message}");
-                return StatusCode(500, new { error = "Error interno" });
-            }
-        }
-
-        /// <summary>
-        /// Detecta incrementos anómalos en la cantidad de intentos por municipio
-        /// Compara últimos 30 días vs promedio histórico (12 meses previos)
-        /// </summary>
-        /// <param name="anio">Año del análisis (opcional, usa año actual)</param>
-        /// <param name="umbralPorcentaje">Umbral de porcentaje para alertar (opcional, default 50%)</param>
-        /// <param name="cancelToken">Token de cancelación</param>
-        /// <returns>Municipios con incrementos anómalos detectados</returns>
-        [HttpGet("incrementos")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(AnomaliaModelInfoDto), 200)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetIncrementosAnomalos(
-            [FromQuery] int? anio = null,
-            [FromQuery] decimal? umbralPorcentaje = null,
-            CancellationToken cancelToken = default)
+        public async Task<IActionResult> GetAnomaliasInfo()
         {
             try
             {
-                _logger.LogInformation(
-                    $"Detectando incrementos anómalos - Año: {anio ?? DateTime.Now.Year}, Umbral: {umbralPorcentaje ?? 50}%");
-
-                var resultado = await _anomalasService.GetIncrementosAnomalosAsync(
-                    anio, umbralPorcentaje, cancelToken);
-
-                return Ok(resultado);
+                var result = await _anomaliaService.ObtenerInfoModeloAsync();
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error en detección de anomalías: {ex.Message}");
-                return StatusCode(500, new { error = "Error al detectar anomalías", details = ex.Message });
+                _logger.LogError(ex, "Error obteniendo info del modelo");
+                return StatusCode(500, new { error = "Error interno", details = ex.Message });
             }
-        }
-
-        // ── DTOs para Anomalías ──────────────────────────────────────────────────
-        public class AnomalíasPayload
-        {
-            public string Entidad { get; set; } = "";
-            public DateTime Fecha { get; set; } = DateTime.Now;
-            public Dictionary<string, object> Medidas { get; set; } = new();
         }
     }
 }

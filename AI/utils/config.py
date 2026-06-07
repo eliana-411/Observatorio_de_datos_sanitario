@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     MODEL_DIR: str = "./models"
     MODEL_BROTES_PATH: str = "./models/brotes/brotes_model.pkl"
     MODEL_DEMANDA_PATH: str = "./models/demanda/demanda_model.pkl"
-    MODEL_ANOMALIAS_PATH: str = "./models/anomalias/anomalia_model.pkl"
+    MODEL_ANOMALIAS_PATH: str = "../models/anomalias/anomalia_model.pkl"
 
     class Config:
         env_file = ".env"

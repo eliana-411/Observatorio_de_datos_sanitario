@@ -46,7 +46,7 @@ METRICS_DIR = BASE_DIR / "data" / "metrics"
 # ─────────────────────────────────────────────────────────────────────────────
 
 ISOLATION_FOREST_PARAMS = {
-    "contamination": "auto",    # Deja que el modelo estime la proporción de anomalías
+    "contamination": 0.20,    # Deja que el modelo estime la proporción de anomalías
     "n_estimators": 200,        # Más árboles = mejor generalización
     "max_samples": "auto",      # Adapta al tamaño del dataset
     "random_state": 42,
@@ -436,6 +436,23 @@ def create_results_dataframe(
     df_results['anomaly_score'] = anomaly_scores
     df_results['is_anomaly'] = (predictions == -1).astype(int)
 
+    # RECUPERAR id_registro del CSV raw
+    raw_path = BASE_DIR / "data" / "raw" / "anomalias.csv"
+    if raw_path.exists():
+        df_raw = pd.read_csv(raw_path)
+        if 'id_registro' in df_raw.columns and len(df_raw) == len(df_results):
+            df_results['id_registro'] = df_raw['id_registro'].values
+            print(
+                f"id_registro recuperado de raw CSV ({len(df_raw)} registros)")
+        else:
+            # Fallback: generar IDs secuenciales
+            df_results['id_registro'] = range(1, len(df_results) + 1)
+            print(
+                f"id_registro generado secuencialmente (raw no coincide o no tiene id)")
+    else:
+        df_results['id_registro'] = range(1, len(df_results) + 1)
+        print(f"id_registro generado secuencialmente (raw CSV no encontrado)")
+
     # Ordenar por score más anómalo
     df_results = df_results.sort_values('anomaly_score')
     df_results['anomaly_rank'] = range(1, len(df_results) + 1)
@@ -444,7 +461,8 @@ def create_results_dataframe(
     df_results['total_anomalies'] = total_anomalies
     df_results['pct_anomalies'] = 100 * total_anomalies / len(predictions)
 
-    print(f"  Dataset generado")
+    print(f"  Dataset generado: {len(df_results)} filas")
+    print(f"  Con id_registro: {'id_registro' in df_results.columns}")
 
     return df_results
 
@@ -566,7 +584,7 @@ def save_artifacts(
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Modelo
-    model_path = MODELS_DIR / "model.pkl"
+    model_path = MODELS_DIR / "anomalia_model.pkl"
     joblib.dump(model, model_path)
     print(f"[SAVED] Artefactos")
     print(f"  Modelo: {model_path}")
@@ -660,7 +678,8 @@ def main():
             cv_metrics, test_metrics, reliability_metrics, full_metrics)
 
         # 13. Guardar artefactos
-        save_artifacts(model, config, predictions, anomaly_scores, cv_metrics, test_metrics, reliability_metrics)
+        save_artifacts(model, config, predictions, anomaly_scores,
+                       cv_metrics, test_metrics, reliability_metrics)
 
         print("\n" + "=" * 80)
         print("ENTRENAMIENTO COMPLETADO EXITOSAMENTE")

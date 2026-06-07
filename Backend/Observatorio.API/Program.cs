@@ -39,7 +39,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IAnomalasService, AnomalasService>();
+builder.Services.AddScoped<IAnomaliaService, AnomaliaService>();
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<GoogleOAuth2Service>();
 // DbContext para PostgreSQL (Usuarios)
