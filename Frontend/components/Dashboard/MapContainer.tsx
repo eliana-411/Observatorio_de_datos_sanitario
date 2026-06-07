@@ -274,9 +274,6 @@ export function MapContainer({
                     <h2 className="text-lg font-black text-on-surface tracking-tight dark:text-[#0b1d2d]">
                         Mapa de Calor de Prevalencia Geográfica
                     </h2>
-                    <p className="text-xs text-on-surface-variant font-medium dark:text-[#6b7079] mt-1">
-                        Clústeres regionales de casos de Dengue detectados en tiempo real
-                    </p>
                 </div>
                 <div className="flex gap-2 flex-wrap justify-end">
                     <button
