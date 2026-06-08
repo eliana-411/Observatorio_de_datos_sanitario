@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,8 +7,11 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 public class HospitalizacionDistribucionDto
 {
+    [DisplayName("Hospitalizado")]
     public int Hospitalizado { get; set; }
+    [DisplayName("Estado")]
     public string? Estado { get; set; }
+    [DisplayName("Total")]
     public int Total { get; set; }
 }
 
@@ -15,9 +20,13 @@ public class HospitalizacionDistribucionDto
 /// </summary>
 public class DistribucionHospitalizacionMunicipioRegistroDto
 {
+    [DisplayName("Código Municipio")]
     public string? CodigoMunicipio { get; set; }
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Estados")]
     public List<HospitalizacionDistribucionDto>? Estados { get; set; }
 }
 
@@ -26,6 +35,8 @@ public class DistribucionHospitalizacionMunicipioRegistroDto
 /// </summary>
 public class DistribucionHospitalizacionMunicipioResponseDto
 {
+    [DisplayName("Periodo")]
     public PeriodoDto? Periodo { get; set; }
+    [DisplayName("Series")]
     public List<DistribucionHospitalizacionMunicipioRegistroDto>? Series { get; set; }
 }

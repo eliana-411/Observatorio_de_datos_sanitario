@@ -21,7 +21,7 @@ def main():
     metrics = ETLMetrics()
     metrics.iniciar()
 
-    ruta = "Data/dataset_intentos_suicidio.csv"
+    ruta = "Data/datos_nuevos.csv"
     # ruta = "Data/dataset_intentos_suicidio.xlsx"
 
     stats_anon = {

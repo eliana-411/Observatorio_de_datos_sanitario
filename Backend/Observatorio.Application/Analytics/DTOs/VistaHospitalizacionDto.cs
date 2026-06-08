@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,7 +7,9 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 internal class VistaHospitalizacionRawDto
 {
+    [DisplayName("Hospitalizado")]
     public bool hospitalizado { get; set; }
+    [DisplayName("Total")]
     public int total { get; set; }
 }
 
@@ -17,16 +21,19 @@ public class VistaHospitalizacionDto
     /// <summary>
     /// 1 = Hospitalizado, 0 = No Hospitalizado
     /// </summary>
+    [DisplayName("Hospitalizado")]
     public int Hospitalizado { get; set; }
     
     /// <summary>
     /// Descripción legible del estado
     /// </summary>
+    [DisplayName("Estado")]
     public string Estado { get; set; } = string.Empty;
     
     /// <summary>
     /// Total de casos
     /// </summary>
+    [DisplayName("Total")]
     public int Total { get; set; }
 }
 
@@ -35,5 +42,6 @@ public class VistaHospitalizacionDto
 /// </summary>
 public class VistaHospitalizacionResponseDto
 {
+    [DisplayName("Datos")]
     public List<VistaHospitalizacionDto>? Data { get; set; }
 }

@@ -29,4 +29,17 @@ public interface IMunicipiosService
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Información del municipio o null si no existe</returns>
     Task<MunicipioInfoDto?> GetMunicipioByNombreAsync(string nombreMunicipio, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene la lista de municipios con coordenadas desde el CSV local, con caché   
+    /// </summary> <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Lista de municipios con coordenadas</returns>  
+    Task<List<MunicipioMapaDto>> GetMunicipiosConCoordenadasAsync(CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene un municipio con coordenadas por nombre (búsqueda normalizada sin tildes)
+    /// </summary> <param name="nombreMunicipio">Nombre del municipio a buscar</
+    /// param name="cancelToken">Token de cancelación</param>
+    /// <returns>Información del municipio con coordenadas o null si no existe</returns>
+    Task<MunicipioMapaDto?> GetMunicipioConCoordenadasByNombreAsync(string nombreMunicipio, CancellationToken cancelToken = default);
 }

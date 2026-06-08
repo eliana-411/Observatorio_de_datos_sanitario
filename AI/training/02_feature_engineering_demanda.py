@@ -9,7 +9,6 @@ from sklearn.preprocessing import LabelEncoder
 # ── Rutas ─────────────────────────────────────────────────────────────────────
 BASE_DIR       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW_MENSUAL    = os.path.join(BASE_DIR, "data", "raw",       "demanda_mensual.csv")
-RAW_SEMANAL    = os.path.join(BASE_DIR, "data", "raw",       "demanda_semanal.csv")
 PROCESSED_DIR  = os.path.join(BASE_DIR, "data", "processed")
 ENCODERS_DIR_M = os.path.join(BASE_DIR, "models", "demanda", "mensual")
 ENCODERS_DIR_S = os.path.join(BASE_DIR, "models", "demanda", "semanal")
@@ -48,23 +47,6 @@ def build_fecha_mensual(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_fecha_semanal(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Construye fecha como primer lunes de la semana ISO.
-    Usa fecha_inicio_semana si viene de la vista, si no la calcula
-    desde anio + numero_semana.
-    """
-    if "fecha_inicio_semana" in df.columns:
-        df["fecha"] = pd.to_datetime(df["fecha_inicio_semana"])
-    else:
-        df["fecha"] = pd.to_datetime(
-            df["anio"].astype(str) + "-W" +
-            df["numero_semana"].astype(str).str.zfill(2) + "-1",
-            format="%G-W%V-%u"
-        )
-    print(f"[fecha:semanal] Rango: {df['fecha'].min()} → {df['fecha'].max()}")
-    return df
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Renombrar target
@@ -97,23 +79,6 @@ def encode_categoricals(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         encoders[col] = le
         print(f"[encoding] {col} → {len(le.classes_)} categorías")
     return df, encoders
-
-def add_target_encoding(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Reemplaza municipio_evento_enc con la media histórica
-    de hospitalizaciones por municipio (target encoding).
-    Usa solo datos de train para evitar leakage.
-    """
-    media_por_municipio = (
-        df.groupby("municipio_evento")["hospitalizaciones"]
-        .mean()
-        .rename("municipio_target_enc")
-    )
-    df = df.merge(media_por_municipio, on="municipio_evento", how="left")
-    print(f"[target_enc] municipio_target_enc creado — rango: "
-          f"{df['municipio_target_enc'].min():.1f} → "
-          f"{df['municipio_target_enc'].max():.1f}")
-    return df
 
 def add_relative_features(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -263,24 +228,9 @@ def process_mensual():
     save_processed(df, "demanda_mensual_processed.csv")
     save_encoders(encoders, ENCODERS_DIR_M)
 
-def process_semanal():
-    df = load_raw(RAW_SEMANAL, "semanal")
-    df = build_fecha_semanal(df)
-    df = rename_target(df)
-    df = build_time_features(df, granularidad="semanal")
-    df, encoders = encode_categoricals(df)
-    df = add_lag_features(df, lags=[1, 4, 8, 12])  # agregar lag 12
-    df = add_rolling_features(df, window=4)
-    df = add_trend_feature(df, lag_reciente=1, lag_anterior=4)
-    df = add_target_encoding(df)
-    df = add_relative_features(df)
-    save_processed(df, "demanda_semanal_processed.csv")
-    save_encoders(encoders, ENCODERS_DIR_S)
-
 
 def main():
     process_mensual()
-    process_semanal()
     print("\n Todo el feature engineering de demanda completado.")
 
 

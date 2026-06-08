@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,7 +7,9 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 public class GrupoEtarioDistribucionDto
 {
+    [DisplayName("Grupo Etario")]
     public string? GrupoEtario { get; set; }
+    [DisplayName("Total")]
     public int Total { get; set; }
 }
 
@@ -14,9 +18,13 @@ public class GrupoEtarioDistribucionDto
 /// </summary>
 public class DistribucionGrupoEtarioMunicipioRegistroDto
 {
+    [DisplayName("Código Municipio")]
     public string? CodigoMunicipio { get; set; }
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Grupos Etarios")]
     public List<GrupoEtarioDistribucionDto>? GruposEtarios { get; set; }
 }
 
@@ -25,6 +33,8 @@ public class DistribucionGrupoEtarioMunicipioRegistroDto
 /// </summary>
 public class DistribucionGrupoEtarioMunicipioResponseDto
 {
+    [DisplayName("Periodo")]
     public PeriodoDto? Periodo { get; set; }
+    [DisplayName("Series")]
     public List<DistribucionGrupoEtarioMunicipioRegistroDto>? Series { get; set; }
 }

@@ -86,4 +86,13 @@ public interface IAnalyticsService
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con tendencia temporal de eventos y hospitalizados por mes y municipio</returns>
     Task<TendenciaTemporalMunicipioResponseDto> GetTendenciaTemporalMunicipioAsync(int anio, int? mes = null, CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene distribución geográfica de eventos por municipio para un año específico con filtros opcionales
+    /// </summary>
+    /// <param name="filtros">Filtros opcionales para la consulta (municipio, rango de edad, género, año)</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con distribución geográfica de eventos por municipio</returns>
+    Task<List<DistribucionGeograficaDto>> GetDistribucionGeograficaAsync(FiltrosDistribucionDto filtros, CancellationToken cancelToken = default);
+
 }

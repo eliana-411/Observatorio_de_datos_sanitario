@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,7 +7,9 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 public class VistaDistribucionGeneroDto
 {
+    [DisplayName("Género")]
     public string? Genero { get; set; }
+    [DisplayName("Total")]
     public int Total { get; set; }
 }
 
@@ -14,5 +18,6 @@ public class VistaDistribucionGeneroDto
 /// </summary>
 public class VistaDistribucionGeneroResponseDto
 {
+    [DisplayName("Datos")]
     public List<VistaDistribucionGeneroDto>? Data { get; set; }
 }

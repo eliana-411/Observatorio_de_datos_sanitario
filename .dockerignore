@@ -1,0 +1,21 @@
+# Para el servicio ETL (contexto raíz)
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Carpetas de otros servicios
+Backend/
+Frontend/
+AI/
+DataBase/
+
+# Datos crudos
+ETL/Data/
+ETL/logs/
+
+# Desarrollo
+.env
+*.log
+.git/
+node_modules/
