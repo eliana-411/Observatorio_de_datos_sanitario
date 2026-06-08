@@ -79,11 +79,6 @@ def get_municipio_context(df: pd.DataFrame, municipio: str) -> dict:
 # ── Perfil histórico del municipio ────────────────────────────────────────────
 
 def get_perfil_historico(df: pd.DataFrame, municipio: str) -> dict:
-    """
-    Calcula el perfil epidemiológico histórico del municipio
-    desde los datos procesados (ya normalizados → revertir no aplica,
-    usamos el CSV raw para interpretabilidad).
-    """
     df_m = df[df["municipio"] == municipio].sort_values("ds")
 
     if len(df_m) == 0:
@@ -93,7 +88,7 @@ def get_perfil_historico(df: pd.DataFrame, municipio: str) -> dict:
     df_reciente = df_m.tail(3)
     tendencia = "estable"
     if len(df_reciente) >= 2:
-        diff = df_reciente["total_eventos"].iloc[-1] - df_reciente["total_eventos"].iloc[0]
+        diff  = df_reciente["total_eventos"].iloc[-1] - df_reciente["total_eventos"].iloc[0]
         media = df_reciente["total_eventos"].mean()
         if media > 0:
             if diff > media * 0.10:
@@ -104,17 +99,23 @@ def get_perfil_historico(df: pd.DataFrame, municipio: str) -> dict:
     total_eventos_hist = float(df_m["total_eventos"].mean())
     std_hist           = float(df_m["total_eventos"].std())
 
+    # Revertir MinMaxScaler en los regressores para obtener valores interpretables
+    scaler = load_scaler()
+    medias_escaladas = df_m[REGRESSORS].mean().values.reshape(1, -1)
+    medias_originales = scaler.inverse_transform(medias_escaladas)[0]
+    orig = dict(zip(REGRESSORS, medias_originales))
+
     return {
         "total_eventos_promedio_mensual": round(total_eventos_hist, 1),
         "std_mensual":                    round(std_hist, 1),
-        "pct_femenino_promedio":          round(float(df_m["pct_femenino"].mean()), 1),
-        "pct_adolescente_promedio":       round(float(df_m["pct_adolescente"].mean()), 1),
-        "pct_sin_pareja_promedio":        round(float(df_m["pct_sin_pareja"].mean()), 1),
-        "pct_intoxicacion_promedio":      round(float(df_m["pct_intoxicacion"].mean()), 1),
-        "pct_antecedente_sm_promedio":    round(float(df_m["pct_antecedente_sm"].mean()), 1),
-        "pct_sustancias_promedio":        round(float(df_m["pct_sustancias"].mean()), 1),
-        "edad_promedio":                  round(float(df_m["edad_promedio"].mean()), 1),
-        "estrato_promedio":               round(float(df_m["estrato_promedio"].mean()), 1),
+        "pct_femenino_promedio":          round(orig["pct_femenino"], 1),
+        "pct_adolescente_promedio":       round(orig["pct_adolescente"], 1),
+        "pct_sin_pareja_promedio":        round(orig["pct_sin_pareja"], 1),
+        "pct_intoxicacion_promedio":      round(orig["pct_intoxicacion"], 1),
+        "pct_antecedente_sm_promedio":    round(orig["pct_antecedente_sm"], 1),
+        "pct_sustancias_promedio":        round(orig["pct_sustancias"], 1),
+        "edad_promedio":                  round(orig["edad_promedio"], 1),
+        "estrato_promedio":               round(orig["estrato_promedio"], 1),
         "tendencia_reciente":             tendencia,
         "meses_con_datos":                len(df_m),
         "rango_fechas": {
