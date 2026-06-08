@@ -1,3 +1,4 @@
+
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
@@ -11,18 +12,18 @@ namespace Observatorio.Application.Common.Services;
 
 public class ExportService : IExportService
 {
-    public byte[] GenerarExcel<T>(List<T> datos, string nombreHoja = "Datos")
+    public byte[] GenerarExcel<T>(List<T> datos, string nombreHoja = "Datos", Dictionary<string, string>? customHeaders = null, List<string>? excluirColumnas = null)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add(nombreHoja);
 
-        var propiedades = GetPropiedadesVisibles<T>();
+        var propiedades = GetPropiedadesVisibles<T>(excluirColumnas, customHeaders);
 
-        // Encabezados con DisplayName
+        // Encabezados: customHeaders primero, luego DisplayName, luego nombre de propiedad
         for (int i = 0; i < propiedades.Count; i++)
         {
-            var displayName = GetDisplayName(propiedades[i]);
-            worksheet.Cell(1, i + 1).Value = displayName;
+            var headerName = GetHeaderName(propiedades[i], customHeaders);
+            worksheet.Cell(1, i + 1).Value = headerName;
             worksheet.Cell(1, i + 1).Style.Font.Bold = true;
             worksheet.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.LightBlue;
         }
@@ -34,13 +35,13 @@ public class ExportService : IExportService
             {
                 var valor = propiedades[col].GetValue(datos[row]);
                 var cell = worksheet.Cell(row + 2, col + 1);
-                cell.Value = valor?.ToString() ?? "";   
+                // si cell es null dejar vacio
+                cell.Value = valor?.ToString() ?? "";
 
                 if (row % 2 == 1)
                 {
                     cell.Style.Fill.BackgroundColor = XLColor.LightGray;
                 }
-                // worksheet.Cell(row + 2, col + 1).Value = valor?.ToString() ?? "";
             }
         }
 
@@ -51,9 +52,9 @@ public class ExportService : IExportService
         return stream.ToArray();
     }
 
-    public byte[] GenerarPdf<T>(List<T> datos, string titulo = "Reporte")
+    public byte[] GenerarPdf<T>(List<T> datos, string titulo = "Reporte", Dictionary<string, string>? customHeaders = null, List<string>? excluirColumnas = null)
     {
-        var propiedades = GetPropiedadesVisibles<T>();
+        var propiedades = GetPropiedadesVisibles<T>(excluirColumnas, customHeaders);
 
         var document = QuestPDF.Fluent.Document.Create(container =>
         {
@@ -74,13 +75,14 @@ public class ExportService : IExportService
                             columns.RelativeColumn();
                     });
 
-                    // Encabezados con DisplayName
+                    // Encabezados
                     table.Header(header =>
                     {
                         foreach (var prop in propiedades)
                         {
-                            var displayName = GetDisplayName(prop);
-                            header.Cell().Text(displayName).Bold();
+                            var headerName = GetHeaderName(prop, customHeaders);
+                            if (headerName != null)
+                                header.Cell().Text(headerName).Bold();
                         }
                     });
 
@@ -103,16 +105,16 @@ public class ExportService : IExportService
         return document.GeneratePdf();
     }
 
-    public string GenerarCsv<T>(List<T> datos)
+    public string GenerarCsv<T>(List<T> datos, Dictionary<string, string>? customHeaders = null, List<string>? excluirColumnas = null)
     {
-        var propiedades = GetPropiedadesVisibles<T>();
+        var propiedades = GetPropiedadesVisibles<T>(excluirColumnas, customHeaders);
         var sb = new StringBuilder();
 
         // Línea mágica para Excel (SEP=; le dice el separador)
         sb.AppendLine("sep=;");
 
-        // Encabezados con DisplayName
-        var encabezados = propiedades.Select(p => GetDisplayName(p));
+        // Encabezados
+        var encabezados = propiedades.Select(p => GetHeaderName(p, customHeaders));
         sb.AppendLine(string.Join(";", encabezados));
 
         // Datos
@@ -132,16 +134,47 @@ public class ExportService : IExportService
 
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
-    private static List<PropertyInfo> GetPropiedadesVisibles<T>()
+    private static List<PropertyInfo> GetPropiedadesVisibles<T>(List<string>? excluirColumnas = null, Dictionary<string, string>? customHeaders = null)
     {
-        return typeof(T).GetProperties()
+        var props = typeof(T).GetProperties()
             .Where(p => !p.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), false).Any())
             .ToList();
+        
+        if (excluirColumnas != null && excluirColumnas.Any())
+        {
+            props = props.Where(p => !excluirColumnas.Contains(p.Name)).ToList();
+        }
+        
+        // También excluir si customHeaders tiene la clave con valor vacío
+        if (customHeaders != null)
+        {
+            props = props.Where(p => 
+                !customHeaders.ContainsKey(p.Name) || 
+                !string.IsNullOrEmpty(customHeaders[p.Name])
+            ).ToList();
+        }
+        
+        return props;
     }
 
     private static string GetDisplayName(PropertyInfo propiedad)
     {
         var atributo = propiedad.GetCustomAttribute<DisplayNameAttribute>();
         return atributo?.DisplayName ?? propiedad.Name;
+    }
+
+    // NUEVO: Obtiene header según prioridad: customHeaders > DisplayName > nombre propiedad
+    private static string? GetHeaderName(PropertyInfo propiedad, Dictionary<string, string>? customHeaders)
+    {
+        if (customHeaders != null && customHeaders.ContainsKey(propiedad.Name))
+        {
+            var valor = customHeaders[propiedad.Name];
+            // Si el valor es vacío, retornar null para indicar que se excluya
+            if (string.IsNullOrEmpty(valor))
+                return null;
+            return valor;
+        }
+
+        return GetDisplayName(propiedad);
     }
 }

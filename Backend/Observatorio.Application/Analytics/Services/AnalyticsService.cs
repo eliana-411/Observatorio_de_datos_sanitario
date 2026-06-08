@@ -534,9 +534,10 @@ public class AnalyticsService : IAnalyticsService
                 Mes = r.Mes,
                 NombreMes = ConvertirMesAlEspanol(r.NombreMes),
                 TotalEventos = r.TotalEventos,
-                PorcentajeEventos = totalEventosAnio > 0 ? (decimal)r.TotalEventos / totalEventosAnio * 100 : 0,
+                PorcentajeEventos = totalEventosAnio > 0 
+            ? Math.Round((decimal)r.TotalEventos / totalEventosAnio * 100, 2) : 0,
                 Hospitalizados = r.Hospitalizados,
-                PorcentajeHospitalizados = r.TotalEventos > 0 ? (decimal)r.Hospitalizados / r.TotalEventos * 100 : 0
+                PorcentajeHospitalizados = r.TotalEventos > 0 ? Math.Round((decimal)r.Hospitalizados / r.TotalEventos * 100, 2) : 0
             })
             .ToList();
 
