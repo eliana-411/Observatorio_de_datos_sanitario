@@ -1,0 +1,173 @@
+version: "3.9"
+
+# ── Red compartida ────────────────────────────────────────────────────────────
+networks:
+  observatorio_network:
+    driver: bridge
+
+# ── Volúmenes persistentes ────────────────────────────────────────────────────
+volumes:
+  sqlserver_data:
+  postgres_data:
+  redis_data:
+  chroma_data:
+
+# ── Servicios ─────────────────────────────────────────────────────────────────
+services:
+
+  # ── 1. SQL Server (Data Warehouse) ─────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: observatorio_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${PASSWORDSQL}
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - observatorio_network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${PASSWORDSQL} -Q 'SELECT 1'"]
+      interval: 15s
+      retries: 10
+      start_period: 30s
+
+  # ── 2. PostgreSQL (datos anonimizados) ─────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: observatorio_postgres
+    environment:
+      POSTGRES_USER: ${USERNAMEPOSTGRES}
+      POSTGRES_PASSWORD: ${PASSWORDPOSTGRES}
+      POSTGRES_DB: ${DATABASEPOSTGRES}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./DataBase/postgres/scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - observatorio_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USERNAMEPOSTGRES} -d ${DATABASEPOSTGRES}"]
+      interval: 10s
+      retries: 5
+
+  # ── 3. Redis (caché de consultas frecuentes) ────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: observatorio_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - observatorio_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      retries: 5
+
+  # ── 4. ChromaDB (embeddings RAG) ────────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: observatorio_chromadb
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - observatorio_network
+
+  # ── 5. Microservicio AI (FastAPI) ───────────────────────────────────────────
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: observatorio_ai
+    env_file: .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./AI/data:/app/data:ro
+      - ./AI/models:/app/models:ro
+    networks:
+      - observatorio_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 15s
+      retries: 5
+      start_period: 20s
+
+  # ── 6. ETL (ejecución única al iniciar) ─────────────────────────────────────
+  etl:
+    build:
+      context: .
+      dockerfile: ETL/Dockerfile
+    container_name: observatorio_etl
+    env_file: .env
+    volumes:
+      - ./ETL/Data:/app/Data
+      - ./ETL/logs:/app/logs
+    networks:
+      - observatorio_network
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # ── 7. Backend .NET 8 ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: observatorio_backend
+    env_file: .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "Host=postgres;Port=5432;Database=${DATABASEPOSTGRES};Username=${USERNAMEPOSTGRES};Password=${PASSWORDPOSTGRES}"
+      DATABASE_SQL_URL: "Server=sqlserver,1433;Database=${DATABASESQL};User Id=sa;Password=${PASSWORDSQL};TrustServerCertificate=True"
+      AI_BASE_URL: "http://ai:8001"
+    ports:
+      - "5000:5000"
+    networks:
+      - observatorio_network
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ai:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      retries: 5
+      start_period: 30s
+
+  # ── 8. Frontend Next.js ─────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: observatorio_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: "http://backend:5000"
+      NEXT_PUBLIC_AI_URL: "http://ai:8001"
+    ports:
+      - "3000:3000"
+    networks:
+      - observatorio_network
+    depends_on:
+      backend:
+        condition: service_healthy
