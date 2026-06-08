@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useColorblindMode } from '@/contexts/ColorblindModeContext';
+import { getInitials } from '@/lib/utils';
 
 export function TopAppBar() {
     const { user, logout } = useAuth();
@@ -17,14 +18,7 @@ export function TopAppBar() {
         router.push('/login');
     };
 
-    const getInitials = (name?: string) => {
-        if (!name) return 'U';
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
-    };
+
 
     return (
         <header className="sticky top-0 z-50 flex justify-between items-center w-full px-6 py-3 bg-[#f7f9ff]/80 dark:bg-[#0b1d2d]/80 backdrop-blur-xl shadow-[0px_12px_32px_rgba(11,29,45,0.06)]">
@@ -93,8 +87,8 @@ export function TopAppBar() {
                         <p className="text-[16px] font-bold text-on-surface leading-tight">
                             {user?.name || 'Usuario'}
                         </p>
-                        <p className="text-[14px] text-on-surface-variant font-medium">
-                            Usuario
+                        <p className="text-[12px] text-on-surface-variant font-medium">
+                            {user?.role === 'Admin' ? 'Administrador' : 'Usuario'}
                         </p>
                     </button>
 

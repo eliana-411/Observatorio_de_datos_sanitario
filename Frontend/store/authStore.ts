@@ -7,6 +7,7 @@ export interface User {
     id: string;
     email: string;
     name: string;
+    role?: string;
 }
 
 export interface AuthStore {
@@ -27,6 +28,7 @@ export interface AuthStore {
     register: (name: string, email: string, password: string) => Promise<void>;
     loginWithGoogle: (googleToken: string) => Promise<void>;
     verify2FA: (email: string, twoFactorCode: string) => Promise<void>;
+    updateUser: (updates: Partial<User>) => void;
     logout: () => void;
     checkTokenValidity: () => void;
     restoreFromStorage: () => void;
@@ -252,6 +254,19 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     },
                 });
             }
+        }
+    },
+
+    // Update user information
+    updateUser: (updates: Partial<User>) => {
+        const currentUser = get().user;
+        if (currentUser) {
+            set({
+                user: {
+                    ...currentUser,
+                    ...updates,
+                },
+            });
         }
     },
 

@@ -75,6 +75,16 @@ async function apiRequest<T>(
             return { error };
         }
 
+        // 429 - Demasiados intentos (Rate limiting)
+        if (response.status === 429) {
+            return {
+                error: {
+                    message: body?.message || 'Demasiados intentos. Por favor espera antes de intentar de nuevo.',
+                    errors: body?.errors,
+                },
+            };
+        }
+
         // Otros errores
         return {
             error: {

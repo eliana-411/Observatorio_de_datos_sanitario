@@ -81,7 +81,7 @@ export function Sidebar() {
                                 mb-1
                                 transition-all
                                 duration-200
-                                min-h-[48px]                               
+                                min-h-12                               
 
                                 ${
                                     isActive
@@ -90,7 +90,7 @@ export function Sidebar() {
                                 }
                             `}
                         >
-                            <span className="material-symbols-outlined flex-shrink-0 text-xl">
+                            <span className="material-symbols-outlined shrink-0 text-xl">
                                 {item.icon}
                             </span>
 
