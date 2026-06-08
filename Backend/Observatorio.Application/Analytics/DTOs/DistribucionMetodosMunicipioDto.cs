@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,7 +7,9 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 public class MetodoDistribucionDto
 {
+    [DisplayName("Método")]
     public string? Metodo { get; set; }
+    [DisplayName("Total")]
     public int Total { get; set; }
 }
 
@@ -14,9 +18,13 @@ public class MetodoDistribucionDto
 /// </summary>
 public class DistribucionMetodosMunicipioRegistroDto
 {
+    [DisplayName("Código Municipio")]
     public string? CodigoMunicipio { get; set; }
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Metodos")]
     public List<MetodoDistribucionDto>? Metodos { get; set; }
 }
 
@@ -25,6 +33,8 @@ public class DistribucionMetodosMunicipioRegistroDto
 /// </summary>
 public class DistribucionMetodosMunicipioResponseDto
 {
+    [DisplayName("Periodo")]
     public PeriodoDto? Periodo { get; set; }
+    [DisplayName("Series")]
     public List<DistribucionMetodosMunicipioRegistroDto>? Series { get; set; }
 }

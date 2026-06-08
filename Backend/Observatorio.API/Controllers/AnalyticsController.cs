@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Observatorio.Application.Analytics.DTOs;
 using Observatorio.Application.Analytics.Interfaces;
+using Observatorio.Application.Common.DTOs;
+using Observatorio.Application.Common.Interfaces;
+using System.Text;
 
 namespace Observatorio.API.Controllers;
 
@@ -11,11 +14,13 @@ namespace Observatorio.API.Controllers;
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
-    private readonly ILogger<AnalyticsController> _logger;
+    private readonly IExportService _exportService;
 
-    public AnalyticsController(IAnalyticsService analyticsService, ILogger<AnalyticsController> logger)
+    private readonly ILogger<AnalyticsController> _logger;
+    public AnalyticsController(IAnalyticsService analyticsService, IExportService exportService, ILogger<AnalyticsController> logger)
     {
         _analyticsService = analyticsService ?? throw new ArgumentNullException(nameof(analyticsService));
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -263,6 +268,11 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Permite descargar en Excel o CSV la distribución de hospitalización por municipio para un año específico
+    /// </summary>
+    
+
+    /// <summary>
     /// Obtiene tendencia temporal de eventos por mes para un año específico
     /// </summary>
     /// <param name="anio">Año de los eventos</param>
@@ -290,6 +300,54 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar tendencia temporal");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV la tendencia temporal de eventos por mes para un año
+    /// </summary>  
+    [HttpGet("tendencia-temporal/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetTendenciaTemporalExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
+        
+        var datos = result.Series ?? new List<TendenciaTemporalRegistroDto>();
+
+        var excel = _exportService.GenerarExcel(datos, $"Tendencia Temporal {anio}");
+        var fileName = $"TendenciaTemporal_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+    [HttpGet("tendencia-temporal/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetTendenciaTemporalCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.Select(s => new RegistroAplanadoDto
+        {
+            Codigo = s.Anio.ToString(),
+            Nombre = s.NombreMes ?? "",
+            Categoria = s.NombreMes ?? "",
+            Subcategoria = $"Mes {s.Mes}",
+            Valor1 = s.TotalEventos,
+            Valor2 = s.Hospitalizados,
+            Porcentaje1 = Math.Round(s.PorcentajeEventos, 2),
+            Porcentaje2 = Math.Round(s.PorcentajeHospitalizados, 2),
+            Periodo = s.Anio.ToString()
+        }).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var csv = _exportService.GenerarCsv(datosPlanos);
+        var fileName = $"TendenciaTemporal_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -335,6 +393,73 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Permite descargar en Excel o CSV la tendencia temporal de eventos por mes y municipio para un año específico (opcional: mes específico)
+    /// </summary>
+
+    [HttpGet("tendencia-temporal-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetTendenciaTemporalMunicipioExcel(
+        [FromQuery] int anio, 
+        [FromQuery] int? mes, 
+        CancellationToken cancelToken)
+    {
+        // Validaciones...
+        var result = await _analyticsService.GetTendenciaTemporalMunicipioAsync(anio, mes, cancelToken);
+        
+        var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
+        
+        var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = d.NombreMes ?? "",
+            Subcategoria = $"Mes {d.Mes}",
+            Valor1 = d.TotalEventos,
+            Valor2 = d.Hospitalizados,
+            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2), // Redondear a 2 decimales para el Excel
+            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2), // Redondear a 2 decimales para el Excel
+            Periodo = periodo
+        })).ToList();
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"Tendencia {periodo}");
+        var fileName = $"TendenciaTemporalMunicipio_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("tendencia-temporal-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetTendenciaTemporalMunicipioCsv(
+        [FromQuery] int anio, 
+        [FromQuery] int? mes, 
+        CancellationToken cancelToken)
+    {
+        // Validaciones...
+        var result = await _analyticsService.GetTendenciaTemporalMunicipioAsync(anio, mes, cancelToken);
+        
+        var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
+        
+        var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = d.NombreMes ?? "",
+            Subcategoria = $"Mes {d.Mes}",
+            Valor1 = d.TotalEventos,
+            Valor2 = d.Hospitalizados,
+            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2), // Redondear a 2 decimales para el CSV
+            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2), // Redondear a 2 decimales para el CSV
+            Periodo = periodo
+        })).ToList();
+
+        var csv = _exportService.GenerarCsv(datosPlanos);
+        var fileName = $"TendenciaTemporalMunicipio_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
+    }
+    
+    /// <summary>
     /// Obtiene distribución geográfica de casos con filtros dinámicos para el mapa
     /// </summary>
     [HttpGet("distribucion-geografica")]
@@ -357,6 +482,59 @@ public class AnalyticsController : ControllerBase
 
         var resultado = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
         return Ok(resultado);
+    }
+
+    [HttpGet("distribucion-geografica/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionGeograficaExcel(
+        [FromQuery] string? municipio,
+        [FromQuery] string? rangoEdad,
+        [FromQuery] string? genero,
+        [FromQuery] int? anio,
+        [FromQuery] string? hospitalizado)
+    {
+        var filtros = new FiltrosDistribucionDto
+        {
+            Municipio = municipio,
+            RangoEdad = rangoEdad,
+            Genero = genero,
+            Anio = anio,
+            Hospitalizado = hospitalizado
+        };
+
+        var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+        
+        var excel = _exportService.GenerarExcel(datos, "Distribución Geográfica");
+        var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-geografica/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionGeograficaCsv(
+        [FromQuery] string? municipio,
+        [FromQuery] string? rangoEdad,
+        [FromQuery] string? genero,
+        [FromQuery] int? anio,
+        [FromQuery] string? hospitalizado)
+    {
+        var filtros = new FiltrosDistribucionDto
+        {
+            Municipio = municipio,
+            RangoEdad = rangoEdad,
+            Genero = genero,
+            Anio = anio,
+            Hospitalizado = hospitalizado
+        };
+
+        var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+        
+        var csv = _exportService.GenerarCsv(datos);
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        return File(csvBytes, "text/csv", fileName);
     }
 
 
