@@ -191,6 +191,14 @@ class DatabaseLoader:
 
         return self._insert_dataframe(table_name, df_to_insert)
 
+
+    def _get_id_mapping(self, table_name: str, key_col: str, id_col: str) -> dict:
+        """Lee el mapping key → id_identity real de la BD después del INSERT."""
+        self.cursor.execute(f"SELECT [{key_col}], [{id_col}] FROM {table_name}")
+        return {str(row[0]): row[1] for row in self.cursor.fetchall()}
+
+    def insert_fact_evento(self, table_name: str, df: pd.DataFrame) -> int:
+
     def leer_ids_reales(self, table_name: str, key_columns: list, id_column: str) -> pd.DataFrame:
         """
         Lee de la BD los IDs reales (IDENTITY) de una dimensión
@@ -212,6 +220,7 @@ class DatabaseLoader:
         dim_atencion: pd.DataFrame,
         dim_contexto: pd.DataFrame,
     ) -> pd.DataFrame:
+
         """
         Reemplaza los id_* de la fact table (generados en memoria por el transformer)
         con los IDs reales que tienen las dimensiones en la BD.

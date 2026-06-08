@@ -20,52 +20,19 @@ MLFLOW_DIR      = os.path.join(BASE_DIR, "mlflow")
 # ── Features ──────────────────────────────────────────────────────────────────
 # Compartidas por ambos modelos
 FEATURES_BASE = [
-    # Temporales
-    "mes",
-    "trimestre",
-    "es_fin_anio",
-    "es_inicio_anio",
-
-    # Lugar
-    "municipio_target_enc",
-    "zona_predominante_enc",
-
-    # Lags
-    "lag_hosp_1",
-
-    # Rolling
-    "rolling_mean_4",
-    "rolling_std_4",
-
-    # Tendencia
-    "tendencia_local",
-
-    # Método y letalidad
-    "metodo_predominante_enc",
-    "nivel_letalidad_predominante_enc",
-
-    # Persona
-    "edad_promedio",
-    "estrato_promedio",
-    "genero_predominante_enc",
-    "grupo_etario_predominante_enc",
-
-    # Contexto
-    "antecedentes_mental_promedio",
-    "consumo_sustancias_promedio",
-
-    # Movilidad
+    "mes", "trimestre", "es_fin_anio", "es_inicio_anio",
+    "zona_predominante_enc", "lag_hosp_1",
+    "rolling_mean_4", "rolling_std_4", "tendencia_local",
+    "metodo_predominante_enc", "nivel_letalidad_predominante_enc",
+    "edad_promedio", "estrato_promedio",
+    "genero_predominante_enc", "grupo_etario_predominante_enc",
+    "antecedentes_mental_promedio", "consumo_sustancias_promedio",
     "tasa_mismo_municipio",
 ]
 
 FEATURES_MENSUAL = FEATURES_BASE + [
-    "lag_hosp_2",
-    "lag_hosp_3",
-    "lag_hosp_6",
-    "lag_hosp_12",
-    "municipio_target_enc",
-    "total_eventos",
-    # hosp_zscore y hosp_relativa ELIMINADAS
+    "lag_hosp_2", "lag_hosp_3", "lag_hosp_6", "lag_hosp_12",
+    "total_eventos", "municipio_target_enc",  
 ]
 
 FEATURES_SEMANAL = FEATURES_BASE + [
@@ -75,7 +42,6 @@ FEATURES_SEMANAL = FEATURES_BASE + [
     "numero_semana",
     "tuvo_fin_de_semana",
     "municipio_target_enc",
-    # hosp_zscore y hosp_relativa ELIMINADAS
 ]
 
 TARGET = "hospitalizaciones"
@@ -155,6 +121,13 @@ def train(df: pd.DataFrame, features_list: list, label: str):
     y_train = train_df[TARGET]
     X_test  = test_df[available]
     y_test  = test_df[TARGET]
+
+    # Target encoding sin leakage — calculado solo sobre train
+    media_municipio = train_df.groupby("municipio_evento")["hospitalizaciones"].mean()
+    train_df = train_df.copy()
+    test_df  = test_df.copy()
+    train_df["municipio_target_enc"] = train_df["municipio_evento"].map(media_municipio)
+    test_df["municipio_target_enc"]  = test_df["municipio_evento"].map(media_municipio).fillna(media_municipio.mean())
 
     # XGBoost no requiere escalado, pero lo mantenemos por consistencia
     # con el pipeline de brotes y para el predictor en producción

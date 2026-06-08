@@ -1,6 +1,5 @@
 # ENV
 .env
-.env.* 
 .venv
 
 # .NET
@@ -18,8 +17,8 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# yml
-*.yml
+# Ignorar yml de bases de datos locales (no el docker-compose raíz)
+DataBase/docker-compose.yml
 
 # datasets
 .csv
@@ -35,11 +34,11 @@ Entorno virtual
 *.csv
 *.xlsx
 
-#Archivos 
-*.md
-.md
 
 # MLflow
 mlruns/
 *.pkl
+.pkl
 mlflow.db 
+
+ANALISIS_CUMPLIMIENTO.md

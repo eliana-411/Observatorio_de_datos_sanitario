@@ -246,64 +246,27 @@ def get_historico(municipio: str):
 @router.get("/brotes/variables-importancia", response_model=list[VariableImportancia])
 def get_variables_importancia():
     """
-    Devuelve la importancia de cada variable del modelo
-    ordenada de mayor a menor — usado para el gráfico de barras.
+    Devuelve la importancia de cada variable del modelo ordenada de mayor a menor.
+    Lee desde config.json para ser compatible con cualquier tipo de modelo.
     """
     try:
-        import joblib
-        import os
         import json
-        import numpy as np
+        import os
 
         BASE_DIR    = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        MODEL_DIR   = os.path.join(BASE_DIR, "models", "brotes")
-        model_path  = os.path.join(MODEL_DIR, "brotes_model.pkl")
-        config_path = os.path.join(MODEL_DIR, "config.json")
+        config_path = os.path.join(BASE_DIR, "models", "brotes", "config.json")
 
-        model  = joblib.load(model_path)
         with open(config_path, "r") as f:
             config = json.load(f)
 
-        features     = config["features"]
-        importancias = model.feature_importances_
+        importancia = config.get("feature_importance", [])
+        if not importancia:
+            raise HTTPException(status_code=404, detail="No hay datos de importancia en el config del modelo.")
 
-        # Nombres más legibles para el dashboard
-        nombres_legibles = {
-            "zona_evento_enc":                        "Zona Geográfica",
-            "consumo_sustancias_promedio":            "Consumo Sustancias",
-            "antecedentes_mental_promedio":           "Historial Clínico",
-            "estrato_promedio":                       "Factor Socioeconómico",
-            "edad_promedio":                          "Edad Promedio",
-            "municipio_evento_enc":                   "Municipio",
-            "situacion_sentimental_predominante_enc": "Situación Sentimental",
-            "mes":                                    "Mes del Año",
-            "nombre_mes_enc":                         "Mes (Encoded)",
-            "trimestre":                              "Trimestre",
-            "lag_casos_1":                            "Casos Mes Anterior",
-            "lag_casos_2":                            "Casos 2 Meses Atrás",
-            "lag_casos_3":                            "Casos 3 Meses Atrás",
-            "metodo_predominante_enc":                "Método Predominante",
-            "nivel_letalidad_predominante_enc":       "Nivel Letalidad",
-            "genero_predominante_enc":                "Género Predominante",
-            "grupo_etario_predominante_enc":          "Grupo Etario",
-            "tasa_mismo_municipio":                   "Tasa Mismo Municipio",
-            "es_fin_anio":                            "Fin de Año",
-            "es_inicio_anio":                         "Inicio de Año",
-        }
+        return importancia
 
-        resultado = []
-        for feature, importancia in zip(features, importancias):
-            resultado.append({
-                "variable":    nombres_legibles.get(feature, feature),
-                "importancia": round(float(importancia), 4),
-                "porcentaje":  round(float(importancia) * 100, 2)
-            })
-
-        # Ordenar de mayor a menor
-        resultado = sorted(resultado, key=lambda x: x["importancia"], reverse=True)
-
-        return resultado
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

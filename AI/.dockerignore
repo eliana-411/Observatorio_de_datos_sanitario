@@ -1,0 +1,23 @@
+# Entornos virtuales
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Datos crudos (no van en imagen)
+data/raw/
+data/processed/
+training/AI/
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Modelos grandes opcionales (se montan como volumen)
+# models/
+
+# Desarrollo
+.env
+*.log
+.pytest_cache/

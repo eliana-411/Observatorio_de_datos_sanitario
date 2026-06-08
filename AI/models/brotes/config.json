@@ -1,39 +1,95 @@
 {
-  "model_type": "RandomForestRegressor",
+  "model_type": "Prophet",
   "target": "casos",
-  "features": [
-    "mes",
-    "trimestre",
-    "es_fin_anio",
-    "es_inicio_anio",
-    "nombre_mes_enc",
-    "municipio_evento_enc",
-    "zona_evento_enc",
-    "lag_casos_1",
-    "lag_casos_2",
-    "lag_casos_3",
-    "metodo_predominante_enc",
-    "nivel_letalidad_predominante_enc",
+  "regressors": [
     "edad_promedio",
     "estrato_promedio",
-    "genero_predominante_enc",
-    "grupo_etario_predominante_enc",
-    "situacion_sentimental_predominante_enc",
     "antecedentes_mental_promedio",
     "consumo_sustancias_promedio",
-    "tasa_mismo_municipio"
+    "lag_casos_1",
+    "lag_casos_2",
+    "lag_casos_3"
   ],
   "params": {
-    "n_estimators": 200,
-    "max_depth": 10,
-    "min_samples_leaf": 5,
-    "random_state": 42,
-    "n_jobs": -1
+    "yearly_seasonality": true,
+    "seasonality_mode": "multiplicative",
+    "changepoint_prior_scale": 0.1,
+    "seasonality_prior_scale": 10
   },
   "metrics": {
+
+    "rmse": 15.5911,
+    "mae": 12.6291,
+    "r2": -0.3568
+
     "rmse": 0.5475,
     "mae": 0.2988,
     "r2": 0.5682
+
   },
-  "aggregation": "municipio+zona+mes"
+  "aggregation": "municipio+mes",
+  "municipios": [
+    "Aguadas",
+    "Anserma",
+    "Belalcazar",
+    "Chinchina",
+    "Filadelfia",
+    "La Dorada",
+    "La Merced",
+    "Manizales",
+    "Manzanares",
+    "Marmato",
+    "Marquetalia",
+    "Marulanda",
+    "Neira",
+    "Pacora",
+    "Palestina",
+    "Pensilvania",
+    "Riosucio",
+    "Risaralda",
+    "Salamina",
+    "Samana",
+    "San Jose",
+    "Supia",
+    "Victoria",
+    "Villamaria",
+    "Viterbo"
+  ],
+  "feature_importance": [
+    {
+      "variable": "Casos Mes Anterior",
+      "importancia": 0.4007,
+      "porcentaje": 30.07
+    },
+    {
+      "variable": "Casos 2 Meses Atr�s",
+      "importancia": 0.3397,
+      "porcentaje": 25.5
+    },
+    {
+      "variable": "Casos 3 Meses Atr�s",
+      "importancia": 0.2963,
+      "porcentaje": 22.24
+    },
+    {
+      "variable": "Factor Socioecon�mico",
+      "importancia": 0.1401,
+      "porcentaje": 10.52
+    },
+    {
+      "variable": "Edad Promedio",
+      "importancia": 0.0944,
+      "porcentaje": 7.08
+    },
+    {
+      "variable": "Consumo Sustancias",
+      "importancia": 0.0463,
+      "porcentaje": 3.48
+    },
+    {
+      "variable": "Historial Cl�nico",
+      "importancia": 0.0149,
+      "porcentaje": 1.12
+    }
+  ]
 }
