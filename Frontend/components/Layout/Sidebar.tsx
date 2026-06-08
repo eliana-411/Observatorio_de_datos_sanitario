@@ -6,10 +6,9 @@ import { useState } from 'react';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
-    { id: 'anomalies', icon: 'biotech', label: 'Predicción de Anomalías', href: '/anomalies' },
-    { id: 'brotes', icon: 'warning', label: 'Predicción de Brotes', href: '/brotes' },
     { id: 'ai-assistant', icon: 'psychiatry', label: 'Asistente IA', href: '/ai-assistant' },
-    { id: 'analytics', icon: 'query_stats', label: 'Análisis Predictivo', href: '/analytics' },
+    { id: 'brotes', icon: 'warning', label: 'Predicción Brotes', href: '/brotes' },
+    { id: 'anomalies', icon: 'query_stats', label: 'Predicción Anomalías', href: '/anomalies' },
     { id: 'maps', icon: 'map', label: 'Mapas de Salud', href: '/maps' },
     { id: 'reports', icon: 'description', label: 'Informes', href: '/reports' },
 ];
@@ -26,7 +25,7 @@ export function Sidebar() {
                 fixed
                 left-0
                 top-0
-                z-16
+                z-18
                 h-screen
                 bg-[#eef4ff]
                 dark:bg-[#0b1d2d]
@@ -63,7 +62,7 @@ export function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-2 py-4 overflow-y-auto overflow-x-hidden">
+            <nav className="flex-1 px-0 py-4 overflow-y-auto overflow-x-hidden">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href;
 

@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { api } from '@/lib/api/client';
 
 interface AnomalyType {
     label: string;
@@ -8,37 +9,83 @@ interface AnomalyType {
     total: number;
 }
 
+interface AnomalyDistributionResponse {
+    status: string;
+    totalAnomalias: number;
+    distribucion: Record<string, number>;
+    porSeveridad: Record<string, number>;
+}
+
 interface AnomalyDistributionChartProps {
     data?: AnomalyType[];
 }
 
-const defaultData: AnomalyType[] = [
-    { label: 'Primeriza + letalidad alta', count: 412, total: 1248 },
-    { label: 'Desplazamiento geográfico', count: 285, total: 1248 },
-    { label: 'Gravedad individual', count: 198, total: 1248 },
-    { label: 'Salud Mental + Sustancias', count: 165, total: 1248 },
-    { label: 'Patrones multivariados complejos', count: 188, total: 1248 },
-];
-
 const colors = ['bg-[#0070ea]', 'bg-[#0070ea]/70', 'bg-[#0070ea]/50', 'bg-[#9e3d00]', 'bg-[#405e96]'];
 
-export function AnomalyDistributionChart({ data = defaultData }: AnomalyDistributionChartProps) {
+export function AnomalyDistributionChart({ data: initialData }: AnomalyDistributionChartProps) {
+    const [data, setData] = useState<AnomalyType[]>(initialData || []);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
+    const [totalAnomalias, setTotalAnomalias] = useState(0);
+
+    useEffect(() => {
+        const fetchDistribution = async () => {
+            try {
+                const response = await api.get<AnomalyDistributionResponse>('/anomalias/distribucion');
+                if (response.data && response.data.distribucion) {
+                    const total = response.data.totalAnomalias;
+                    setTotalAnomalias(total);
+                    const formattedData: AnomalyType[] = Object.entries(response.data.distribucion).map(
+                        ([tipo, casos]) => ({
+                            label: tipo,
+                            count: casos,
+                            total: total,
+                        })
+                    );
+                    setData(formattedData);
+                } else if (response.error) {
+                    setError(response.error.message);
+                } else {
+                    setError('Estructura de datos inválida del servidor');
+                }
+            } catch (error) {
+                console.error('Error fetching anomaly distribution:', error);
+                setError('Error al cargar la distribución');
+                if (initialData) {
+                    setData(initialData);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDistribution();
+    }, [initialData]);
+
+    if (loading && data.length === 0) {
+        return (
+            <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)]">
+                <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+        );
+    }
+
+    if (error && data.length === 0) {
+        return (
+            <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)]">
+                <p className="text-sm text-red-600">Error: {error}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)]">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h3 className="text-lg font-bold text-[#0b1d2d]">
-                        Distribución por Tipo de Anomalía
-                    </h3>
-                    <p className="text-xs text-[#414754]">
-                        Clasificación según el motor de inferencia neuronal
-                    </p>
-                </div>
-                <button className="text-xs font-bold text-[#0059bb] flex items-center gap-1 hover:underline transition-colors">
-                    Exportar Detalles
-                    <span className="material-symbols-outlined text-sm">open_in_new</span>
-                </button>
+            <div className="mb-8">
+                <h3 className="text-lg font-bold text-[#0b1d2d]">
+                    Distribución por Tipo de Anomalía
+                </h3>
             </div>
 
             {/* Bars */}

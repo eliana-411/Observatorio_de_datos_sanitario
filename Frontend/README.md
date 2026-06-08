@@ -46,3 +46,5 @@ npx shadcn@latest add select
 npx shadcn@latest add popover
 npx shadcn@latest add command
 npx shadcn@latest add scroll-area
+npx shadcn@latest add drawer
+npx shadcn@latest add dialog

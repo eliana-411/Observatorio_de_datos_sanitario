@@ -1,90 +1,157 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { api } from '@/lib/api/client';
 
 interface SeverityDistributionProps {
-    highPercentage?: number;
-    mediumPercentage?: number;
+    highCount?: number;
+    mediumCount?: number;
+}
+
+interface AnomalyDistributionResponse {
+    status: string;
+    totalAnomalias: number;
+    distribucion: Record<string, number>;
+    porSeveridad: Record<string, number>;
 }
 
 export function SeverityDistributionChart({
-    highPercentage = 62,
-    mediumPercentage = 38,
+    highCount: initialHighCount,
+    mediumCount: initialMediumCount,
 }: SeverityDistributionProps) {
+    const [highCount, setHighCount] = useState<number>(initialHighCount || 0);
+    const [mediumCount, setMediumCount] = useState<number>(initialMediumCount || 0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSeverityData = async () => {
+            try {
+                const response = await api.get<AnomalyDistributionResponse>('/anomalias/distribucion');
+                if (response.data?.porSeveridad) {
+                    const alta = response.data.porSeveridad['Alta'] || response.data.porSeveridad['alta'] || 0;
+                    const media = response.data.porSeveridad['Media'] || response.data.porSeveridad['media'] || 0;
+
+                    setHighCount(alta);
+                    setMediumCount(media);
+                } else if (response.error) {
+                    setError(response.error.message);
+                }
+            } catch (error) {
+                console.error('Error fetching severity distribution:', error);
+                setError('Error al cargar la distribución');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSeverityData();
+    }, []);
+
+    const total = highCount + mediumCount;
+    const highPercentage = total > 0 ? (highCount / total) * 100 : 0;
+    const mediumPercentage = total > 0 ? (mediumCount / total) * 100 : 0;
+
+    // Calculate pie slice angles
+    const highAngle = (highCount / total) * 360;
+    const mediumAngle = (mediumCount / total) * 360;
+
+    const getPieSlicePath = (startAngle: number, angle: number, radius: number = 40, innerRadius: number = 0) => {
+        const startRad = (startAngle - 90) * (Math.PI / 180);
+        const endRad = (startAngle + angle - 90) * (Math.PI / 180);
+
+        const x1 = 50 + radius * Math.cos(startRad);
+        const y1 = 50 + radius * Math.sin(startRad);
+        const x2 = 50 + radius * Math.cos(endRad);
+        const y2 = 50 + radius * Math.sin(endRad);
+
+        const largeArc = angle > 180 ? 1 : 0;
+
+        return `M 50 50 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)] flex flex-col items-center justify-center">
+                <div className="h-64 bg-gray-200 rounded-lg animate-pulse w-full"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)]">
+                <p className="text-sm text-red-600">Error: {error}</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)] flex flex-col items-center justify-center relative">
+        <div className="bg-white p-8 rounded-xl shadow-[0px_12px_32px_rgba(11,29,45,0.04)]">
             {/* Header */}
-            <div className="absolute top-8 left-8">
-                <h3 className="text-lg font-bold text-[#0b1d2d] leading-tight">
-                    Distribución por Severidad
-                </h3>
-                <p className="text-xs text-[#414754]">
-                    Índice de Prioridad de Respuesta
-                </p>
-            </div>
+            <h3 className="text-lg font-bold text-[#0b1d2d] mb-6">
+                Distribución por Severidad
+            </h3>
 
-            {/* Doughnut Chart SVG */}
-            <div className="relative w-48 h-48 mt-12 flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                    {/* Background circle */}
-                    <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke="#e4efff"
-                        strokeWidth="12"
-                    />
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
+                {/* Pie Chart SVG */}
+                <div className="flex-shrink-0">
+                    <svg viewBox="0 0 100 100" className="w-48 h-48">
+                        {/* High severity slice */}
+                        <path
+                            d={getPieSlicePath(0, highAngle)}
+                            fill="#9e3d00"
+                            stroke="white"
+                            strokeWidth="1"
+                        />
 
-                    {/* High severity segment */}
-                    <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke="#9e3d00"
-                        strokeWidth="12"
-                        strokeDasharray={`${(highPercentage / 100) * 282.7} 282.7`}
-                        style={{ transition: 'stroke-dasharray 0.5s' }}
-                    />
-
-                    {/* Medium severity segment */}
-                    <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke="#0059bb"
-                        strokeWidth="12"
-                        strokeDasharray={`${(mediumPercentage / 100) * 282.7} 282.7`}
-                        strokeDashoffset={-((highPercentage / 100) * 282.7)}
-                        style={{ transition: 'stroke-dasharray 0.5s' }}
-                    />
-                </svg>
-
-                {/* Center text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-black text-[#0b1d2d]">S-Score</span>
-                    <p className="text-[10px] text-[#414754] uppercase font-bold">
-                        Priority
-                    </p>
+                        {/* Medium severity slice */}
+                        <path
+                            d={getPieSlicePath(highAngle, mediumAngle)}
+                            fill="#0059bb"
+                            stroke="white"
+                            strokeWidth="1"
+                        />
+                    </svg>
                 </div>
-            </div>
 
-            {/* Legend */}
-            <div className="mt-8 grid grid-cols-2 gap-8 w-full">
-                <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-[#9e3d00]"></div>
-                    <div>
-                        <p className="text-xs font-bold text-[#0b1d2d]">Alta</p>
-                        <p className="text-lg font-black text-[#0b1d2d]">{highPercentage}%</p>
+                {/* Legend and Stats */}
+                <div className="flex flex-col gap-6">
+                    {/* Total */}
+                    <div className="text-center lg:text-left">
+                        <p className="text-sm text-[#414754] font-medium">Total de Anomalías</p>
+                        <p className="text-3xl font-bold text-[#0b1d2d]">{total}</p>
                     </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-[#0059bb]"></div>
-                    <div>
-                        <p className="text-xs font-bold text-[#0b1d2d]">Media</p>
-                        <p className="text-lg font-black text-[#0b1d2d]">{mediumPercentage}%</p>
+
+                    {/* Severity Items */}
+                    <div className="space-y-4">
+                        {/* Alta */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                                <div className="w-4 h-4 rounded-full bg-[#9e3d00]"></div>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-[#0b1d2d]">Alta</p>
+                                <div className="flex gap-4 text-sm text-[#414754]">
+                                    <span>{highCount} anomalías</span>
+                                    <span className="font-bold text-[#0b1d2d]">{highPercentage.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Media */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                                <div className="w-4 h-4 rounded-full bg-[#0059bb]"></div>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-[#0b1d2d]">Media</p>
+                                <div className="flex gap-4 text-sm text-[#414754]">
+                                    <span>{mediumCount} anomalías</span>
+                                    <span className="font-bold text-[#0b1d2d]">{mediumPercentage.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

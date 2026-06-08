@@ -26,7 +26,7 @@ export function KPICard({
     return (
         <div
             className={`
-                p-6
+                p-4
                 rounded-xl
                 flex
                 flex-col
@@ -78,35 +78,22 @@ export function KPICard({
                         }`}>
                         {value}
                     </span>
-                    {trend && (
-                        <span className={`text-xs font-semibold ${isDark ? 'opacity-60 text-white' : 'text-[#0059bb] opacity-60'}`}>
-                            {trend}
-                        </span>
-                    )}
                 </div>
 
                 {/* Progress Bar */}
                 {percentage > 0 && !isDark && (
                     <div className="h-1.5 w-full bg-[#e4efff] rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-linear-to-r from-[#0059bb] to-[#0070ea] transition-all duration-500"
+                            className={`
+                                h-full
+                                rounded-full
+                                transition-all
+                                duration-500
+                                bg-linear-to-r from-[#0059bb] to-[#0070ea]
+                            `}
                             style={{ width: `${percentage}%` }}
                         ></div>
                     </div>
-                )}
-
-                {/* Subtext */}
-                {subtext && (
-                    <p
-                        className={`
-                            text-xs
-                            mt-4
-                            leading-relaxed
-                            ${isDark ? 'opacity-50 text-[#d2e4fb]' : 'text-[#414754]'}
-                        `}
-                    >
-                        {subtext}
-                    </p>
                 )}
             </div>
         </div>
