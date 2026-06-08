@@ -19,3 +19,15 @@ public class MunicipioInfoDto
     public string? Municipio { get; set; }
     public string? Departamento { get; set; }
 }
+
+/// <summary>
+/// DTO para la respuesta de municipios
+/// </summary>
+public class MunicipioMapaDto
+{
+    public string CodigoMunicipio { get; set; } = string.Empty;
+    public string Municipio { get; set; } = string.Empty;
+    public string Departamento { get; set; } = string.Empty;
+    public decimal? Longitud { get; set; }   
+    public decimal? Latitud { get; set; }    
+}

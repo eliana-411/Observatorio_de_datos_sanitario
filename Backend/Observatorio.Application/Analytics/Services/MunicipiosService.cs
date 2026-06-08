@@ -69,9 +69,9 @@ public class MunicipiosService : IMunicipiosService
             var basePath = AppContext.BaseDirectory;
             var projectRoot = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", ".."));
             var csvPath = Path.Combine(projectRoot, "Observatorio.Application", "Data", "municipios-divipola.csv");
-            
+
             _logger?.LogInformation("Buscando CSV en: {csvPath}", csvPath);
-            
+
             if (!File.Exists(csvPath))
             {
                 throw new FileNotFoundException($"No se encontró el archivo CSV: {csvPath}");
@@ -132,8 +132,82 @@ public class MunicipiosService : IMunicipiosService
     {
         var municipios = await GetMunicipiosAsync(cancelToken);
         var nombreNormalizado = NormalizarTexto(nombreMunicipio);
-        
-        return municipios.FirstOrDefault(m => 
+
+        return municipios.FirstOrDefault(m =>
+            NormalizarTexto(m.Municipio) == nombreNormalizado);
+    }
+
+        /// <summary>
+        /// Obtiene la lista de municipios con coordenadas desde el CSV local, con caché
+        /// </summary> <param name="cancelToken">Token de cancelación</param>
+        /// <returns>Lista de municipios con coordenadas</returns>
+    public async Task<List<MunicipioMapaDto>> GetMunicipiosConCoordenadasAsync(CancellationToken cancelToken = default)
+    {
+        const string CACHE_KEY_COORDENADAS = "municipios_coordenadas_list";
+
+        if (_memoryCache.TryGetValue(CACHE_KEY_COORDENADAS, out List<MunicipioMapaDto>? cached))
+            return cached ?? new List<MunicipioMapaDto>();
+
+        try
+        {
+            var basePath = AppContext.BaseDirectory;
+            var projectRoot = Path.GetFullPath(Path.Combine(basePath, "..", "..", "..", ".."));
+            var csvPath = Path.Combine(projectRoot, "Observatorio.Application", "Data", "municipios-divipola.csv");
+
+            if (!File.Exists(csvPath))
+                throw new FileNotFoundException($"No se encontró el archivo CSV: {csvPath}");
+
+            var municipios = new List<MunicipioMapaDto>();
+
+            using (var reader = new StreamReader(csvPath))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                csv.Read();
+                csv.ReadHeader();
+
+                while (csv.Read())
+                {
+                    var codigo = csv.GetField("Código Municipio");
+                    var nombre = csv.GetField("Nombre Municipio");
+                    var depto = csv.GetField("Nombre Departamento");
+                    var lngStr = csv.GetField("longitud");
+                    var latStr = csv.GetField("Latitud");
+
+                    if (!string.IsNullOrEmpty(codigo) && !string.IsNullOrEmpty(nombre))
+                    {
+                        municipios.Add(new MunicipioMapaDto
+                        {
+                            CodigoMunicipio = codigo,
+                            Municipio = nombre,
+                            Departamento = depto,
+                            Longitud = decimal.TryParse(lngStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var lng) ? lng : null,
+                            Latitud = decimal.TryParse(latStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var lat) ? lat : null
+                        });
+                    }
+                }
+            }
+
+            _memoryCache.Set(CACHE_KEY_COORDENADAS, municipios, TimeSpan.FromMinutes(CACHE_DURATION_MINUTES));
+            _logger?.LogInformation($"GetMunicipiosConCoordenadas: {municipios.Count} municipios con coordenadas cacheados");
+
+            return municipios;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al cargar municipios con coordenadas desde CSV");
+            throw new InvalidOperationException("Error al obtener la lista de municipios con coordenadas", ex);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene un municipio con coordenadas por nombre (búsqueda normalizada sin tildes)
+    /// </summary> <param name="nombreMunicipio">Nombre del municipio a buscar</param>
+    public async Task<MunicipioMapaDto?> GetMunicipioConCoordenadasByNombreAsync(string nombreMunicipio, CancellationToken cancelToken = default)
+    {
+        var municipios = await GetMunicipiosConCoordenadasAsync(cancelToken);
+        var nombreNormalizado = NormalizarTexto(nombreMunicipio);
+
+        return municipios.FirstOrDefault(m =>
             NormalizarTexto(m.Municipio) == nombreNormalizado);
     }
 }
