@@ -10,6 +10,7 @@ import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributi
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
 import { HospitalizationChart } from '@/components/Dashboard/HospitalizationChart';
+import { MunicipalComparator } from '@/components/Dashboard/MunicipalComparator';
 import { useMunicipios } from '@/hooks/useMunicipios';
 import { useFilterStore } from '@/store/filterStore';
 import { fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
@@ -96,6 +97,10 @@ export default function DashboardPage() {
                             municipiosData={municipiosData}
                             municipiosGrupoEtarioData={municipiosGrupoEtarioData}
                             municipiosCoordenadas={municipiosCoordenadas}
+                        />
+                        <MunicipalComparator
+                            municipiosCoordenadas={municipiosCoordenadas}
+                            municipiosData={municipiosData}
                         />
                     </div>
 

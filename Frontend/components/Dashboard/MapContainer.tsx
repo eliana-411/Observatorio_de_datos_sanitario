@@ -268,12 +268,12 @@ export function MapContainer({
     };
 
     return (
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-full md:h-150">
-            <div className="p-4 md:p-6 border-b border-surface-container flex justify-between items-start md:items-center bg-white/50 backdrop-blur-md gap-4 flex-col md:flex-row">
+        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-full md:h-160">
+            <div className="p-2 md:p-2 border-b border-surface-container flex justify-between items-start md:items-center bg-white/50 backdrop-blur-md gap-4 flex-col md:flex-row">
                 <div className="flex-1">
-                    <h2 className="text-lg font-black text-on-surface tracking-tight dark:text-[#0b1d2d]">
+                    <h3 className=" pl-3 text-lg font-semibold text-gray-800 text-on-surface tracking-tight dark:text-[#0b1d2d]">
                         Mapa de Calor de Prevalencia Geográfica
-                    </h2>
+                    </h3>
                 </div>
                 <div className="flex gap-2 flex-wrap justify-end">
                     <button

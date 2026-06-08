@@ -55,9 +55,9 @@ export function TimeSeriesChart() {
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm flex-1 flex flex-col border border-gray-200">
             <div className="flex justify-between items-start mb-6">
-                <h2 className="text-sm font-black text-gray-900 tracking-tight uppercase">
+                <h3 className="text-lg font-semibold text-gray-800">
                     Tendencia Temporal Mensual
-                </h2>
+                </h3>
                 <div className="flex items-center gap-4">
                     <select
                         value={selectedYear}
@@ -84,7 +84,7 @@ export function TimeSeriesChart() {
                     <p className="text-red-500 text-center">{error}</p>
                 </div>
             ) : (
-                <div className="flex-1 flex flex-col min-h-100">
+                <div className="flex-1 flex flex-col min-h-85">
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -159,7 +159,7 @@ export function TimeSeriesChart() {
                     </ResponsiveContainer>
 
                     {/* Legend */}
-                    <div className="mt-6 pt-6 border-t border-gray-200 flex gap-6">
+                    <div className="mt-6 pt-6 border-t border-gray-200 flex gap-6 mb-0">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
                             <span className="text-xs font-medium text-gray-700">Total de Eventos</span>
