@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ── Red compartida ────────────────────────────────────────────────────────────
 networks:
   observatorio_network:
