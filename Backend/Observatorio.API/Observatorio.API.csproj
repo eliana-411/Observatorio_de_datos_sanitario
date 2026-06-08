@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Observatorio.Application\Observatorio.Application.csproj" />
     <ProjectReference Include="..\Observatorio.Infrastructure\Observatorio.Infrastructure.csproj" />
+    <ProjectReference Include="..\Observatorio.Application\Common\Observatorio.Application.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,8 @@ using Observatorio.API.Middleware;
 using Observatorio.Infrastructure.Data;
 using Observatorio.Infrastructure.Data.Repositories;
 using Observatorio.Infrastructure.Sanitario;
+using Observatorio.Application.Common.Interfaces;
+using Observatorio.Application.Common.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +39,7 @@ builder.Services.AddMemoryCache();
 
 // Registrar servicios
 builder.Services.AddScoped<IMunicipiosService, MunicipiosService>();
-
+builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

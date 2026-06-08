@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Observatorio.Application.Analytics.DTOs;
 
 /// <summary>
@@ -5,12 +7,19 @@ namespace Observatorio.Application.Analytics.DTOs;
 /// </summary>
 public class TendenciaTemporalMunicipioRegistroDto
 {
+    [DisplayName("Código Municipio")]
     public string? CodigoMunicipio { get; set; }
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
+    [DisplayName("Año")]
     public int Anio { get; set; }
+    [DisplayName("Mes")]
     public int Mes { get; set; }
+    [DisplayName("Nombre Mes")]
     public string? NombreMes { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Hospitalizados")]
     public int Hospitalizados { get; set; }
 }
 
@@ -19,7 +28,9 @@ public class TendenciaTemporalMunicipioRegistroDto
 /// </summary>
 public class TendenciaTemporalMunicipioSerieDto
 {
+    [DisplayName("Código Municipio")]
     public string? CodigoMunicipio { get; set; }
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
     public List<TendenciaTemporalMesesDto>? Datos { get; set; }
 }
@@ -29,11 +40,17 @@ public class TendenciaTemporalMunicipioSerieDto
 /// </summary>
 public class TendenciaTemporalMesesDto
 {
+    [DisplayName("Mes")]
     public int Mes { get; set; }
+    [DisplayName("Nombre Mes")]
     public string? NombreMes { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Porcentaje Eventos")]
     public decimal PorcentajeEventos { get; set; }
+    [DisplayName("Hospitalizados")] 
     public int Hospitalizados { get; set; }
+    [DisplayName("Porcentaje Hospitalizados")]
     public decimal PorcentajeHospitalizados { get; set; }
 }
 
@@ -42,7 +59,9 @@ public class TendenciaTemporalMesesDto
 /// </summary>
 public class PeriodoFiltroDto
 {
+    [DisplayName("Año")]
     public int Anio { get; set; }
+    [DisplayName("Mes")]
     public int? Mes { get; set; }
 }
 
@@ -51,7 +70,9 @@ public class PeriodoFiltroDto
 /// </summary>
 public class TendenciaTemporalMunicipioResponseDto
 {
+    [DisplayName("Periodo")]
     public PeriodoFiltroDto? Periodo { get; set; }
+    [DisplayName("Series")]
     public List<TendenciaTemporalMunicipioSerieDto>? Series { get; set; }
 }
 
@@ -60,10 +81,16 @@ public class TendenciaTemporalMunicipioResponseDto
 /// </summary>
 internal class TendenciaTemporalMunicipioRawDto
 {
+    [DisplayName("Municipio")]
     public string? Municipio { get; set; }
+    [DisplayName("Año")]
     public int Anio { get; set; }
+    [DisplayName("Mes")]
     public int Mes { get; set; }
+    [DisplayName("Nombre Mes")]
     public string? NombreMes { get; set; }
+    [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
+    [DisplayName("Hospitalizados")]
     public int Hospitalizados { get; set; }
 }
