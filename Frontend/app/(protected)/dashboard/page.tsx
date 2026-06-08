@@ -5,6 +5,7 @@ import { FilterBar } from '@/components/Dashboard/FilterBar';
 import { KPICard } from '@/components/Dashboard/KPICard';
 import { MapContainer } from '@/components/Dashboard/MapContainer';
 import { TimeSeriesChart } from '@/components/Dashboard/TimeSeriesChart';
+import { TopCitiesChart } from '@/components/Dashboard/TopCitiesChart';
 import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributionChart';
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
@@ -100,6 +101,7 @@ export default function DashboardPage() {
 
                     {/* Distribution Charts Stack */}
                     <div className="lg:col-span-4 space-y-6">
+                        <TopCitiesChart />
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
                     </div>
