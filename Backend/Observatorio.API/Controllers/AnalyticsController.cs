@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Observatorio.Application.Analytics.DTOs;
 using Observatorio.Application.Analytics.Interfaces;
 
 namespace Observatorio.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-//! [Authorize] // Comentar temporalmente para pruebas, se puede reactivar luego
+// [Authorize] 
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
@@ -332,6 +333,33 @@ public class AnalyticsController : ControllerBase
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Obtiene distribución geográfica de casos con filtros dinámicos para el mapa
+    /// </summary>
+    [HttpGet("distribucion-geografica")]
+    [ProducesResponseType(typeof(List<DistribucionGeograficaDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDistribucionGeografica(
+        [FromQuery] string? municipio,
+        [FromQuery] string? rangoEdad,
+        [FromQuery] string? genero,
+        [FromQuery] int? anio,
+        [FromQuery] string? hospitalizado)
+    {
+        var filtros = new FiltrosDistribucionDto
+        {
+            Municipio = municipio,
+            RangoEdad = rangoEdad,
+            Genero = genero,
+            Anio = anio,
+            Hospitalizado = hospitalizado
+        };
+
+        var resultado = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+        return Ok(resultado);
+    }
+
+
 
 }
 

@@ -3,6 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes.brotes import router as brotes_router
+from api.routes.anomalias import router as anomalias_router
+
 
 app = FastAPI(
     title="Observatorio Sanitario Caldas — API de Predicción",
@@ -18,7 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(brotes_router)
-
+app.include_router(anomalias_router)
 @app.get("/")
 def health():
     return {"status": "ok", "service": "Observatorio Sanitario Caldas"}

@@ -1,23 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Observatorio.API.Controllers
 {
     /// <summary>
     /// API Gateway para consumir microservicios de ML (AI)
-    /// Brotes, Anomalías, Demanda
+    /// Brotes
     /// </summary>
     [ApiController]
-    [Route("api/v1/models")]
-    public class ModelsController : ControllerBase
+    [Route("api/[controller]")]
+    public class BrotesController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger<ModelsController> _logger;
+        private readonly ILogger<BrotesController> _logger;
         private readonly string _aiBaseUrl;
 
-        public ModelsController(HttpClient httpClient, ILogger<ModelsController> logger, string aiBaseUrl)
+        public BrotesController(
+            HttpClient httpClient,
+            ILogger<BrotesController> logger,
+            string aiBaseUrl)
         {
             _httpClient = httpClient;
             _logger = logger;
@@ -29,7 +30,7 @@ namespace Observatorio.API.Controllers
         /// </summary>
         /// <param name="payload">Municipio y meses a predecir</param>
         /// <returns>Predicción de brotes para los meses solicitados</returns>
-        [HttpPost("brotes/predict")]
+        [HttpPost("predict")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -40,12 +41,12 @@ namespace Observatorio.API.Controllers
                 _logger.LogInformation($"Predicción de brotes para municipio: {payload.Municipio ?? "Todos"}");
 
                 var url = $"{_aiBaseUrl}/api/v1/predict/brotes";
-                
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
-                
+
                 var content = new StringContent(
                     JsonSerializer.Serialize(payload, options),
                     System.Text.Encoding.UTF8,
@@ -78,7 +79,7 @@ namespace Observatorio.API.Controllers
         /// Usado para la matriz de monitoreo del dashboard
         /// </summary>
         /// <returns>Lista de predicciones para todos los municipios</returns>
-        [HttpGet("brotes/todos")]
+        [HttpGet("todos")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetBrotesTodos()
@@ -110,7 +111,7 @@ namespace Observatorio.API.Controllers
         /// Obtiene listado de municipios disponibles para predicción
         /// </summary>
         /// <returns>Lista de municipios</returns>
-        [HttpGet("brotes/municipios")]
+        [HttpGet("municipios")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetBrotesMunicipios()
@@ -142,7 +143,7 @@ namespace Observatorio.API.Controllers
         /// Incluye versión, features, parámetros de entrenamiento
         /// </summary>
         /// <returns>Información del modelo</returns>
-        [HttpGet("brotes/info")]
+        [HttpGet("info")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetBrotesInfo()
@@ -175,7 +176,7 @@ namespace Observatorio.API.Controllers
         /// </summary>
         /// <param name="municipio">Nombre del municipio</param>
         /// <returns>Serie temporal de casos históricos</returns>
-        [HttpGet("brotes/historico/{municipio}")]
+        [HttpGet("historico/{municipio}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
@@ -208,7 +209,7 @@ namespace Observatorio.API.Controllers
         /// Ordenadas de mayor a menor relevancia
         /// </summary>
         /// <returns>Lista de variables con su importancia</returns>
-        [HttpGet("brotes/variables-importancia")]
+        [HttpGet("variables-importancia")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetBrotesVariablesImportancia()
@@ -240,7 +241,7 @@ namespace Observatorio.API.Controllers
         /// Para todos los municipios
         /// </summary>
         /// <returns>Variaciones por municipio</returns>
-        [HttpGet("brotes/variacion")]
+        [HttpGet("variacion")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetBrotesVariacion()
@@ -267,141 +268,16 @@ namespace Observatorio.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Predice anomalías para un evento específico
-        /// </summary>
-        [HttpPost("anomalias/predict")]
-        public async Task<IActionResult> PredictAnomalias([FromBody] AnomalíasPayload payload)
+
+        // ── DTOs para Brotes ─────────────────────────────────────────────────────
+        public class BrotesPayload
         {
-            try
-            {
-                _logger.LogInformation($"Detección de anomalías para evento: {payload.Entidad}");
-
-                var url = $"{_aiBaseUrl}/api/v1/predict/anomalias";
-                
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                };
-                
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload, options),
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                );
-
-                var response = await _httpClient.PostAsync(url, content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Error en detección de anomalías: {response.StatusCode}");
-                    return StatusCode(
-                        (int)response.StatusCode,
-                        new { error = "Error al detectar anomalías", details = await response.Content.ReadAsStringAsync() }
-                    );
-                }
-
-                var result = await response.Content.ReadAsStringAsync();
-                return Ok(JsonSerializer.Deserialize<object>(result));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Excepción en detección de anomalías: {ex.Message}");
-                return StatusCode(500, new { error = "Error interno", details = ex.Message });
-            }
+            public string? Municipio { get; set; }
+            public int MesesAPredecir { get; set; } = 3;
         }
 
-        /// <summary>
-        /// Predice demanda para un período específico
-        /// </summary>
-        [HttpPost("demanda/predict")]
-        public async Task<IActionResult> PredictDemanda([FromBody] DemandaPayload payload)
-        {
-            try
-            {
-                _logger.LogInformation($"Predicción de demanda para período: {payload.Periodo}");
+        
 
-                var url = $"{_aiBaseUrl}/api/v1/predict/demanda";
-                
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                };
-                
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload, options),
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                );
-
-                var response = await _httpClient.PostAsync(url, content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Error en predicción de demanda: {response.StatusCode}");
-                    return StatusCode(
-                        (int)response.StatusCode,
-                        new { error = "Error al predecir demanda", details = await response.Content.ReadAsStringAsync() }
-                    );
-                }
-
-                var result = await response.Content.ReadAsStringAsync();
-                return Ok(JsonSerializer.Deserialize<object>(result));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Excepción en predicción de demanda: {ex.Message}");
-                return StatusCode(500, new { error = "Error interno", details = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene información del modelo de Anomalías
-        /// </summary>
-        [HttpGet("anomalias/info")]
-        public async Task<IActionResult> GetAnomalíasInfo()
-        {
-            try
-            {
-                var url = $"{_aiBaseUrl}/api/v1/predict/anomalias/model-info";
-                var response = await _httpClient.GetAsync(url);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return StatusCode((int)response.StatusCode, new { error = "No se pudo obtener información del modelo Anomalías" });
-                }
-
-                var result = await response.Content.ReadAsStringAsync();
-                return Ok(JsonSerializer.Deserialize<object>(result));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error obteniendo info de Anomalías: {ex.Message}");
-                return StatusCode(500, new { error = "Error interno" });
-            }
-        }
-    }
-
-    // ── DTOs para Brotes ─────────────────────────────────────────────────────
-    public class BrotesPayload
-    {
-        public string? Municipio { get; set; }
-        public int MesesAPredecir { get; set; } = 3;
-    }
-
-    // ── DTOs para Anomalías ──────────────────────────────────────────────────
-    public class AnomalíasPayload
-    {
-        public string Entidad { get; set; } = "";
-        public DateTime Fecha { get; set; } = DateTime.Now;
-        public Dictionary<string, object> Medidas { get; set; } = new();
-    }
-
-    // ── DTOs para Demanda ────────────────────────────────────────────────────
-    public class DemandaPayload
-    {
-        public string Periodo { get; set; } = "";
-        public string? Municipio { get; set; }
-        public Dictionary<string, object>? Variables { get; set; }
+        
     }
 }

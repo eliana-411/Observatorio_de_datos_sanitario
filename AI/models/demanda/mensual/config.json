@@ -46,6 +46,14 @@
     "brote_precision": 0.9452,
     "brote_recall": 0.92,
     "brote_f1": 0.9324
+
+    "rmse": 1.2054,
+    "mae": 0.7255,
+    "r2": -0.4415,
+    "brote_umbral": 2.0,
+    "brote_precision": 0.8095,
+    "brote_recall": 0.3953,
+    "brote_f1": 0.5312
   },
   "aggregation": "municipio+mensual",
   "granularidad": "mensual"

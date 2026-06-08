@@ -1,3 +1,7 @@
+using System.Runtime.CompilerServices;
+using System.Text;
+using Dapper;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Observatorio.Application.Analytics.DTOs;
@@ -44,8 +48,8 @@ public class AnalyticsService : IAnalyticsService
         if (string.IsNullOrEmpty(mesEnglish))
             return "Desconocido";
 
-        return MesesEnglishToSpanish.TryGetValue(mesEnglish, out var mesSpanish) 
-            ? mesSpanish 
+        return MesesEnglishToSpanish.TryGetValue(mesEnglish, out var mesSpanish)
+            ? mesSpanish
             : mesEnglish; // Si no encuentra, devuelve el original
     }
 
@@ -182,7 +186,7 @@ public class AnalyticsService : IAnalyticsService
         foreach (var resultado in resultados)
         {
             var municipio = await _municipiosService.GetMunicipioByNombreAsync(resultado.Municipio ?? "", cancelToken);
-            
+
             series.Add(new CasosPorMunicipioRegistroDto
             {
                 CodigoMunicipio = municipio?.CodigoMunicipio ?? "Desconocido",
@@ -561,7 +565,7 @@ public class AnalyticsService : IAnalyticsService
 
         // Query para obtener eventos y hospitalizados por mes y municipio
         FormattableString query;
-        
+
         if (mes.HasValue)
         {
             query = $@"
@@ -619,7 +623,7 @@ public class AnalyticsService : IAnalyticsService
         foreach (var grupo in municipiosAgrupados)
         {
             var municipio = await _municipiosService.GetMunicipioByNombreAsync(grupo.Key ?? "", cancelToken);
-            
+
             // Calcular totales del municipio para porcentajes
             int totalEventosMunicipio = grupo.Sum(g => g.TotalEventos);
             int totalHospitalizadosMunicipio = grupo.Sum(g => g.Hospitalizados);
@@ -652,8 +656,112 @@ public class AnalyticsService : IAnalyticsService
             Series = series
         };
     }
-}
 
+
+    /// <summary>
+    /// Obtiene distribución geográfica con filtros dinámicos para el mapa
+    /// </summary>
+    public async Task<List<DistribucionGeograficaDto>> GetDistribucionGeograficaAsync(
+        FiltrosDistribucionDto filtros,
+        CancellationToken cancelToken = default)
+    {
+        var municipioLog = filtros.Municipio ?? "Todos";
+        var rangoEdadLog = filtros.RangoEdad ?? "Todos";
+        var generoLog = filtros.Genero ?? "Todos";
+        var anioLog = filtros.Anio?.ToString() ?? "Todos";
+        var hospitalizadoLog = filtros.Hospitalizado ?? "Todos";
+
+        _logger?.LogInformation(
+            "GetDistribucionGeografica: Municipio={municipio}, RangoEdad={rangoEdad}, Genero={genero}, Anio={anio}, Hospitalizado={hospitalizado}",
+            municipioLog, rangoEdadLog, generoLog, anioLog, hospitalizadoLog);
+
+        var sql = new StringBuilder(@"
+            SELECT 
+                l.municipio_evento as NombreMunicipio,
+                COUNT(*) as TotalCasos,
+                SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) as Hospitalizados
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE 1=1");
+
+        var parameters = new DynamicParameters();
+
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+        {
+            sql.Append(" AND l.municipio_evento = @Municipio");
+            parameters.Add("Municipio", filtros.Municipio);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
+        {
+            sql.Append(" AND p.grupo_etario = @RangoEdad");
+            parameters.Add("RangoEdad", filtros.RangoEdad);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtros.Genero))
+        {
+            sql.Append(" AND p.genero = @Genero");
+            parameters.Add("Genero", filtros.Genero);
+        }
+
+        if (filtros.Anio.HasValue)
+        {
+            sql.Append(" AND t.anio = @Anio");
+            parameters.Add("Anio", filtros.Anio.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
+        {
+            if (filtros.Hospitalizado == "Hospitalizado")
+            {
+                sql.Append(" AND f.hospitalizado = 1");
+            }
+            else if (filtros.Hospitalizado == "No hospitalizado")
+            {
+                sql.Append(" AND f.hospitalizado = 0");
+            }
+        }
+
+        sql.Append(" GROUP BY l.municipio_evento ORDER BY TotalCasos DESC");
+
+        // Usar Dapper en vez de EF Core SqlQuery
+        using var connection = _dbContext.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync(cancelToken);
+
+        var resultados = await connection.QueryAsync<DistribucionGeograficaRawDto>(
+            sql.ToString(), 
+            parameters);
+
+        // Enriquecer con coordenadas del CSV
+        var resultadoFinal = new List<DistribucionGeograficaDto>();
+
+        foreach (var r in resultados)
+        {
+            var municipioInfo = await _municipiosService
+                .GetMunicipioConCoordenadasByNombreAsync(r.NombreMunicipio ?? "", cancelToken);
+
+            resultadoFinal.Add(new DistribucionGeograficaDto
+            {
+                CodigoMunicipio = municipioInfo?.CodigoMunicipio ?? "Desconocido",
+                NombreMunicipio = r.NombreMunicipio ?? "Desconocido",
+                Latitud = municipioInfo?.Latitud,
+                Longitud = municipioInfo?.Longitud,
+                TotalCasos = r.TotalCasos,
+                Hospitalizados = r.Hospitalizados,
+                TasaHospitalizacion = r.TotalCasos > 0
+                    ? Math.Round((decimal)r.Hospitalizados / r.TotalCasos * 100, 2)
+                    : 0
+            });
+        }
+
+        _logger?.LogInformation("GetDistribucionGeografica: {count} municipios encontrados", resultadoFinal.Count);
+
+        return resultadoFinal;
+    }
+}
 /// <summary>
 /// DTO para la query raw de casos por municipio
 /// </summary>
@@ -701,4 +809,14 @@ internal class DistribucionHospitalizacionMunicipioRawDto
     public string? Municipio { get; set; }
     public bool Hospitalizado { get; set; }
     public int Total { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de distribución geográfica
+/// </summary>
+internal class DistribucionGeograficaRawDto
+{
+    public string? NombreMunicipio { get; set; }
+    public int TotalCasos { get; set; }
+    public int Hospitalizados { get; set; }
 }

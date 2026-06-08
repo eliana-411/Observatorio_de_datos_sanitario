@@ -1,0 +1,139 @@
+{
+  "model_type": "IsolationForest",
+  "trained_at": "2026-06-07T18:20:59.314071",
+  "version": "2.1",
+  "summary": {
+    "total_records": 3602,
+    "total_anomalies": 718,
+    "pct_anomalies": 19.93,
+    "reliability_pct": 95.43,
+    "cv_stability": 0.9317
+  },
+  "charts": {
+    "cross_validation": [
+      {
+        "fold": 1,
+        "pct_anomalies": 20.249653259362,
+        "n_anomalies": 146
+      },
+      {
+        "fold": 2,
+        "pct_anomalies": 21.359223300970875,
+        "n_anomalies": 154
+      },
+      {
+        "fold": 3,
+        "pct_anomalies": 22.22222222222222,
+        "n_anomalies": 160
+      },
+      {
+        "fold": 4,
+        "pct_anomalies": 18.055555555555557,
+        "n_anomalies": 130
+      },
+      {
+        "fold": 5,
+        "pct_anomalies": 20.833333333333332,
+        "n_anomalies": 150
+      }
+    ],
+    "score_distribution": {
+      "min": -0.031981515877999356,
+      "max": 0.04029493992682276,
+      "mean": 0.008986125796596096,
+      "median": 0.009512463096222806,
+      "std": 0.010441717309316733
+    }
+  },
+  "cross_validation": {
+    "folds": [
+      {
+        "fold": 1,
+        "n_train": 2881,
+        "n_val": 721,
+        "n_anomalies": 146,
+        "pct_anomalies": 20.249653259362,
+        "score_min": -0.023034905028907315,
+        "score_max": 0.04081273678596947,
+        "score_mean": 0.008816184859217884,
+        "score_std": 0.009998680624547663
+      },
+      {
+        "fold": 2,
+        "n_train": 2881,
+        "n_val": 721,
+        "n_anomalies": 154,
+        "pct_anomalies": 21.359223300970875,
+        "score_min": -0.033635880759682324,
+        "score_max": 0.038752275777885536,
+        "score_mean": 0.0085069410130848,
+        "score_std": 0.010716169228888383
+      },
+      {
+        "fold": 3,
+        "n_train": 2882,
+        "n_val": 720,
+        "n_anomalies": 160,
+        "pct_anomalies": 22.22222222222222,
+        "score_min": -0.03324276825821976,
+        "score_max": 0.03906329197804764,
+        "score_mean": 0.008432543994664794,
+        "score_std": 0.010385634011305774
+      },
+      {
+        "fold": 4,
+        "n_train": 2882,
+        "n_val": 720,
+        "n_anomalies": 130,
+        "pct_anomalies": 18.055555555555557,
+        "score_min": -0.025593506159148682,
+        "score_max": 0.03735236003845316,
+        "score_mean": 0.008742595406175044,
+        "score_std": 0.010040531007240238
+      },
+      {
+        "fold": 5,
+        "n_train": 2882,
+        "n_val": 720,
+        "n_anomalies": 150,
+        "pct_anomalies": 20.833333333333332,
+        "score_min": -0.021668653427220352,
+        "score_max": 0.037108248017144574,
+        "score_mean": 0.008608777857154389,
+        "score_std": 0.010155014996258451
+      }
+    ],
+    "stability": 0.9317017061691952,
+    "mean_pct_anomalies": 20.543997534288795,
+    "std_pct_anomalies": 1.403119980056185
+  },
+  "test_evaluation": {
+    "n_test": 721,
+    "n_anomalies": 142,
+    "pct_anomalies": 19.694868238557557,
+    "score_min": -0.02825290027411187,
+    "score_max": 0.03951436367822597,
+    "score_mean": 0.009014503487049744,
+    "score_median": 0.009309603819954548,
+    "score_std": 0.010279828190259672,
+    "mean_normal_score": 0.01263419810159117,
+    "mean_anomaly_score": -0.005744673849707202
+  },
+  "reliability": {
+    "separability": 0.9489749833818651,
+    "stability": 0.913869429888168,
+    "coverage": 1.0,
+    "reliability": 0.954281471090011,
+    "reliability_pct": 95.4281471090011,
+    "mean_normal_score": 0.012718744481427562,
+    "mean_anomaly_score": -0.0060067325419191344,
+    "skewness": -0.17226114022366393
+  },
+  "model_params": {
+    "contamination": 0.2,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "random_state": 42,
+    "n_jobs": -1
+  }
+}

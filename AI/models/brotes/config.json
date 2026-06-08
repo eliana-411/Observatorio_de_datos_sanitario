@@ -17,9 +17,15 @@
     "seasonality_prior_scale": 10
   },
   "metrics": {
+
     "rmse": 15.5911,
     "mae": 12.6291,
     "r2": -0.3568
+
+    "rmse": 0.5475,
+    "mae": 0.2988,
+    "r2": 0.5682
+
   },
   "aggregation": "municipio+mes",
   "municipios": [
@@ -56,17 +62,17 @@
       "porcentaje": 30.07
     },
     {
-      "variable": "Casos 2 Meses Atrás",
+      "variable": "Casos 2 Meses Atrï¿½s",
       "importancia": 0.3397,
       "porcentaje": 25.5
     },
     {
-      "variable": "Casos 3 Meses Atrás",
+      "variable": "Casos 3 Meses Atrï¿½s",
       "importancia": 0.2963,
       "porcentaje": 22.24
     },
     {
-      "variable": "Factor Socioeconómico",
+      "variable": "Factor Socioeconï¿½mico",
       "importancia": 0.1401,
       "porcentaje": 10.52
     },
@@ -81,7 +87,7 @@
       "porcentaje": 3.48
     },
     {
-      "variable": "Historial Clínico",
+      "variable": "Historial Clï¿½nico",
       "importancia": 0.0149,
       "porcentaje": 1.12
     }
