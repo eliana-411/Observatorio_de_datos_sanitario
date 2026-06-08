@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
+    { id: 'anomalies', icon: 'biotech', label: 'Predicción de Anomalías', href: '/anomalies' },
     { id: 'brotes', icon: 'warning', label: 'Predicción de Brotes', href: '/brotes' },
     { id: 'ai-assistant', icon: 'psychiatry', label: 'Asistente IA', href: '/ai-assistant' },
     { id: 'analytics', icon: 'query_stats', label: 'Análisis Predictivo', href: '/analytics' },
@@ -83,10 +84,9 @@ export function Sidebar() {
                                 duration-200
                                 min-h-12                               
 
-                                ${
-                                    isActive
-                                        ? 'bg-white dark:bg-surface-container text-primary dark:text-[#2e77c9] shadow-sm'
-                                        : 'text-on-surface-variant dark:text-surface-variant opacity-80 hover:bg-surface-container/50 dark:hover:bg-surface-container/50'
+                                ${isActive
+                                    ? 'bg-white dark:bg-surface-container text-primary dark:text-[#2e77c9] shadow-sm'
+                                    : 'text-on-surface-variant dark:text-surface-variant opacity-80 hover:bg-surface-container/50 dark:hover:bg-surface-container/50'
                                 }
                             `}
                         >
@@ -103,10 +103,9 @@ export function Sidebar() {
                                     whitespace-nowrap
                                     transition-all
                                     duration-200
-                                    ${
-                                        isExpanded
-                                            ? 'opacity-100'
-                                            : 'opacity-0 pointer-events-none'
+                                    ${isExpanded
+                                        ? 'opacity-100'
+                                        : 'opacity-0 pointer-events-none'
                                     }
                                 `}
                             >
