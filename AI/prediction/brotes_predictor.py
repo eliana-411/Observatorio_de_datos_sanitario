@@ -7,11 +7,11 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# ── Rutas ─────────────────────────────────────────────────────────────────────
+# ── Rutas ──────────────
 BASE_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models", "brotes")
 
-# ── Carga de artefactos ───────────────────────────────────────────────────────
+# ── Carga de artefactos ────────────
 def load_artifacts():
     model  = joblib.load(os.path.join(MODEL_DIR, "brotes_model.pkl"))
     scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
@@ -270,21 +270,3 @@ def predecir_brotes(
         "predicciones":    resultados,
         "perfil_historico": perfil
     }
-
-
-# ── Test rápido ───────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    resultados = predecir_brotes(
-        municipio="Riosucio",
-        zona="Urbana",
-        anio=2025,
-        mes=1,
-        meses_a_predecir=3
-    )
-
-    print("\n Predicciones:")
-    for r in resultados:
-        print(f"  {r['anio']}-{r['mes']:02d} | {r['municipio']} ({r['zona']}) | "
-              f"Casos: {r['casos_predichos']} | "
-              f"Media histórica: {r['media_historica']} | "
-              f"Alerta: {r['nivel_alerta']}")

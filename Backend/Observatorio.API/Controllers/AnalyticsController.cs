@@ -6,7 +6,7 @@ namespace Observatorio.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-//! [Authorize] // Comentar temporalmente para pruebas, se puede reactivar luego
+[Authorize] 
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
