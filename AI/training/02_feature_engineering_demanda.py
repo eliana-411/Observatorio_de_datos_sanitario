@@ -223,7 +223,6 @@ def process_mensual():
     df = add_lag_features(df, lags=[1, 2, 3, 6, 12])  # agregar lag 6 y 12
     df = add_rolling_features(df, window=4)
     df = add_trend_feature(df, lag_reciente=1, lag_anterior=3)
-    df = add_target_encoding(df)    # después de lags
     df = add_relative_features(df)  # después de lags
     save_processed(df, "demanda_mensual_processed.csv")
     save_encoders(encoders, ENCODERS_DIR_M)

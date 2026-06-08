@@ -21,8 +21,12 @@ from api.schemas.anomalias_schema import (
 
 router = APIRouter(prefix="/api/v1/detect", tags=["Anomalias"])
 
-# Instancia del detector (singleton)
-detector = AnomaliaDetector()
+_detector_error: str = ""
+try:
+    detector = AnomaliaDetector()
+except Exception as _exc:
+    detector = None
+    _detector_error = str(_exc)
 
 
 # ============ POST - PREDICCIÓN INDIVIDUAL ============
