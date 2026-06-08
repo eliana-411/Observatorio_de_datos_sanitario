@@ -23,10 +23,10 @@ public class RegistroAplanadoDto
     public int Valor2 { get; set; }
     
     [DisplayName("Porcentaje 1")]
-    public decimal Porcentaje1 { get; set; }
+    public decimal? Porcentaje1 { get; set; }
     
     [DisplayName("Porcentaje 2")]
-    public decimal Porcentaje2 { get; set; }
+    public decimal? Porcentaje2 { get; set; } 
     
     [DisplayName("Periodo")]
     public string Periodo { get; set; } = string.Empty;
