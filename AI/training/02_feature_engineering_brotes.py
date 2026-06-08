@@ -1,113 +1,134 @@
 # AI/training/02_feature_engineering.py
 
 import os
+import joblib
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 
-# ── Rutas ────────────────────────────────────────────────────────────────────
-BASE_DIR      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_PATH      = os.path.join(BASE_DIR, "data", "raw", "brotes.csv")
-PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
-PROCESSED_PATH = os.path.join(PROCESSED_DIR, "brotes_processed.csv")
-ENCODERS_DIR  = os.path.join(BASE_DIR, "models", "brotes")
+# ── Rutas ─────────────────────────────────────────────────────────────────────
+BASE_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RAW_PATH        = os.path.join(BASE_DIR, "data", "raw",       "brotes.csv")
+PROCESSED_DIR   = os.path.join(BASE_DIR, "data", "processed")
+PROCESSED_PATH  = os.path.join(PROCESSED_DIR,                 "brotes_processed.csv")
+MODELS_DIR      = os.path.join(BASE_DIR, "models", "brotes")
+SCALER_PATH     = os.path.join(MODELS_DIR,                    "scaler_regressors.pkl")
 
-# ── 1. Carga 
-def load_raw() -> pd.DataFrame:
-    df = pd.read_csv(RAW_PATH)
-    print(f"[load] Filas: {len(df)} | Columnas: {list(df.columns)}")
-    return df
+# Columnas que Prophet necesita tal cual (no se tocan)
+PROPHET_COLS = ["ds", "municipio", "total_eventos"]
 
-# ── 2. Construcción de fecha 
-def build_fecha(df: pd.DataFrame) -> pd.DataFrame:
-    df["fecha"] = pd.to_datetime(
-        df["anio"].astype(str) + "-" + df["mes"].astype(str).str.zfill(2) + "-01"
-    )
-    print(f"[fecha] Rango: {df['fecha'].min()} → {df['fecha'].max()}")
-    return df
-
-# ── 3. Renombrar target 
-def rename_target(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.rename(columns={"total_eventos": "casos"})
-    print(f"[target] casos — min: {df['casos'].min()} | max: {df['casos'].max()} | media: {df['casos'].mean():.2f}")
-    return df
-
-# ── 4. Encoding de categóricas 
-CATEGORICAL_COLS = [
-    "municipio_evento",
-    "zona_evento",          # ← corregido
-    "metodo_predominante",
-    "nivel_letalidad_predominante",
-    "genero_predominante",
-    "grupo_etario_predominante",
-    "situacion_sentimental_predominante",
-    "nombre_mes",
+# Regressores numéricos a normalizar a [0, 1]
+# Prophet es sensible a magnitudes — todos vienen como porcentajes (0-100)
+# o promedios de diferente escala, por eso se escalan juntos.
+REGRESSORS = [
+    "pct_fin_semana",
+    "pct_zona_rural",
+    "pct_fuera_municipio",
+    "edad_promedio",
+    "estrato_promedio",
+    "pct_femenino",
+    "pct_adolescente",
+    "pct_sin_pareja",
+    "pct_relacion_conflictiva",
+    "pct_intoxicacion",
+    "pct_letalidad_alta",
+    "pct_hospitalizado",
+    "pct_requirio_hospitalizacion",
+    "pct_en_tratamiento",
+    "pct_derivacion",
+    "pct_antecedente_sm",
+    "pct_sustancias",
 ]
 
-def encode_categoricals(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    encoders = {}
-    for col in CATEGORICAL_COLS:
-        if col not in df.columns:
-            print(f"[warning] Columna '{col}' no encontrada, se omite.")
-            continue
-        le = LabelEncoder()
-        df[col] = df[col].fillna("Desconocido")
-        df[col + "_enc"] = le.fit_transform(df[col].astype(str))
-        encoders[col] = le
-        print(f"[encoding] {col} → {len(le.classes_)} categorías")
-    return df, encoders
 
-# ── 5. Lags por municipio ─────────────────────────────────────────────────────
-def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.sort_values(["municipio_evento", "fecha"]).reset_index(drop=True)
+# ── 1. Carga ──────────────────────────────────────────────────────────────────
 
-    for lag in [1, 2, 3]:
-        col_name = f"lag_casos_{lag}"
-        df[col_name] = (
-            df.groupby("municipio_evento")["casos"]
-            .shift(lag)
-        )
-        print(f"[lag] {col_name} — nulos generados: {df[col_name].isna().sum()}")
-
-    # Eliminar filas sin lags (primeros meses de cada municipio)
-    before = len(df)
-    df = df.dropna(subset=["lag_casos_1", "lag_casos_2", "lag_casos_3"])
-    print(f"[lag] Filas eliminadas por NaN en lags: {before - len(df)} | Filas finales: {len(df)}")
+def load_raw() -> pd.DataFrame:
+    df = pd.read_csv(RAW_PATH, parse_dates=["ds"])
+    print(f"[load] Filas: {len(df):,} | Municipios: {df['municipio'].nunique()}")
     return df
 
-# ── 6. Variables temporales adicionales ───────────────────────────────────────
-def build_time_features(df: pd.DataFrame) -> pd.DataFrame:
-    df["es_fin_anio"]    = df["mes"].isin([11, 12]).astype(int)
-    df["es_inicio_anio"] = df["mes"].isin([1, 2]).astype(int)
-    print("[time] Variables temporales adicionales creadas.")
+
+# ── 2. Validaciones básicas ───────────────────────────────────────────────────
+
+def validate(df: pd.DataFrame) -> pd.DataFrame:
+    # Verificar columnas requeridas
+    missing = [c for c in PROPHET_COLS + REGRESSORS if c not in df.columns]
+    if missing:
+        raise ValueError(f"Columnas faltantes en brotes.csv: {missing}")
+
+    # Reportar nulos en regressores
+    nulls = df[REGRESSORS].isnull().sum()
+    if nulls.any():
+        print("[validate] Nulos encontrados — se imputan con 0:")
+        print(nulls[nulls > 0].to_string())
+
+    # Imputar nulos con 0 (meses sin eventos → proporciones = 0)
+    df[REGRESSORS] = df[REGRESSORS].fillna(0)
+
+    # Municipios con muy pocos meses (no servirán para entrenar Prophet)
+    conteo = df.groupby("municipio")["ds"].count()
+    escasos = conteo[conteo < 24]
+    if not escasos.empty:
+        print(f"[validate] Municipios con < 24 meses (serán omitidos en entrenamiento):")
+        print(escasos.to_string())
+
+    print("[validate] OK")
     return df
 
-# ── 7. Guardar ────────────────────────────────────────────────────────────────
+
+# ── 3. Normalización de regressores ──────────────────────────────────────────
+
+def normalize_regressors(df: pd.DataFrame) -> tuple[pd.DataFrame, MinMaxScaler]:
+    """
+    Escala todos los regressores a [0, 1] con MinMaxScaler.
+    El scaler se guarda en disco para reutilizarlo en inferencia
+    sin tener que recalcular sobre datos de entrenamiento.
+    """
+    scaler = MinMaxScaler()
+    df = df.copy()
+    df[REGRESSORS] = scaler.fit_transform(df[REGRESSORS])
+
+    for reg in REGRESSORS:
+        print(f"[scaler] {reg:40s} → [{df[reg].min():.3f}, {df[reg].max():.3f}]")
+
+    return df, scaler
+
+
+# ── 4. Guardado ───────────────────────────────────────────────────────────────
+
 def save_processed(df: pd.DataFrame):
     os.makedirs(PROCESSED_DIR, exist_ok=True)
     df.to_csv(PROCESSED_PATH, index=False)
     print(f"[saved] {PROCESSED_PATH}")
 
-def save_encoders(encoders: dict):
-    import joblib
-    os.makedirs(ENCODERS_DIR, exist_ok=True)
-    for col, le in encoders.items():
-        path = os.path.join(ENCODERS_DIR, f"encoder_{col}.pkl")
-        joblib.dump(le, path)
-        print(f"[encoder saved] {path}")
+
+def save_scaler(scaler: MinMaxScaler):
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    joblib.dump(scaler, SCALER_PATH)
+    print(f"[saved] {SCALER_PATH}")
+
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+
 def main():
+    print("=" * 55)
+    print("  Feature engineering — brotes (Prophet)")
+    print("=" * 55)
+
     df = load_raw()
-    df = build_fecha(df)
-    df = rename_target(df)
-    df = build_time_features(df)
-    df, encoders = encode_categoricals(df)
-    df = add_lag_features(df)
+    df = validate(df)
+    df, scaler = normalize_regressors(df)
     save_processed(df)
-    save_encoders(encoders)
-    print("\n Feature engineering completado.")
-    print(df.head())
+    save_scaler(scaler)
+
+    print(f"\nResumen final:")
+    print(f"  Filas procesadas : {len(df):,}")
+    print(f"  Municipios       : {df['municipio'].nunique()}")
+    print(f"  Rango fechas     : {df['ds'].min()} → {df['ds'].max()}")
+    print(f"  Regressores      : {len(REGRESSORS)}")
+    print("\nFeature engineering completado.")
+    print(df[PROPHET_COLS + REGRESSORS[:3]].head())
+
 
 if __name__ == "__main__":
     main()

@@ -1,118 +1,153 @@
+-- ============================================================
+-- Vista: vw_brotes (versión actualizada)
+-- Propósito: Datos agregados mensuales por municipio para
+--            entrenamiento del modelo Prophet de brotes.
+-- Granularidad: 1 fila por (municipio_evento × año × mes)
+-- ============================================================
 USE ObservatorioDW;
 GO
 
 CREATE OR ALTER VIEW dbo.vw_brotes AS
+
 SELECT
-    -- Temporales
-    dt.anio,
-    dt.mes,
-    dt.trimestre,
-    dt.nombre_mes,
+    -- ── Dimensión temporal ────────────────────────────────────────────────
+    DATEFROMPARTS(t.anio, t.mes, 1)     AS ds,
+    t.anio,
+    t.mes,
+    t.trimestre,
 
-    -- Lugar
-    dl.municipio_evento,
-    dl.zona_evento,
+    -- ── Dimensión geográfica ──────────────────────────────────────────────
+    l.municipio_evento                  AS municipio,
+    l.departamento,
 
-    -- Volumen (TARGET)
-    COUNT(fe.id_registro)                               AS total_eventos,
+    -- ── Variable objetivo ─────────────────────────────────────────────────
+    COUNT(*)                            AS total_eventos,
 
-    -- Hospitalización
-    SUM(CAST(fe.hospitalizado AS INT))                AS hospitalizados,
-    AVG(CAST(fe.hospitalizado AS FLOAT))              AS tasa_hospitalizacion,
+    -- ── Regressores: temporalidad ─────────────────────────────────────────
+    ROUND(AVG(CAST(t.es_fin_de_semana AS FLOAT)) * 100, 2)
+                                        AS pct_fin_semana,
 
-    -- Método predominante
-    (
-        SELECT TOP 1 dm2.metodo
-        FROM dbo.FACT_EVENTO fe2
-        JOIN dbo.DIM_METODO dm2 ON fe2.id_metodo = dm2.id_metodo
-        JOIN dbo.DIM_TIEMPO  dt2 ON fe2.id_tiempo = dt2.id_tiempo
-        JOIN dbo.DIM_LUGAR   dl2 ON fe2.id_lugar  = dl2.id_Lugar
-        WHERE dl2.municipio_evento = dl.municipio_evento
-          AND dt2.anio             = dt.anio
-          AND dt2.mes              = dt.mes
-        GROUP BY dm2.metodo
-        ORDER BY COUNT(*) DESC
-    )                                                   AS metodo_predominante,
+    -- ── Regressores: geografía ────────────────────────────────────────────
+    ROUND(
+        SUM(CASE WHEN l.zona_evento IN ('Rural', 'Rural Disperso')
+                 THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_zona_rural,
 
-    -- Letalidad (varchar → moda en lugar de promedio)
-    (
-        SELECT TOP 1 dm2.nivel_letalidad
-        FROM dbo.FACT_EVENTO fe2
-        JOIN dbo.DIM_METODO dm2 ON fe2.id_metodo = dm2.id_metodo
-        JOIN dbo.DIM_TIEMPO  dt2 ON fe2.id_tiempo = dt2.id_tiempo
-        JOIN dbo.DIM_LUGAR   dl2 ON fe2.id_lugar  = dl2.id_Lugar
-        WHERE dl2.municipio_evento = dl.municipio_evento
-          AND dt2.anio             = dt.anio
-          AND dt2.mes              = dt.mes
-        GROUP BY dm2.nivel_letalidad
-        ORDER BY COUNT(*) DESC
-    )                                                   AS nivel_letalidad_predominante,
+    ROUND(
+        AVG(CAST(CASE WHEN l.mismo_municipio = 0 THEN 1 ELSE 0 END AS FLOAT)) * 100, 2
+    )                                   AS pct_fuera_municipio,
 
-    -- Género predominante
-    (
-        SELECT TOP 1 dp2.genero
-        FROM dbo.FACT_EVENTO fe2
-        JOIN dbo.DIM_PERSONA dp2 ON fe2.id_persona = dp2.id_persona
-        JOIN dbo.DIM_TIEMPO  dt2 ON fe2.id_tiempo  = dt2.id_tiempo
-        JOIN dbo.DIM_LUGAR   dl2 ON fe2.id_lugar   = dl2.id_Lugar
-        WHERE dl2.municipio_evento = dl.municipio_evento
-          AND dt2.anio             = dt.anio
-          AND dt2.mes              = dt.mes
-        GROUP BY dp2.genero
-        ORDER BY COUNT(*) DESC
-    )                                                   AS genero_predominante,
+    -- ── Regressores: perfil demográfico ───────────────────────────────────
+    ROUND(AVG(CAST(p.edad    AS FLOAT)), 2) AS edad_promedio,
+    ROUND(AVG(CAST(p.estrato AS FLOAT)), 2) AS estrato_promedio,
 
-    -- Grupo etario predominante
-    (
-        SELECT TOP 1 dp2.grupo_etario
-        FROM dbo.FACT_EVENTO fe2
-        JOIN dbo.DIM_PERSONA dp2 ON fe2.id_persona = dp2.id_persona
-        JOIN dbo.DIM_TIEMPO  dt2 ON fe2.id_tiempo  = dt2.id_tiempo
-        JOIN dbo.DIM_LUGAR   dl2 ON fe2.id_lugar   = dl2.id_Lugar
-        WHERE dl2.municipio_evento = dl.municipio_evento
-          AND dt2.anio             = dt.anio
-          AND dt2.mes              = dt.mes
-        GROUP BY dp2.grupo_etario
-        ORDER BY COUNT(*) DESC
-    )                                                   AS grupo_etario_predominante,
+    ROUND(
+        SUM(CASE WHEN p.genero = 'Femenino' THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_femenino,
 
-    -- Situación sentimental predominante
-    (
-        SELECT TOP 1 dp2.situacion_sentimental
-        FROM dbo.FACT_EVENTO fe2
-        JOIN dbo.DIM_PERSONA dp2 ON fe2.id_persona = dp2.id_persona
-        JOIN dbo.DIM_TIEMPO  dt2 ON fe2.id_tiempo  = dt2.id_tiempo
-        JOIN dbo.DIM_LUGAR   dl2 ON fe2.id_lugar   = dl2.id_Lugar
-        WHERE dl2.municipio_evento = dl.municipio_evento
-          AND dt2.anio             = dt.anio
-          AND dt2.mes              = dt.mes
-        GROUP BY dp2.situacion_sentimental
-        ORDER BY COUNT(*) DESC
-    )                                                   AS situacion_sentimental_predominante,
+    -- Adolescentes (12-17) — grupo de alto riesgo
+    ROUND(
+        SUM(CASE WHEN p.grupo_poblacional = 'Adolescencia (12-17)'
+                 THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_adolescente,
 
-    -- Promedios numéricos persona
-    AVG(CAST(dp.edad AS FLOAT))                         AS edad_promedio,
-    AVG(CAST(dp.estrato AS FLOAT))                      AS estrato_promedio,
+    -- ── Regressores: situación sentimental ────────────────────────────────
+    -- Sin pareja activa (sin pareja + ruptura reciente + duelo)
+    ROUND(
+        SUM(CASE WHEN p.situacion_sentimental IN (
+                        'Sin Pareja',
+                        'Ruptura Reciente',
+                        'Duelo Por Perdida De Pareja'
+                    ) THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_sin_pareja,
 
-    -- Contexto (nombres corregidos)
-    AVG(CAST(dc.tiene_antecedente AS FLOAT))            AS antecedentes_mental_promedio,
-    AVG(CAST(dc.consume_sustancias_flag AS FLOAT))      AS consumo_sustancias_promedio,
+    -- Relación conflictiva o en proceso de separación
+    ROUND(
+        SUM(CASE WHEN p.situacion_sentimental IN (
+                        'Relacion Conflictiva',
+                        'En Proceso De Separacion'
+                    ) THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_relacion_conflictiva,
 
-    -- Movilidad
-    AVG(CAST(dl.mismo_municipio AS FLOAT))              AS tasa_mismo_municipio
+    -- ── Regressores: método ───────────────────────────────────────────────
+    -- Intoxicación — método más frecuente y con perfil diferenciado
+    ROUND(
+        SUM(CASE WHEN m.metodo IN (
+                        'Intoxicacion Por Medicamentos',
+                        'Intoxicacion Por Otras Sustancias',
+                        'Intoxicacion Por Plaguicidas'
+                    ) THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_intoxicacion,
 
-FROM dbo.FACT_EVENTO fe
-JOIN dbo.DIM_TIEMPO   dt ON fe.id_tiempo   = dt.id_tiempo
-JOIN dbo.DIM_LUGAR    dl ON fe.id_lugar    = dl.id_Lugar
-JOIN dbo.DIM_PERSONA  dp ON fe.id_persona  = dp.id_persona
-JOIN dbo.DIM_METODO   dm ON fe.id_metodo   = dm.id_metodo
-JOIN dbo.DIM_ATENCION da ON fe.id_atencion = da.id_atencion
-JOIN dbo.DIM_CONTEXTO dc ON fe.id_contexto = dc.id_contexto
+    -- Métodos de alta letalidad
+    ROUND(
+        SUM(CASE WHEN m.nivel_letalidad = 'Alto' THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_letalidad_alta,
+
+    -- ── Regressores: atención clínica ─────────────────────────────────────
+    ROUND(AVG(CAST(fe.hospitalizado AS FLOAT)) * 100, 2)
+                                        AS pct_hospitalizado,
+
+    ROUND(AVG(CAST(a.requirio_hospitalizacion AS FLOAT)) * 100, 2)
+                                        AS pct_requirio_hospitalizacion,
+
+    -- En tratamiento ambulatorio — indica continuidad de atención
+    ROUND(
+        SUM(CASE WHEN a.resultado_atencion = 'En Tratamiento Ambulatorio'
+                 THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_en_tratamiento,
+
+    -- Derivación a psiquiatría o traslado — casos más graves
+    ROUND(
+        SUM(CASE WHEN a.resultado_atencion IN (
+                        'Remision A Psiquiatria',
+                        'Traslado A Otro Centro',
+                        'Hospitalizacion Prolongada'
+                    ) THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 2
+    )                                   AS pct_derivacion,
+
+    -- ── Regressores: contexto clínico ─────────────────────────────────────
+    ROUND(AVG(CAST(c.tiene_antecedente       AS FLOAT)) * 100, 2)
+                                        AS pct_antecedente_sm,
+
+    ROUND(AVG(CAST(c.consume_sustancias_flag AS FLOAT)) * 100, 2)
+                                        AS pct_sustancias
+
+FROM      dbo.FACT_EVENTO  fe
+JOIN      dbo.DIM_TIEMPO   t  ON fe.id_tiempo   = t.id_tiempo
+JOIN      dbo.DIM_LUGAR    l  ON fe.id_lugar    = l.id_lugar
+JOIN      dbo.DIM_PERSONA  p  ON fe.id_persona  = p.id_persona
+JOIN      dbo.DIM_ATENCION a  ON fe.id_atencion = a.id_atencion
+JOIN      dbo.DIM_CONTEXTO c  ON fe.id_contexto = c.id_contexto
+JOIN      dbo.DIM_METODO   m  ON fe.id_metodo   = m.id_metodo
+
+WHERE     t.fecha >= '2018-01-01'
+  AND     t.fecha <  '2026-01-01'
 
 GROUP BY
-    dt.anio,
-    dt.mes,
-    dt.trimestre,
-    dt.nombre_mes,
-    dl.municipio_evento,
-    dl.zona_evento;
+    t.anio,
+    t.mes,
+    t.trimestre,
+    l.municipio_evento,
+    l.departamento;
+GO
+
+-- ── Verificación post-creación ────────────────────────────────────────────
+-- SELECT TOP 5 * FROM dbo.vw_brotes ORDER BY ds, municipio;
+--
+-- SELECT
+--     COUNT(*)                  AS total_filas,
+--     COUNT(DISTINCT municipio) AS municipios,
+--     COUNT(DISTINCT ds)        AS meses,
+--     MIN(ds) AS desde,
+--     MAX(ds) AS hasta
+-- FROM dbo.vw_brotes;

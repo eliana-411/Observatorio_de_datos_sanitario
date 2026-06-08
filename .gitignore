@@ -42,4 +42,5 @@ Entorno virtual
 # MLflow
 mlruns/
 *.pkl
+.pkl
 mlflow.db 

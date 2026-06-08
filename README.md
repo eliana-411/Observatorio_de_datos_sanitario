@@ -125,7 +125,7 @@ dotnetrestore
 - pip install -r requirements.txt
 
 ## AI
-uvicorn AI.api.main:app --reload --port 8001
+uvicorn api.main:app --reload --port 8001
 ## Modelos predictivos
 pip install prophet mlflow
 pip install xgboost

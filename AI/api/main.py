@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from AI.api.routes.brotes import router as brotes_router
+from api.routes.brotes import router as brotes_router
 
 app = FastAPI(
     title="Observatorio Sanitario Caldas — API de Predicción",
