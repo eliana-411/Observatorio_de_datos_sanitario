@@ -48,6 +48,38 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Permite descargar en Excel o CSV los datos de la vista de distribución por género
+    /// </summary>
+    [HttpGet("vista-distribucion-genero/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDataFromVistaDistribucionGeneroExcel(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaDistribucionGeneroDto>();
+
+        var excel = _exportService.GenerarExcel(datos, "DistribucionGenero");
+        var fileName = $"VistaDistribucionGenero_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("vista-distribucion-genero/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDataFromVistaDistribucionGeneroCsv(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaDistribucionGeneroDto>();
+
+        var csv = _exportService.GenerarCsv(datos);
+        var fileName = $"VistaDistribucionGenero_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    /// <summary>
     /// Obtiene datos de la vista de distribución por grupo etario
     /// </summary> <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con datos de la vista</returns>
@@ -68,6 +100,38 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar la vista de distribución por grupo etario");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV los datos de la vista de distribución por grupo etario
+    /// </summary>
+    [HttpGet("vista-grupo-etario/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDataFromVistaGrupoEtarioExcel(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaGrupoEtarioAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaDistribucionGrupoEtarioDto>();
+
+        var excel = _exportService.GenerarExcel(datos, "GrupoEtario");
+        var fileName = $"VistaGrupoEtario_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("vista-grupo-etario/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDataFromVistaGrupoEtarioCsv(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaGrupoEtarioAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaDistribucionGrupoEtarioDto>();
+
+        var csv = _exportService.GenerarCsv(datos);
+        var fileName = $"VistaGrupoEtario_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -94,10 +158,42 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Permite descargar en Excel o CSV los datos de la vista de distribución por género
+    /// </summary>
+    [HttpGet("vista-metodos-mas-usados/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDataFromVistaMetodosMasUsadosExcel(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaMetodosMasUsadosAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaMetodosMasUsadosDto>();
+
+        var excel = _exportService.GenerarExcel(datos, "Metodos");
+        var fileName = $"VistaMetodosMasUsados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("vista-metodos-mas-usados/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDataFromVistaMetodosMasUsadosCsv(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaMetodosMasUsadosAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaMetodosMasUsadosDto>();
+
+        var csv = _exportService.GenerarCsv(datos);
+        var fileName = $"VistaMetodosMasUsados_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    /// <summary>
     /// Obtiene datos de la vista de hospitalización
     /// </summary> <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con datos de hospitalización (1=Hospitalizado, 0=No Hospitalizado)</returns>
-    
+
     [HttpGet("vista-hospitalizacion")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -118,6 +214,38 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
+    /// Permite descargar en Excel o CSV los datos de la vista de hospitalización
+    /// </summary>
+    [HttpGet("vista-hospitalizacion/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDataFromVistaHospitalizacionExcel(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaHospitalizacionAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaHospitalizacionDto>();
+
+        var excel = _exportService.GenerarExcel(datos, "Hospitalizacion");
+        var fileName = $"VistaHospitalizacion_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("vista-hospitalizacion/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDataFromVistaHospitalizacionCsv(CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDataFromVistaHospitalizacionAsync(cancelToken);
+        
+        var datos = result.Data ?? new List<VistaHospitalizacionDto>();
+
+        var csv = _exportService.GenerarCsv(datos);
+        var fileName = $"VistaHospitalizacion_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    /// <summary>
     /// Obtiene casos por municipio para un año específico (para mapa de calor)
     /// </summary>
     /// <param name="anio">Año de los eventos</param>
@@ -130,11 +258,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
-
             _logger.LogInformation("Consultando casos por municipio para el año {anio}", anio);
             var result = await _analyticsService.GetCasosPorMunicipioAsync(anio, cancelToken);
             _logger.LogInformation("Casos por municipio obtenidos exitosamente");
@@ -145,6 +268,49 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar casos por municipio");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV los casos por municipio para un año específico (para mapa de calor)
+    /// </summary>
+    [HttpGet("casos-por-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetCasosPorMunicipioExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetCasosPorMunicipioAsync(anio, cancelToken);
+        
+        var datos = result.Series ?? new List<CasosPorMunicipioRegistroDto>();
+
+        // Redondear porcentajes antes de exportar (opcional, si quieres 2 decimales)
+        foreach (var d in datos)
+        {
+            d.Porcentaje = Math.Round(d.Porcentaje, 2);
+        }
+
+        var excel = _exportService.GenerarExcel(datos, $"Casos {anio}");
+        var fileName = $"CasosPorMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("casos-por-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetCasosPorMunicipioCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetCasosPorMunicipioAsync(anio, cancelToken);
+        
+        var datos = result.Series ?? new List<CasosPorMunicipioRegistroDto>();
+
+        foreach (var d in datos)
+        {
+            d.Porcentaje = Math.Round(d.Porcentaje, 2);
+        }
+
+        var csv = _exportService.GenerarCsv(datos);
+        var fileName = $"CasosPorMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -160,11 +326,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
-
             _logger.LogInformation("Consultando distribución de género por municipio para el año {anio}", anio);
             var result = await _analyticsService.GetDistribucionGeneroMunicipioAsync(anio, cancelToken);
             _logger.LogInformation("Distribución de género por municipio obtenida exitosamente");
@@ -175,6 +336,88 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar distribución de género por municipio");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV la distribución de género por municipio para un año específico
+    /// </summary>
+    [HttpGet("distribucion-genero-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionGeneroMunicipioExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        var result = await _analyticsService.GetDistribucionGeneroMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Generos.Select(g => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = g.Genero,                     // "Femenino", "Masculino"
+            Valor1 = g.Total,
+            Valor2 = s.TotalEventos,                   // Total del municipio para contexto
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Género" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"Genero {anio}", headers, excluir);
+        var fileName = $"DistribucionGeneroMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-genero-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionGeneroMunicipioCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        var result = await _analyticsService.GetDistribucionGeneroMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Generos.Select(g => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = g.Genero,
+            Valor1 = g.Total,
+            Valor2 = s.TotalEventos,
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Género" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var csv = _exportService.GenerarCsv(datosPlanos, headers, excluir);
+        var fileName = $"DistribucionGeneroMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -190,11 +433,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
-
             _logger.LogInformation("Consultando distribución de grupo etario por municipio para el año {anio}", anio);
             var result = await _analyticsService.GetDistribucionGrupoEtarioMunicipioAsync(anio, cancelToken);
             _logger.LogInformation("Distribución de grupo etario por municipio obtenida exitosamente");
@@ -205,6 +443,85 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar distribución de grupo etario por municipio");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV la distribución de grupo etario por municipio para un año específico
+    /// </summary>
+    [HttpGet("distribucion-grupo-etario-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionGrupoEtarioMunicipioExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDistribucionGrupoEtarioMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.GruposEtarios.Select(g => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = g.GrupoEtario,              // "Adulto", "Adulto Mayor", "Joven", "Adolescente"
+            Valor1 = g.Total,
+            Valor2 = s.TotalEventos,                  // Total del municipio para contexto
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Grupo Etario" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"GrupoEtario {anio}", headers, excluir);
+        var fileName = $"DistribucionGrupoEtarioMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-grupo-etario-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionGrupoEtarioMunicipioCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        var result = await _analyticsService.GetDistribucionGrupoEtarioMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.GruposEtarios.Select(g => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = g.GrupoEtario,
+            Valor1 = g.Total,
+            Valor2 = s.TotalEventos,
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Grupo Etario" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var csv = _exportService.GenerarCsv(datosPlanos, headers, excluir);
+        var fileName = $"DistribucionGrupoEtarioMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -220,11 +537,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
-
             _logger.LogInformation("Consultando distribución de métodos por municipio para el año {anio}", anio);
             var result = await _analyticsService.GetDistribucionMetodosMunicipioAsync(anio, cancelToken);
             _logger.LogInformation("Distribución de métodos por municipio obtenida exitosamente");
@@ -235,6 +547,82 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar distribución de métodos por municipio");
             return BadRequest(new { message = "Error al obtener la analítica", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV la distribución de métodos por municipio para un año específico
+    /// </summary>
+    [HttpGet("distribucion-metodos-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionMetodosMunicipioExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDistribucionMetodosMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Metodos.Select(m => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = m.Metodo,                    // "Ahorcamiento", "Intoxicacion Por Medicamentos", etc.
+            Valor1 = m.Total,
+            Valor2 = s.TotalEventos,                  // Total del municipio para contexto
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)m.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Método" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"Metodos {anio}", headers, excluir);
+        var fileName = $"DistribucionMetodosMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-metodos-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionMetodosMunicipioCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDistribucionMetodosMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Metodos.Select(m => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = m.Metodo,
+            Valor1 = m.Total,
+            Valor2 = s.TotalEventos,
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)m.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Método" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2", "Subcategoria" };
+
+        var csv = _exportService.GenerarCsv(datosPlanos, headers, excluir);
+        var fileName = $"DistribucionMetodosMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     /// <summary>
@@ -250,10 +638,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
 
             _logger.LogInformation("Consultando distribución de hospitalización por municipio para el año {anio}", anio);
             var result = await _analyticsService.GetDistribucionHospitalizacionMunicipioAsync(anio, cancelToken);
@@ -270,7 +654,86 @@ public class AnalyticsController : ControllerBase
     /// <summary>
     /// Permite descargar en Excel o CSV la distribución de hospitalización por municipio para un año específico
     /// </summary>
-    
+    [HttpGet("distribucion-hospitalizacion-municipio/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionHospitalizacionMunicipioExcel([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDistribucionHospitalizacionMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Estados.Select(e => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = e.Estado,                    // "Hospitalizado" / "No Hospitalizado"
+            Subcategoria = e.Hospitalizado == 1 ? "Sí" : "No",
+            Valor1 = e.Total,
+            Valor2 = s.TotalEventos,                  // Total del municipio para contexto
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)e.Total / s.TotalEventos * 100 : 0, 2),
+            // Porcentaje2 = 0,                          // No aplica segunda porcentaje
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Estado" },
+            { "Subcategoria", "Hospitalizado" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2" };
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"Hospitalizacion {anio}", headers, excluir);
+        var fileName = $"DistribucionHospitalizacionMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-hospitalizacion-municipio/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionHospitalizacionMunicipioCsv([FromQuery] int anio, CancellationToken cancelToken)
+    {
+        var result = await _analyticsService.GetDistribucionHospitalizacionMunicipioAsync(anio, cancelToken);
+        
+        var datosPlanos = result.Series?.SelectMany(s => s.Estados.Select(e => new RegistroAplanadoDto
+        {
+            Codigo = s.CodigoMunicipio,
+            Nombre = s.Municipio,
+            Categoria = e.Estado,
+            Subcategoria = e.Hospitalizado == 1 ? "Sí" : "No",
+            Valor1 = e.Total,
+            Valor2 = s.TotalEventos,
+            Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)e.Total / s.TotalEventos * 100 : 0, 2),
+            Periodo = anio.ToString()
+        })).ToList() ?? new List<RegistroAplanadoDto>();
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Estado" },
+            { "Subcategoria", "Hospitalizado" },
+            { "Valor1", "Total" },
+            { "Valor2", "Total Municipio" },
+            { "Porcentaje1", "% del Municipio" },
+            // { "Porcentaje2", "" },
+            { "Periodo", "Año" }
+        };
+
+        var excluir = new List<string> { "Porcentaje2" };
+
+        var csv = _exportService.GenerarCsv(datosPlanos, headers, excluir);
+        var fileName = $"DistribucionHospitalizacionMunicipio_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
+    }
+
+
 
     /// <summary>
     /// Obtiene tendencia temporal de eventos por mes para un año específico
@@ -285,11 +748,6 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            if (anio < 1900 || anio > DateTime.Now.Year)
-            {
-                return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-            }
-
             _logger.LogInformation("Consultando tendencia temporal para el año {anio}", anio);
             var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
             _logger.LogInformation("Tendencia temporal obtenida exitosamente");
@@ -309,43 +767,28 @@ public class AnalyticsController : ControllerBase
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     public async Task<IActionResult> GetTendenciaTemporalExcel([FromQuery] int anio, CancellationToken cancelToken)
     {
-        if (anio < 1900 || anio > DateTime.Now.Year)
-            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
 
         var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
-        
+
         var datos = result.Series ?? new List<TendenciaTemporalRegistroDto>();
 
         var excel = _exportService.GenerarExcel(datos, $"Tendencia Temporal {anio}");
         var fileName = $"TendenciaTemporal_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-        
+
         return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
     [HttpGet("tendencia-temporal/csv")]
     [Produces("text/csv")]
     public async Task<IActionResult> GetTendenciaTemporalCsv([FromQuery] int anio, CancellationToken cancelToken)
     {
-        if (anio < 1900 || anio > DateTime.Now.Year)
-            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
-
         var result = await _analyticsService.GetTendenciaTemporalAsync(anio, cancelToken);
-        
-        var datosPlanos = result.Series?.Select(s => new RegistroAplanadoDto
-        {
-            Codigo = s.Anio.ToString(),
-            Nombre = s.NombreMes ?? "",
-            Categoria = s.NombreMes ?? "",
-            Subcategoria = $"Mes {s.Mes}",
-            Valor1 = s.TotalEventos,
-            Valor2 = s.Hospitalizados,
-            Porcentaje1 = Math.Round(s.PorcentajeEventos, 2),
-            Porcentaje2 = Math.Round(s.PorcentajeHospitalizados, 2),
-            Periodo = s.Anio.ToString()
-        }).ToList() ?? new List<RegistroAplanadoDto>();
 
-        var csv = _exportService.GenerarCsv(datosPlanos);
+        var datos = result.Series ?? new List<TendenciaTemporalRegistroDto>();
+
+        var excluir = new List<string> { "Porcentaje2" };
+        var csv = _exportService.GenerarCsv(datos, null, excluir);
         var fileName = $"TendenciaTemporal_{anio}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-        
+
         var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
         return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
@@ -399,15 +842,21 @@ public class AnalyticsController : ControllerBase
     [HttpGet("tendencia-temporal-municipio/excel")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     public async Task<IActionResult> GetTendenciaTemporalMunicipioExcel(
-        [FromQuery] int anio, 
-        [FromQuery] int? mes, 
+        [FromQuery] int anio,
+        [FromQuery] int? mes,
         CancellationToken cancelToken)
     {
-        // Validaciones...
+        // Validaciones (copiar del GET original)
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        if (mes.HasValue && (mes < 1 || mes > 12))
+            return BadRequest(new { message = "Mes inválido", error = "El mes debe estar entre 1 y 12" });
+
         var result = await _analyticsService.GetTendenciaTemporalMunicipioAsync(anio, mes, cancelToken);
-        
+
         var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
-        
+
         var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
         {
             Codigo = s.CodigoMunicipio,
@@ -416,29 +865,49 @@ public class AnalyticsController : ControllerBase
             Subcategoria = $"Mes {d.Mes}",
             Valor1 = d.TotalEventos,
             Valor2 = d.Hospitalizados,
-            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2), // Redondear a 2 decimales para el Excel
-            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2), // Redondear a 2 decimales para el Excel
+            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2),
+            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2),
             Periodo = periodo
         })).ToList();
 
-        var excel = _exportService.GenerarExcel(datosPlanos, $"Tendencia {periodo}");
+        // Headers específicos para este endpoint
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Mes" },
+            { "Subcategoria", "Número Mes" },
+            { "Valor1", "Total Eventos" },
+            { "Valor2", "Hospitalizados" },
+            { "Porcentaje1", "% Eventos" },
+            { "Porcentaje2", "% Hospitalizados" },
+            { "Periodo", "Período" }
+        };
+
+        var excel = _exportService.GenerarExcel(datosPlanos, $"Tendencia T. Municipio {periodo}", headers);
         var fileName = $"TendenciaTemporalMunicipio_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-        
+
         return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 
     [HttpGet("tendencia-temporal-municipio/csv")]
     [Produces("text/csv")]
     public async Task<IActionResult> GetTendenciaTemporalMunicipioCsv(
-        [FromQuery] int anio, 
-        [FromQuery] int? mes, 
+        [FromQuery] int anio,
+        [FromQuery] int? mes,
         CancellationToken cancelToken)
     {
-        // Validaciones...
+        // Mismas validaciones...
+        if (anio < 1900 || anio > DateTime.Now.Year)
+            return BadRequest(new { message = "Año inválido", error = "El año debe estar entre 1900 y el año actual" });
+
+        if (mes.HasValue && (mes < 1 || mes > 12))
+            return BadRequest(new { message = "Mes inválido", error = "El mes debe estar entre 1 y 12" });
+
         var result = await _analyticsService.GetTendenciaTemporalMunicipioAsync(anio, mes, cancelToken);
-        
+
         var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
-        
+
         var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
         {
             Codigo = s.CodigoMunicipio,
@@ -447,18 +916,31 @@ public class AnalyticsController : ControllerBase
             Subcategoria = $"Mes {d.Mes}",
             Valor1 = d.TotalEventos,
             Valor2 = d.Hospitalizados,
-            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2), // Redondear a 2 decimales para el CSV
-            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2), // Redondear a 2 decimales para el CSV
+            Porcentaje1 = Math.Round(d.PorcentajeEventos, 2),
+            Porcentaje2 = Math.Round(d.PorcentajeHospitalizados, 2),
             Periodo = periodo
         })).ToList();
 
-        var csv = _exportService.GenerarCsv(datosPlanos);
-        var fileName = $"TendenciaTemporalMunicipio_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-        
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Mes" },
+            { "Subcategoria", "Número Mes" },
+            { "Valor1", "Total Eventos" },
+            { "Valor2", "Hospitalizados" },
+            { "Porcentaje1", "% Eventos" },
+            { "Porcentaje2", "% Hospitalizados" },
+            { "Periodo", "Período" }
+        };
+
+        var csv = _exportService.GenerarCsv(datosPlanos, headers);
         var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        var fileName = $"TendenciaTemporalMunicipio_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
         return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
-    
+
     /// <summary>
     /// Obtiene distribución geográfica de casos con filtros dinámicos para el mapa
     /// </summary>
@@ -503,10 +985,10 @@ public class AnalyticsController : ControllerBase
         };
 
         var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
-        
+
         var excel = _exportService.GenerarExcel(datos, "Distribución Geográfica");
         var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-        
+
         return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 
@@ -529,11 +1011,11 @@ public class AnalyticsController : ControllerBase
         };
 
         var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
-        
+
         var csv = _exportService.GenerarCsv(datos);
         var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
         var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-        
+
         return File(csvBytes, "text/csv", fileName);
     }
 
