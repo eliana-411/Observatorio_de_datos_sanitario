@@ -762,6 +762,25 @@ public class AnalyticsService : IAnalyticsService
 
         return resultadoFinal;
     }
+
+    public async Task<PiramidePoblacionalResponseDto> GetPiramidePoblacionalAsync(CancellationToken cancelToken = default)
+    {
+        _logger?.LogInformation("GetPiramidePoblacional: Consultando vista");
+
+        FormattableString query = $@"
+            SELECT 
+                genero AS Genero, 
+                grupo_etario AS GrupoEtario,
+                total AS Total
+            FROM vw_piramide_poblacional
+            ORDER BY grupo_etario, genero
+        ";
+
+        var data = await _dbContext.Database.SqlQuery<PiramidePoblacionalDto>(query)
+            .ToListAsync(cancelToken);
+
+        return new PiramidePoblacionalResponseDto { Data = data };
+    }
 }
 /// <summary>
 /// DTO para la query raw de casos por municipio
