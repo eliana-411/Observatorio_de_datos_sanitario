@@ -22,7 +22,9 @@ export function TimeSeriesChart() {
 
     // Sincronizar con cambios del store global
     useEffect(() => {
-        setSelectedYear(selectedAnio);
+        // Si selectedAnio es null (todos), usar el año actual
+        const yearToUse = selectedAnio ?? new Date().getFullYear();
+        setSelectedYear(yearToUse);
     }, [selectedAnio]);
 
     // Handler para cambios del selector local

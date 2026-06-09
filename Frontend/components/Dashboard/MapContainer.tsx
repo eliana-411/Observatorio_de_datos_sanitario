@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useFilterStore } from '@/store/filterStore';
+import { DistribucionGeograficaData } from '@/lib/api/analytics';
 
 interface Municipio {
     codigoMunicipio: string;
@@ -13,27 +13,14 @@ interface Municipio {
 }
 
 interface MapContainerProps {
-    municipiosData?: Array<{
-        codigoMunicipio: string;
-        municipio: string;
-        totalEventos: number;
-        generos: Array<{ genero: string; total: number }>;
-    }>;
-    municipiosGrupoEtarioData?: Array<{
-        codigoMunicipio: string;
-        municipio: string;
-        totalEventos: number;
-        gruposEtarios: Array<{ grupoEtario: string; total: number }>;
-    }>;
+    distribucionGeograficaData?: DistribucionGeograficaData[];
     municipiosCoordenadas?: Map<string, Municipio>;
 }
 
 export function MapContainer({
-    municipiosData = [],
-    municipiosGrupoEtarioData = [],
+    distribucionGeograficaData = [],
     municipiosCoordenadas
 }: MapContainerProps) {
-    const { selectedGenero, selectedGrupoEtario } = useFilterStore();
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const markersRef = useRef<L.CircleMarker[]>([]);
@@ -120,18 +107,12 @@ export function MapContainer({
         };
     }, []);
 
-    // Update markers when selectedGenero, selectedGrupoEtario or data changes
+    // Update markers when data changes
     useEffect(() => {
         if (!mapInstanceRef.current) return;
 
         const map = mapInstanceRef.current;
-
-        // Determinar cuál dataset usar
-        const usarGrupoEtario = selectedGrupoEtario !== 'todos';
-        const dataActual = usarGrupoEtario ? municipiosGrupoEtarioData : municipiosData;
-        const filtroActual = usarGrupoEtario ? selectedGrupoEtario : selectedGenero;
-
-        console.log('MapContainer updating markers. usarGrupoEtario:', usarGrupoEtario, 'filtro:', filtroActual, 'data:', dataActual.length);
+        console.log('MapContainer - Datos recibidos:', distribucionGeograficaData);
 
         // Limpiar marcadores anteriores
         markersRef.current.forEach(marker => {
@@ -139,114 +120,114 @@ export function MapContainer({
         });
         markersRef.current = [];
 
-        // Calcular el máximo de eventos para normalizar colores
-        let maxEventos = 0;
-        dataActual.forEach((municipio: any) => {
-            let datosFilterados: any[] = [];
+        // Si no hay datos, no hacer nada
+        if (!distribucionGeograficaData || distribucionGeograficaData.length === 0) {
+            console.log('MapContainer - Sin datos para mostrar');
+            return;
+        }
 
-            if (usarGrupoEtario) {
-                datosFilterados = (municipio.gruposEtarios || []);
-                if (filtroActual !== 'todos') {
-                    datosFilterados = datosFilterados.filter(
-                        g => g.grupoEtario?.toLowerCase() === filtroActual.toLowerCase()
-                    );
-                }
-            } else {
-                datosFilterados = (municipio.generos || []);
-                if (filtroActual !== 'Género: Todos') {
-                    datosFilterados = datosFilterados.filter(
-                        g => g.genero?.toLowerCase() === filtroActual.replace('Género: ', '').toLowerCase()
-                    );
-                }
-            }
-
-            if (datosFilterados.length > 0) {
-                const total = datosFilterados.reduce((sum, d) => sum + d.total, 0);
-                maxEventos = Math.max(maxEventos, total);
-            }
+        // Calcular el máximo de casos para normalizar colores
+        let maxCasos = 0;
+        distribucionGeograficaData.forEach((municipio) => {
+            maxCasos = Math.max(maxCasos, municipio.totalCasos);
         });
-
-        console.log('Max eventos:', maxEventos);
+        console.log('MapContainer - Max casos:', maxCasos, 'Total municipios:', distribucionGeograficaData.length);
 
         // Función para obtener color según densidad
-        const getColorByDensity = (eventos: number, max: number) => {
+        const getColorByDensity = (casos: number, max: number) => {
             if (max === 0) return { fill: '#3B82F6', stroke: '#1E40AF' };
 
-            const porcentaje = eventos / max; // 0 a 1
+            const porcentaje = casos / max;
 
-            // Rojo (alto) -> Amarillo (medio) -> Azul (bajo)
             if (porcentaje >= 0.66) {
-                // Rojo (alto riesgo)
                 return { fill: '#DC2626', stroke: '#991B1B' };
             } else if (porcentaje >= 0.33) {
-                // Amarillo/Naranja (riesgo medio)
                 return { fill: '#F59E0B', stroke: '#D97706' };
             } else {
-                // Azul (bajo riesgo)
                 return { fill: '#3B82F6', stroke: '#1E40AF' };
             }
         };
 
-        // Agregar nuevos marcadores con el filtro seleccionado
-        dataActual.forEach((municipio: any) => {
-            const coordenada = municipiosCoordenadas?.get(municipio.codigoMunicipio);
-            if (coordenada) {
-                // Filtrar datos según la selección
-                let datosFilterados: any[] = [];
-                let labelFiltro = '';
+        // Agregar nuevos marcadores
+        // Crear bounds para centrar el mapa en todos los municipios
+        const bounds = L.latLngBounds([]);
+        let municipiosConCoordenadas = 0;
 
-                if (usarGrupoEtario) {
-                    datosFilterados = (municipio.gruposEtarios || []);
-                    if (filtroActual !== 'todos') {
-                        datosFilterados = datosFilterados.filter(
-                            g => g.grupoEtario?.toLowerCase() === filtroActual.toLowerCase()
-                        );
-                    }
-                    labelFiltro = filtroActual === 'todos' ? 'Todos los grupos etarios' : filtroActual;
-                } else {
-                    datosFilterados = (municipio.generos || []);
-                    if (filtroActual !== 'Género: Todos') {
-                        datosFilterados = datosFilterados.filter(
-                            g => g.genero?.toLowerCase() === filtroActual.replace('Género: ', '').toLowerCase()
-                        );
-                    }
-                    labelFiltro = filtroActual;
-                }
+        // Agregar nuevos marcadores
+        distribucionGeograficaData.forEach((municipio) => {
+            // Validar explícitamente que no sean null/undefined, no usar truthy
+            if (municipio.latitud !== null && municipio.latitud !== undefined && 
+                municipio.longitud !== null && municipio.longitud !== undefined) {
+                
+                const colors = getColorByDensity(municipio.totalCasos, maxCasos);
+                const radius = Math.max(10, Math.sqrt(municipio.totalCasos) * 1.5);
 
-                // Solo mostrar marcador si hay datos después del filtro
-                if (datosFilterados.length > 0) {
-                    const totalEventosFiltrados = datosFilterados.reduce((sum, d) => sum + d.total, 0);
+                // Transformar coordenadas - ajustar escala inconsistente
+                const lat = municipio.latitud > 1000 
+                    ? municipio.latitud / 100000  // Latitud en centimicrogrados
+                    : municipio.latitud;           // Ya en grados
+                    
+                const lng = municipio.longitud < -1000 || municipio.longitud > 1000
+                    ? municipio.longitud / 1000000 // Longitud en microgrados
+                    : municipio.longitud;          // Ya en grados
 
-                    // Obtener colores según densidad
-                    const colors = getColorByDensity(totalEventosFiltrados, maxEventos);
-
-                    // Radio más grande y basado en densidad
-                    const radius = Math.max(10, Math.sqrt(totalEventosFiltrados) * 1.5);
-
-                    const marker = L.circleMarker([coordenada.latitud, coordenada.longitud], {
-                        radius: radius,
-                        fillColor: colors.fill,
-                        color: colors.stroke,
-                        weight: 3,
-                        opacity: 1,
-                        fillOpacity: 0.75
-                    })
-                        .addTo(map)
-                        .bindPopup(`
-                            <div style="font-size: 14px;">
-                                <strong>${municipio.municipio}</strong><br>
-                                <span style="color: ${colors.fill}; font-weight: bold;">
-                                    ${labelFiltro}: ${totalEventosFiltrados} casos
-                                </span>
+                const marker = L.circleMarker([lat, lng], {
+                    radius: radius,
+                    fillColor: colors.fill,
+                    color: colors.stroke,
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.75
+                })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="font-size: 13px; max-width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                            <div style="background: linear-gradient(135deg, ${colors.fill} 0%, ${colors.stroke} 100%); color: white; padding: 12px; border-radius: 6px 6px 0 0; margin: -12px -12px 8px -12px;">
+                                <strong style="font-size: 16px; display: block; margin-bottom: 4px;">${municipio.nombreMunicipio}</strong>
+                                <span style="font-size: 11px; opacity: 0.9;">Código: ${municipio.codigoMunicipio}</span>
                             </div>
-                        `);
+                            
+                            <div style="padding: 0 0 12px 0;">
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: ${colors.fill}; font-size: 14px;">Estadísticas Generales</strong>
+                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid ${colors.fill};">
+                                        <div style="margin-bottom: 4px;"><strong>Total de Casos:</strong> <span style="color: ${colors.fill}; font-weight: bold;">${municipio.totalCasos}</span></div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #059669; font-size: 14px;">Hospitalización</strong>
+                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid #059669;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>Hospitalizados:</strong> ${municipio.hospitalizados} 
+                                            <span style="background: #D1FAE5; color: #065F46; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaHospitalizacion.toFixed(2)}%</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>No Hospitalizados:</strong> ${municipio.noHospitalizados} 
+                                            <span style="background: #E0E7FF; color: #312E81; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaNoHospitalizacion.toFixed(2)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
 
-                    markersRef.current.push(marker);
-                }
+                markersRef.current.push(marker);
+                bounds.extend([lat, lng]);
+                municipiosConCoordenadas++;
+            } else {
+                console.warn(`Municipio sin coordenadas válidas: ${municipio.nombreMunicipio}`);
             }
         });
-    }, [selectedGenero, selectedGrupoEtario, municipiosData, municipiosGrupoEtarioData, municipiosCoordenadas]);
 
+        // Ajustar el mapa para mostrar todos los marcadores
+        if (municipiosConCoordenadas > 0 && bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+            console.log(`MapContainer - ${municipiosConCoordenadas} municipios mostrados en el mapa`);
+        } else {
+            console.warn('No hay municipios con coordenadas válidas para mostrar');
+        }
+    }, [distribucionGeograficaData]);
 
     const handleZoomIn = () => {
         if (mapInstanceRef.current) {

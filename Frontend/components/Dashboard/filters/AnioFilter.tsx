@@ -4,11 +4,12 @@ import { FilterCombobox } from './FilterCombobox';
 import { FilterOption } from './types';
 
 interface AnioFilterProps {
-    value: number;
-    onChange: (value: number) => void;
+    value: number | null;
+    onChange: (value: number | null) => void;
 }
 
 const ANOS: FilterOption[] = [
+    { value: "todos", label: "Todos" },
     { value: "2020", label: "2020" },
     { value: "2021", label: "2021" },
     { value: "2022", label: "2022" },
@@ -19,12 +20,14 @@ const ANOS: FilterOption[] = [
 
 export function AnioFilter({ value, onChange }: AnioFilterProps) {
     const handleChange = (selectedValue: string) => {
-        onChange(Number(selectedValue));
+        // Si es "todos", pasar null para indicar que se deben traer todos los años
+        const numValue = selectedValue === "todos" ? null : Number(selectedValue);
+        onChange(numValue);
     };
 
     return (
         <FilterCombobox
-            value={String(value)}
+            value={String(value === null ? "todos" : value)}
             options={ANOS}
             label="Año"
             icon="calendar_month"

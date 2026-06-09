@@ -5,12 +5,12 @@ export interface FilterStore {
     // State
     selectedGenero: string;
     selectedGrupoEtario: string;
-    selectedAnio: number;
+    selectedAnio: number | null;
 
     // Actions
     setSelectedGenero: (genero: string) => void;
     setSelectedGrupoEtario: (grupoEtario: string) => void;
-    setSelectedAnio: (anio: number) => void;
+    setSelectedAnio: (anio: number | null) => void;
     resetFilters: () => void;
 }
 
@@ -20,7 +20,7 @@ export const useFilterStore = create<FilterStore>()(
             // Initial state
             selectedGenero: 'Género: Todos',
             selectedGrupoEtario: 'todos',
-            selectedAnio: 2025, // Cambiar según el año con datos disponibles
+            selectedAnio: null, // null significa "todos" los años
 
             // Actions
             setSelectedGenero: (genero: string) => {
@@ -31,14 +31,14 @@ export const useFilterStore = create<FilterStore>()(
                 console.log('Setting selectedGrupoEtario to:', grupoEtario);
                 set({ selectedGrupoEtario: grupoEtario });
             },
-            setSelectedAnio: (anio: number) => {
+            setSelectedAnio: (anio: number | null) => {
                 console.log('Setting selectedAnio to:', anio);
                 set({ selectedAnio: anio });
             },
             resetFilters: () => set({
                 selectedGenero: 'Género: Todos',
                 selectedGrupoEtario: 'todos',
-                selectedAnio: 2025
+                selectedAnio: null
             }),
         }),
         {

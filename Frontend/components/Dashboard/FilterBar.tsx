@@ -12,33 +12,47 @@ import {
 } from './filters';
 
 interface FilterBarProps {
-    onGeneroChange?: (genero: string) => void;
-    onGrupoEtarioChange?: (grupoEtario: string) => void;
-    onAnioChange?: (anio: number) => void;
+    municipioSeleccionado: string;
+    onMunicipioChange: (municipio: string) => void;
+    hospitalizacionSeleccionada: string;
+    onHospitalizacionChange: (hospitalizacion: string) => void;
+    metodoSeleccionado: string;
+    onMetodoChange: (metodo: string) => void;
 }
 
-export function FilterBar({ onGeneroChange, onGrupoEtarioChange, onAnioChange }: FilterBarProps) {
+export function FilterBar({
+    municipioSeleccionado,
+    onMunicipioChange,
+    hospitalizacionSeleccionada,
+    onHospitalizacionChange,
+    metodoSeleccionado,
+    onMetodoChange
+}: FilterBarProps) {
     const { selectedGenero, selectedGrupoEtario, selectedAnio, setSelectedGenero, setSelectedGrupoEtario, setSelectedAnio } = useFilterStore();
-
-    // Estados locales para filtros que no persisten en store
-    const [municipioSeleccionado, setMunicipioSeleccionado] = React.useState("todos");
-    const [hospitalizacionSeleccionada, setHospitalizacionSeleccionada] = React.useState("todos");
-    const [metodoSeleccionado, setMetodoSeleccionado] = React.useState("todos");
 
     // Manejadores de cambio
     const handleAnioChange = (value: number) => {
         setSelectedAnio(value);
-        onAnioChange?.(value);
     };
 
     const handleGeneroChange = (value: string) => {
         setSelectedGenero(value);
-        onGeneroChange?.(value);
     };
 
     const handleGrupoEtarioChange = (value: string) => {
         setSelectedGrupoEtario(value);
-        onGrupoEtarioChange?.(value);
+    };
+
+    const handleMunicipioChange = (value: string) => {
+        onMunicipioChange(value);
+    };
+
+    const handleHospitalizacionChange = (value: string) => {
+        onHospitalizacionChange(value);
+    };
+
+    const handleMetodoChange = (value: string) => {
+        onMetodoChange(value);
     };
 
     return (
@@ -52,7 +66,7 @@ export function FilterBar({ onGeneroChange, onGrupoEtarioChange, onAnioChange }:
             {/* Municipios */}
             <MunicipioFilter
                 value={municipioSeleccionado}
-                onChange={setMunicipioSeleccionado}
+                onChange={handleMunicipioChange}
             />
 
             {/* Grupo Etario */}
@@ -70,13 +84,13 @@ export function FilterBar({ onGeneroChange, onGrupoEtarioChange, onAnioChange }:
             {/* Método Usado */}
             <MetodoFilter
                 value={metodoSeleccionado}
-                onChange={setMetodoSeleccionado}
+                onChange={handleMetodoChange}
             />
 
             {/* Hospitalización */}
             <HospitalizacionFilter
                 value={hospitalizacionSeleccionada}
-                onChange={setHospitalizacionSeleccionada}
+                onChange={handleHospitalizacionChange}
             />
 
         </section>
