@@ -1,6 +1,7 @@
 # AI/training/03_train_brotes.py
 
 import os
+import json
 import logging
 import warnings
 from datetime import datetime
@@ -312,6 +313,23 @@ def main():
         os.makedirs(MODELS_DIR, exist_ok=True)
         df_res.to_csv(report_path, index=False)
         mlflow.log_artifact(report_path)
+
+        # Actualizar config.json con métricas globales del entrenamiento
+        if not validos.empty:
+            config_path = os.path.join(MODELS_DIR, "config.json")
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+
+            config["metrics"]["rmse"]                = round(validos["rmse"].mean(), 4)
+            config["metrics"]["mae"]                 = round(validos["mae"].mean(),  4)
+            config["metrics"]["r2"]                  = round(validos["r2"].mean(),   4)
+            config["metrics"]["confiabilidad_modelo"] = round(validos["r2"].mean(),  4)
+            config["metrics"]["municipios_entrenados"] = len(validos)
+
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+
+            log.info(f"config.json actualizado — R² global: {config['metrics']['r2']}")
 
         # ── Resumen en consola ────────────────────────────────────────────────
         print("\n" + "=" * 60)

@@ -17,9 +17,10 @@
     "seasonality_prior_scale": 10
   },
   "metrics": {
-    "rmse": 0.5475,
-    "mae": 0.2988,
-    "r2": 0.5682
+    "rmse": 36.2525,
+    "mae": 27.4191,
+    "r2": 0.8434,
+    "confiabilidad_modelo": 0.8434
   },
   "aggregation": "municipio+mes",
   "municipios": [

@@ -44,7 +44,8 @@
     "brote_umbral": 53.25,
     "brote_precision": 0.9452,
     "brote_recall": 0.92,
-    "brote_f1": 0.9324
+    "brote_f1": 0.9324,
+    "confiabilidad_modelo": 0.9324
   },
   "aggregation": "municipio+mensual",
   "granularidad": "mensual"
