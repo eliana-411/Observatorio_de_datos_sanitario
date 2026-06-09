@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FilterBar } from '@/components/Dashboard/FilterBar';
 import { KPICard } from '@/components/Dashboard/KPICard';
 import { MapContainer } from '@/components/Dashboard/MapContainer';
@@ -24,6 +24,8 @@ export default function DashboardPage() {
     const [municipiosGrupoEtarioData, setMunicipiosGrupoEtarioData] = useState<DistribucionGrupoEtarioMunicipioData[]>([]);
     const [loading, setLoading] = useState(false);
     const [noDataNotified, setNoDataNotified] = useState(false);
+    const hasInitialLoadCompleted = useRef(false);
+    const wasLoadingRef = useRef(false);
 
     // Filtros locales para el mapa
     const [municipioSeleccionado, setMunicipioSeleccionado] = useState("todos");
@@ -69,9 +71,18 @@ export default function DashboardPage() {
         loadMunicipiosData();
     }, [selectedAnio, selectedGenero, selectedGrupoEtario, municipioSeleccionado, hospitalizacionSeleccionada, metodoSeleccionado]);
 
-    // Mostrar notificación cuando no hay datos
+    // Marcar que la carga inicial se completó cuando loading pase de true a false
     useEffect(() => {
-        if (!loading && distribucionGeograficaData.length === 0 && !noDataNotified) {
+        if (loading) {
+            wasLoadingRef.current = true;
+        } else if (wasLoadingRef.current && !hasInitialLoadCompleted.current) {
+            hasInitialLoadCompleted.current = true;
+        }
+    }, [loading]);
+
+    // Mostrar notificación cuando no hay datos (solo después de la carga inicial)
+    useEffect(() => {
+        if (hasInitialLoadCompleted.current && !loading && distribucionGeograficaData.length === 0 && !noDataNotified) {
             showWarning(
                 'No hay datos disponibles para los filtros seleccionados. Por favor, intenta con otros criterios.',
                 6000
