@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using BCrypt.Net;
 using Observatorio.Application.Auth.DTOs;
 using Observatorio.Application.Auth.Interfaces;
@@ -167,6 +168,7 @@ public class AuthService : IAuthService
     {
         // Buscar usuario por refresh token
         var users = await _userRepository.GetAllAsync();
+
         var user = users.FirstOrDefault(u => u.RefreshToken == refreshToken);
 
         if (user == null || user.RefreshTokenExpiryDate == null || user.RefreshTokenExpiryDate < DateTime.UtcNow)
@@ -206,4 +208,61 @@ public class AuthService : IAuthService
             await _userRepository.UpdateAsync(user);
         }
     }
+
+    public async Task RequestPasswordResetAsync(ForgotPasswordRequest request)
+    {
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        
+        // SIEMPRE mismo mensaje, sin importar si el email existe (anti-enumeración)
+        if (user == null)
+        {
+            // Opcional: loggear intento con email inexistente
+            return;
+        }
+
+        // Generar código seguro de 6 dígitos
+        var resetCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+        var expiry = DateTime.UtcNow.AddMinutes(10);
+
+        // Guardar en BD (reutilizamos campos de 2FA o creamos nuevos)
+        user.PasswordResetCode = resetCode;
+        user.PasswordResetCodeExpiry = expiry;
+        await _userRepository.UpdateAsync(user);
+
+        // Enviar email
+        await _emailService.SendPasswordResetEmailAsync(user.Email, resetCode);
+    }
+
+    public async Task ResetPasswordAsync(VerifyResetCodeRequest request)
+    {
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user == null)
+            throw new InvalidOperationException("Código inválido o expirado"); // Mensaje genérico
+
+        // Validar código
+        if (user.PasswordResetCode != request.Code)
+            throw new InvalidOperationException("Código inválido o expirado");
+
+        // Validar expiración
+        if (user.PasswordResetCodeExpiry == null || user.PasswordResetCodeExpiry < DateTime.UtcNow)
+            throw new InvalidOperationException("Código inválido o expirado");
+
+        // Validar que no sea la misma contraseña anterior (opcional pero recomendado)
+        if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+            throw new InvalidOperationException("La nueva contraseña debe ser diferente a la anterior");
+
+        // Hashear nueva contraseña (igual que en registro)
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        
+        // Limpiar código usado (single-use)
+        user.PasswordResetCode = null;
+        user.PasswordResetCodeExpiry = null;
+        
+        // Invalidar sesiones existentes (seguridad)
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryDate = null;
+
+        await _userRepository.UpdateAsync(user);
+    }
+
 }
