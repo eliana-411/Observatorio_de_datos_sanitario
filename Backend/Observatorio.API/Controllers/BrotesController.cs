@@ -44,7 +44,7 @@ namespace Observatorio.API.Controllers
 
                 var options = new JsonSerializerOptions
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
                 };
 
                 var content = new StringContent(
@@ -237,25 +237,24 @@ namespace Observatorio.API.Controllers
         }
 
         /// <summary>
-        /// Obtiene variación de casos vs mes anterior
-        /// Para todos los municipios
+        /// Tabla de monitoreo con predicciones reales por municipio.
+        /// Columnas: municipio, tendencia, casos_predichos, desviacion_pct, nivel_alerta.
         /// </summary>
-        /// <returns>Variaciones por municipio</returns>
-        [HttpGet("variacion")]
+        [HttpGet("matriz")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetBrotesVariacion()
+        public async Task<IActionResult> GetBrotesMatriz()
         {
             try
             {
-                _logger.LogInformation("Obteniendo variación de brotes vs mes anterior");
+                _logger.LogInformation("Obteniendo matriz de monitoreo de brotes");
 
-                var url = $"{_aiBaseUrl}/api/v1/predict/brotes/variacion";
+                var url = $"{_aiBaseUrl}/api/v1/predict/brotes/matriz";
                 var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    return StatusCode((int)response.StatusCode, new { error = "Error al obtener variación" });
+                    return StatusCode((int)response.StatusCode, new { error = "Error al obtener matriz" });
                 }
 
                 var result = await response.Content.ReadAsStringAsync();
@@ -263,7 +262,38 @@ namespace Observatorio.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error obteniendo variación: {ex.Message}");
+                _logger.LogError("Error obteniendo matriz de brotes: {Message}", ex.Message);
+                return StatusCode(500, new { error = "Error interno" });
+            }
+        }
+
+        /// <summary>
+        /// Municipios en alerta ALTO o CRÍTICO para el próximo mes.
+        /// Usado para el banner superior del dashboard.
+        /// </summary>
+        [HttpGet("alertas-criticas")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetAlertasCriticas()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo alertas críticas de brotes");
+
+                var url = $"{_aiBaseUrl}/api/v1/predict/brotes/alertas-criticas";
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)response.StatusCode, new { error = "Error al obtener alertas críticas" });
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                return Ok(JsonSerializer.Deserialize<object>(result));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error obteniendo alertas críticas: {Message}", ex.Message);
                 return StatusCode(500, new { error = "Error interno" });
             }
         }
