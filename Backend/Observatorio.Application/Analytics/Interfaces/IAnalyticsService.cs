@@ -101,4 +101,14 @@ public interface IAnalyticsService
     /// <param name="anio">Año de los eventos</param>
     /// <param name="cancelToken">Token de cancelación</param>
     Task<PiramidePoblacionalResponseDto> GetPiramidePoblacionalAsync(CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Obtiene resumen municipal con casos, hospitalizados y tasa de hospitalización
+    /// </summary>
+    /// <param name="filtros">Filtros opcionales de municipio y año</param>
+    /// <param name="cancelToken">Token de cancelación</param>
+    /// <returns>Respuesta con resumen por municipio</returns>
+    Task<ResumenMunicipalResponseDto> GetResumenMunicipalAsync(
+        ResumenMunicipalFiltrosDto filtros, 
+        CancellationToken cancelToken = default);
 }
