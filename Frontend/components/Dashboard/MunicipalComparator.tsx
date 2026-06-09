@@ -103,7 +103,7 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
 
     return (
         <div className="mt-6">
-            <Card className="p-6 bg-white border border-[#e4efff]">
+            <Card className="p-5 bg-white border border-[#e4efff]">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-lg font-bold text-[#0b1d2d]">Comparador municipal</h2>
                     <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
                         const { label, data } = getMunicipioInfo(selectedMunicipio);
 
                         return (
-                            <div key={index} className="space-y-4 min-h-62.5">
+                            <div key={index} className="space-y-4 min-h-85">
                                 {/* Dropdown */}
                                 <ComparatorCombobox
                                     value={selectedMunicipio}

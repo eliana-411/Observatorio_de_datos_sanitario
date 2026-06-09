@@ -279,3 +279,32 @@ export async function fetchDistribucionGeografica(
         };
     }
 }
+
+// Interfaces para Pirámide Poblacional
+export interface PiramidePoblacionalData {
+    genero: string;
+    grupoEtario: string;
+    total: number;
+}
+
+interface PiramidePoblacionalResponse {
+    data: PiramidePoblacionalData[];
+}
+
+export async function fetchPiramidePoblacional(): Promise<ApiResponse<PiramidePoblacionalData[]>> {
+    try {
+        const response = await api.get<PiramidePoblacionalResponse>('/analytics/piramide-poblacional');
+
+        if (response.data) {
+            return { data: response.data.data };
+        }
+
+        return { error: response.error };
+    } catch (err) {
+        return {
+            error: {
+                message: 'Error al cargar la pirámide poblacional'
+            }
+        };
+    }
+}

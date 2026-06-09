@@ -10,6 +10,7 @@ import { GenderDistributionChart } from '@/components/Dashboard/GenderDistributi
 import { AgeGroupDistributionChart } from '@/components/Dashboard/AgeGroupDistributionChart';
 import { MethodsDistributionChart } from '@/components/Dashboard/MethodsDistributionChart';
 import { HospitalizationChart } from '@/components/Dashboard/HospitalizationChart';
+import { PyramidChart } from '@/components/Dashboard/PyramidChart';
 import { MunicipalComparator } from '@/components/Dashboard/MunicipalComparator';
 import { Toast } from '@/components/Toast/Toast';
 import { useMunicipios } from '@/hooks/useMunicipios';
@@ -157,6 +158,7 @@ export default function DashboardPage() {
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
                         <HospitalizationChart />
+                        <PyramidChart />
                     </div>
                 </div>
 
