@@ -59,15 +59,16 @@ public class EmailService : IEmailService
         return await SendEmailAsync(toEmail, userName, subject, plainTextContent, htmlContent);
     }
 
-    public async Task<bool> SendPasswordResetEmailAsync(string toEmail, string resetLink)
+    public async Task<bool> SendPasswordResetEmailAsync(string toEmail, string resetCode)
     {
-        var subject = "Restablece tu contraseña - Observatorio de Datos";
-        var plainTextContent = $"Para restablecer tu contraseña, haz clic en: {resetLink}";
+        var subject = "Código de restablecimiento - Observatorio de Datos";
+        var plainTextContent = $"Tu código de restablecimiento es: {resetCode}\n\nVálido por 10 minutos.";
         var htmlContent = $@"
             <h2>Restablecer Contraseña</h2>
-            <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-            <p><a href='{resetLink}' style='background-color: #2E86AB; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Restablecer Contraseña</a></p>
-            <p>Este enlace expira en 1 hora.</p>";
+            <p>Tu código de restablecimiento es:</p>
+            <h1 style='color: #2E86AB;'>{resetCode}</h1>
+            <p>Este código expira en 10 minutos.</p>
+            <p>Si no solicitaste esto, ignora este correo.</p>";
 
         return await SendEmailAsync(toEmail, "Usuario", subject, plainTextContent, htmlContent);
     }

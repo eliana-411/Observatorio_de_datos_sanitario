@@ -27,5 +27,7 @@ public class User
     public string? TwoFactorCode { get; set; } // Código para autenticación de doble factor
 
     public DateTime? TwoFactorCodeExpiry { get; set; } // Expiración del código 2FA
+    public string? PasswordResetCode { get; set; } // Código para restablecer contraseña
+    public DateTime? PasswordResetCodeExpiry { get; set; } // Expiración del código de restablecimiento
 
 }

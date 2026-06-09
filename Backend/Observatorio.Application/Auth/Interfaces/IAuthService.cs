@@ -9,4 +9,6 @@ public interface IAuthService
     Task<AuthResponse> VerifyTwoFactorCodeAsync(string email, string twoFactorCode);
     Task<AuthResponse> RefreshTokenAsync(string refreshToken);
     Task LogoutAsync(int userId);
+    Task RequestPasswordResetAsync(ForgotPasswordRequest request);
+    Task ResetPasswordAsync(VerifyResetCodeRequest request);
 }
