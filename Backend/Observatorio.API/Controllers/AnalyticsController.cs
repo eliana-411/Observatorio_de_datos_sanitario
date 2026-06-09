@@ -1019,6 +1019,30 @@ public class AnalyticsController : ControllerBase
         return File(csvBytes, "text/csv", fileName);
     }
 
+    /// <summary>
+    /// Obtiene datos para construir pirámide poblacional de casos por género y grupo etario   
+    /// </summary>
+    /// <param name="cancelToken"></param>
+    /// <returns></returns>
+    [HttpGet("piramide-poblacional")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetPiramidePoblacional(CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation("Consultando vista de pirámide poblacional");
+            var result = await _analyticsService.GetPiramidePoblacionalAsync(cancelToken);
+            _logger.LogInformation("Datos de pirámide poblacional obtenidos exitosamente");
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar la vista de pirámide poblacional");
+            return BadRequest(new { message = "Error al obtener la pirámide poblacional", error = ex.Message });
+        }
+    }
+
 
 
 }
