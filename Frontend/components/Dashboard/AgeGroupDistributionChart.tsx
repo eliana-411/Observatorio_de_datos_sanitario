@@ -74,7 +74,7 @@ export function AgeGroupDistributionChart() {
     }));
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-95">
+        <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full/2">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Distribución por Grupo Etario</h3>
             <div className="flex-1 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height={200}>

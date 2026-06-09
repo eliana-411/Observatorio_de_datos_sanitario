@@ -137,7 +137,6 @@ export default function DashboardPage() {
 
                 {/* Map + Distribution Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Main Heat Map */}
                     <div className="lg:col-span-8">
                         <MapContainer
                             distribucionGeograficaData={distribucionGeograficaData}
@@ -147,6 +146,9 @@ export default function DashboardPage() {
                             municipiosCoordenadas={municipiosCoordenadas}
                             municipiosData={municipiosData}
                         />
+                        <div className="lg:col-span-8 mt-6">
+                            <MethodsDistributionChart />
+                        </div>
                     </div>
 
                     {/* Distribution Charts Stack */}
@@ -154,15 +156,6 @@ export default function DashboardPage() {
                         <TopCitiesChart />
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
-                    </div>
-                </div>
-
-                {/* Methods Distribution Chart and Hospitalization Chart */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-8">
-                        <MethodsDistributionChart />
-                    </div>
-                    <div className="lg:col-span-4">
                         <HospitalizationChart />
                     </div>
                 </div>
