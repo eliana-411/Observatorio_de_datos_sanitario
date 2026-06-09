@@ -27,7 +27,7 @@ public class DistribucionHospitalizacionMunicipioRegistroDto
     [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
     [DisplayName("Estados")]
-    public List<HospitalizacionDistribucionDto>? Estados { get; set; }
+    public List<HospitalizacionDistribucionDto> Estados { get; set; } = new();
 }
 
 /// <summary>
