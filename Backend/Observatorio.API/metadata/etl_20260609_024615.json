@@ -1,0 +1,11 @@
+{
+    "inicio": "2026-06-09T02:46:15.340138",
+    "fin": "2026-06-09T02:46:15.354752",
+    "duracion_segundos": 0.01,
+    "extraidos": 0,
+    "validos": 0,
+    "invalidos": 0,
+    "anonimizados": 0,
+    "estado": "ERROR",
+    "error": "EXTRACT falló. No se pudieron leer datos."
+}

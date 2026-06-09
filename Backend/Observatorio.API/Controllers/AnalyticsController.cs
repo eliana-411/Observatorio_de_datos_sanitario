@@ -966,6 +966,10 @@ public class AnalyticsController : ControllerBase
         return Ok(resultado);
     }
 
+    /// <summary>
+    /// Permite descargar en Excel o CSV la distribución geográfica de casos con filtros dinámicos
+    /// </summary>
+
     [HttpGet("distribucion-geografica/excel")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     public async Task<IActionResult> GetDistribucionGeograficaExcel(
@@ -1041,6 +1045,88 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar la vista de pirámide poblacional");
             return BadRequest(new { message = "Error al obtener la pirámide poblacional", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Obtiene datos para construir pirámide poblacional de casos por género y grupo etario y permite exportar a Excel o CSV
+    /// </summary>
+    
+
+    /// <summary>
+    /// Obtiene resumen municipal de casos con filtros dinámicos para el mapa
+    /// </summary>
+    [HttpGet("resumen-municipal")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetResumenMunicipal(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio,
+        CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Consultando resumen municipal - Municipio: {municipio}, Año: {anio}",
+                municipio ?? "Todos",
+                anio?.ToString() ?? "Todos");
+
+            var filtros = new ResumenMunicipalFiltrosDto
+            {
+                Municipio = municipio,
+                Anio = anio
+            };
+
+            var result = await _analyticsService.GetResumenMunicipalAsync(filtros, cancelToken);
+
+            _logger.LogInformation("Resumen municipal obtenido exitosamente - {count} registros", result.Data.Count);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar resumen municipal");
+            return BadRequest(new { message = "Error al obtener el resumen municipal", error = ex.Message });
+        }
+    }
+
+    [HttpGet("resumen-municipal/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetResumenMunicipalExcel(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio)
+    {
+        var filtros = new ResumenMunicipalFiltrosDto
+        {
+            Municipio = municipio,
+            Anio = anio
+        };
+
+        var resultado = await _analyticsService.GetResumenMunicipalAsync(filtros);
+
+        var excel = _exportService.GenerarExcel(resultado.Data, "Resumen Municipal");
+        var fileName = $"ResumenMunicipal_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("resumen-municipal/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetResumenMunicipalCsv(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio)
+    {
+        var filtros = new ResumenMunicipalFiltrosDto
+        {
+            Municipio = municipio,
+            Anio = anio
+        };
+
+        var resultado = await _analyticsService.GetResumenMunicipalAsync(filtros);
+
+        var csv = _exportService.GenerarCsv(resultado.Data);
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        var fileName = $"ResumenMunicipal_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+        return File(csvBytes, "text/csv", fileName);
     }
 
 
