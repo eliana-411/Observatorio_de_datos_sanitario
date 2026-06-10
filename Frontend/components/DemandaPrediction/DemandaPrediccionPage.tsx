@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { FilterSection } from './FilterSection';
 import { ProjectionChart } from './ProjectionChart';
-import { TrimestrProjectionSection } from './TrimestrProjectionSection';
 import { DemandaCriticaRanking } from './DemandaCriticaRanking';
 import { PredictionMetricsPanel } from './PredictionMetricsPanel';
 import { useFilterStore } from '@/store/filterStore';
@@ -76,9 +75,6 @@ export function DemandaPrediccionPage() {
                 </div>
             </div>
 
-            {/* NEW SECTION 1: Proyección Trimestral de Demanda */}
-            <TrimestrProjectionSection />
-
             {/* NEW SECTION 2 & 3: Details Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Monthly Projection Details */}
@@ -143,26 +139,6 @@ export function DemandaPrediccionPage() {
 
             {/* Metrics Bento Grid */}
             <PredictionMetricsPanel />
-
-            {/* Observation Notes */}
-            <div className="glass-panel p-6 rounded-2xl border border-white/40 shadow-sm flex items-start gap-6">
-                <div className="bg-[#0059bb]/20 p-4 rounded-full">
-                    <span className="material-symbols-outlined text-[#0059bb] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        lightbulb
-                    </span>
-                </div>
-                <div className="space-y-2">
-                    <h6 className="text-sm font-black text-[#0059bb] uppercase tracking-widest">
-                        Inferencia del Sentinel AI
-                    </h6>
-                    <p className="text-sm text-[#414754] leading-relaxed max-w-4xl">
-                        El modelo detecta una correlación del 88% entre el descenso de temperatura estacional y el aumento de ingresos
-                        respiratorios para el periodo Ene-Feb 2025. Se recomienda incrementar la disponibilidad de camas en un 15%
-                        antes de la segunda semana de enero. La precisión del modelo se mantiene estable sobre el 94% para el nodo
-                        Alpha Manizales.
-                    </p>
-                </div>
-            </div>
         </div>
     );
 }
