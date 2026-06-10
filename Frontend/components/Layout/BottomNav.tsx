@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
-    { id: 'estadisticas', icon: 'query_stats', label: 'Estads.', href: '/statistics' },
-    { id: 'mapas', icon: 'map', label: 'Mapas', href: '/maps' },
-    { id: 'informes', icon: 'description', label: 'Informes', href: '/reports' },
+    { id: 'ai-assistant', icon: 'smart_toy', label: 'IA', href: '/ai-assistant' },
+    { id: 'brotes', icon: 'warning', label: 'Brotes', href: '/brotes' },
+    { id: 'demanda', icon: 'trending_up', label: 'Demanda', href: '/demanda-prediccion' },
+    { id: 'anomalies', icon: 'query_stats', label: 'Anomalías', href: '/anomalies' },
 ];
 
 export function BottomNav() {

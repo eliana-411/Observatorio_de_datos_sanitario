@@ -1,23 +1,35 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DistribucionGeograficaData } from '@/lib/api/analytics';
 import { Municipio } from '@/hooks/useMunicipios';
 
+interface FiltrosParams {
+    anio?: number;
+    genero?: string;
+    edad?: string;
+    municipio?: string;
+    hospitalizado?: string;
+    metodo?: string;
+}
+
 interface MapContainerProps {
     distribucionGeograficaData?: DistribucionGeograficaData[];
     municipiosCoordenadas?: Map<string, Municipio>;
+    filtros?: FiltrosParams;
 }
 
 export function MapContainer({
     distribucionGeograficaData = [],
-    municipiosCoordenadas
+    municipiosCoordenadas,
+    filtros
 }: MapContainerProps) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
     const markersRef = useRef<L.CircleMarker[]>([]);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Initialize map on mount
     useEffect(() => {
@@ -240,6 +252,61 @@ export function MapContainer({
         }
     };
 
+    const handleDownloadExcel = async () => {
+        setIsDownloading(true);
+        try {
+            const queryParams = new URLSearchParams();
+
+            if (filtros?.anio !== undefined && filtros.anio !== null) {
+                queryParams.append('anio', String(filtros.anio));
+            }
+            if (filtros?.genero) {
+                queryParams.append('genero', filtros.genero);
+            }
+            if (filtros?.edad) {
+                queryParams.append('rangoEdad', filtros.edad);
+            }
+            if (filtros?.municipio) {
+                queryParams.append('municipio', filtros.municipio);
+            }
+            if (filtros?.hospitalizado) {
+                queryParams.append('hospitalizado', filtros.hospitalizado);
+            }
+            if (filtros?.metodo) {
+                queryParams.append('metodo', filtros.metodo);
+            }
+
+            const url = `https://localhost:7083/api/Analytics/distribucion-geografica/excel?${queryParams.toString()}`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+            }
+
+            // Obtener el blob y descargar
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `distribucion-geografica-${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error descargando Excel:', error);
+            alert('Error al descargar el archivo');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     return (
         <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-full md:h-160">
             <div className="p-2 md:p-2 border-b border-surface-container flex justify-between items-start md:items-center bg-white/50 backdrop-blur-md gap-4 flex-col md:flex-row">
@@ -277,6 +344,17 @@ export function MapContainer({
                     >
                         <span className="material-symbols-outlined text-sm" data-icon="map">
                             map
+                        </span>
+                    </button>
+                    <button
+                        onClick={handleDownloadExcel}
+                        disabled={isDownloading}
+                        className="bg-surface-container p-2 rounded-lg hover:bg-surface-container-high transition-colors duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Descargar en Excel"
+                        aria-label="Descargar datos en Excel"
+                    >
+                        <span className="material-symbols-outlined text-sm" data-icon="download">
+                            {isDownloading ? 'downloading' : 'download'}
                         </span>
                     </button>
                 </div>

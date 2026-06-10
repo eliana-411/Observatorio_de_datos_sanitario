@@ -46,6 +46,23 @@ export interface DemandaPredictionResponse {
     };
 }
 
+export interface DemandaModelMetrics {
+    rmse: number;
+    mae: number;
+    r2: number;
+    brote_umbral: number;
+    brote_precision: number;
+    brote_recall: number;
+    brote_f1: number;
+}
+
+export interface DemandaModelInfoResponse {
+    status: string;
+    model_info: {
+        metrics: DemandaModelMetrics;
+    };
+}
+
 // ── Hook ───────────────────────────────────────────────────────────────────
 
 export const useDemandaApi = () => {
@@ -108,9 +125,27 @@ export const useDemandaApi = () => {
         }
     }, []);
 
+    /**
+     * Obtiene las métricas del modelo de demanda (RMSE, MAE, R2, etc.)
+     */
+    const fetchModelInfo = useCallback(async (): Promise<DemandaModelMetrics | null> => {
+        try {
+            const response = await api.get<DemandaModelInfoResponse>('/Demanda/info');
+            if (response.error) {
+                console.error('Error fetching model info:', response.error);
+                return null;
+            }
+            return response.data?.model_info?.metrics || null;
+        } catch (error) {
+            console.error('Exception in fetchModelInfo:', error);
+            return null;
+        }
+    }, []);
+
     return {
         fetchMunicipios,
         fetchHistorico,
         fetchPredict,
+        fetchModelInfo,
     };
 };

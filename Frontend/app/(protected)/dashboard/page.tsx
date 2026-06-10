@@ -171,6 +171,14 @@ export default function DashboardPage() {
                         <MapContainer
                             distribucionGeograficaData={distribucionCompleta?.municipios || []}
                             municipiosCoordenadas={municipiosCoordenadas}
+                            filtros={{
+                                anio: selectedAnio !== null ? selectedAnio : undefined,
+                                genero: selectedGenero !== "Género: Todos" ? selectedGenero.replace("Género: ", "") : undefined,
+                                edad: selectedGrupoEtario !== "todos" ? selectedGrupoEtario : undefined,
+                                municipio: selectedMunicipio !== "todos" ? selectedMunicipio : undefined,
+                                hospitalizado: hospitalizacionSeleccionada !== "todos" ? hospitalizacionSeleccionada : undefined,
+                                metodo: metodoSeleccionado !== "todos" ? metodoSeleccionado : undefined
+                            }}
                         />
                         <MunicipalComparator
                             municipiosCoordenadas={municipiosCoordenadas}
