@@ -41,7 +41,7 @@ services:
     image: chromadb/chroma:0.5.3
     container_name: observatorio_chromadb
     ports:
-      - "8001:8000"
+      - "8002:8000"
     volumes:
       - chroma_data:/chroma/chroma
     networks:
