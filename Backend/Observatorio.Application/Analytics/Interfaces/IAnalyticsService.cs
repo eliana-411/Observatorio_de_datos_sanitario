@@ -93,7 +93,7 @@ public interface IAnalyticsService
     /// <param name="filtros">Filtros opcionales para la consulta (municipio, rango de edad, género, año)</param>
     /// <param name="cancelToken">Token de cancelación</param>
     /// <returns>Respuesta con distribución geográfica de eventos por municipio</returns>
-    Task<List<DistribucionGeograficaDto>> GetDistribucionGeograficaAsync(FiltrosDistribucionDto filtros, CancellationToken cancelToken = default);
+    Task<DistribucionGeograficaDetalladaResponseDto> GetDistribucionGeograficaAsync(FiltrosDistribucionDto filtros, CancellationToken cancelToken = default);
 
     /// <summary>
     /// Obtiene datos para la pirámide poblacional de eventos por género y grupo etario para un año específico

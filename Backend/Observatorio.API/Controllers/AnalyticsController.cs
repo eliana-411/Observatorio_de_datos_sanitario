@@ -945,7 +945,7 @@ public class AnalyticsController : ControllerBase
     /// Obtiene distribución geográfica de casos con filtros dinámicos para el mapa
     /// </summary>
     [HttpGet("distribucion-geografica")]
-    [ProducesResponseType(typeof(List<DistribucionGeograficaDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DistribucionGeograficaDetalladaResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDistribucionGeografica(
         [FromQuery] string? municipio,
         [FromQuery] string? rangoEdad,
@@ -970,58 +970,58 @@ public class AnalyticsController : ControllerBase
     /// Permite descargar en Excel o CSV la distribución geográfica de casos con filtros dinámicos
     /// </summary>
 
-    [HttpGet("distribucion-geografica/excel")]
-    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
-    public async Task<IActionResult> GetDistribucionGeograficaExcel(
-        [FromQuery] string? municipio,
-        [FromQuery] string? rangoEdad,
-        [FromQuery] string? genero,
-        [FromQuery] int? anio,
-        [FromQuery] string? hospitalizado)
-    {
-        var filtros = new FiltrosDistribucionDto
-        {
-            Municipio = municipio,
-            RangoEdad = rangoEdad,
-            Genero = genero,
-            Anio = anio,
-            Hospitalizado = hospitalizado
-        };
+    // [HttpGet("distribucion-geografica/excel")]
+    // [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    // public async Task<IActionResult> GetDistribucionGeograficaExcel(
+    //     [FromQuery] string? municipio,
+    //     [FromQuery] string? rangoEdad,
+    //     [FromQuery] string? genero,
+    //     [FromQuery] int? anio,
+    //     [FromQuery] string? hospitalizado)
+    // {
+    //     var filtros = new FiltrosDistribucionDto
+    //     {
+    //         Municipio = municipio,
+    //         RangoEdad = rangoEdad,
+    //         Genero = genero,
+    //         Anio = anio,
+    //         Hospitalizado = hospitalizado
+    //     };
 
-        var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+    //     var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
 
-        var excel = _exportService.GenerarExcel(datos, "Distribución Geográfica");
-        var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+    //     var excel = _exportService.GenerarExcel(datos, "Distribución Geográfica");
+    //     var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
-        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-    }
+    //     return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    // }
 
-    [HttpGet("distribucion-geografica/csv")]
-    [Produces("text/csv")]
-    public async Task<IActionResult> GetDistribucionGeograficaCsv(
-        [FromQuery] string? municipio,
-        [FromQuery] string? rangoEdad,
-        [FromQuery] string? genero,
-        [FromQuery] int? anio,
-        [FromQuery] string? hospitalizado)
-    {
-        var filtros = new FiltrosDistribucionDto
-        {
-            Municipio = municipio,
-            RangoEdad = rangoEdad,
-            Genero = genero,
-            Anio = anio,
-            Hospitalizado = hospitalizado
-        };
+    // [HttpGet("distribucion-geografica/csv")]
+    // [Produces("text/csv")]
+    // public async Task<IActionResult> GetDistribucionGeograficaCsv(
+    //     [FromQuery] string? municipio,
+    //     [FromQuery] string? rangoEdad,
+    //     [FromQuery] string? genero,
+    //     [FromQuery] int? anio,
+    //     [FromQuery] string? hospitalizado)
+    // {
+    //     var filtros = new FiltrosDistribucionDto
+    //     {
+    //         Municipio = municipio,
+    //         RangoEdad = rangoEdad,
+    //         Genero = genero,
+    //         Anio = anio,
+    //         Hospitalizado = hospitalizado
+    //     };
 
-        var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+    //     var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
 
-        var csv = _exportService.GenerarCsv(datos);
-        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
-        var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+    //     var csv = _exportService.GenerarCsv(datos);
+    //     var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+    //     var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
 
-        return File(csvBytes, "text/csv", fileName);
-    }
+    //     return File(csvBytes, "text/csv", fileName);
+    // }
 
     /// <summary>
     /// Obtiene datos para construir pirámide poblacional de casos por género y grupo etario   
