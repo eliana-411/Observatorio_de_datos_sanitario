@@ -320,22 +320,6 @@ def crear_aplicacion() -> Application:
     app.add_error_handler(manejar_error)
     return app
 
-def formatear_respuesta(respuesta: str, fuentes: list[str]) -> str:
-    # Eliminar cualquier markdown residual
-    texto = re.sub(r'\*+', '', respuesta)          # quitar asteriscos
-    texto = re.sub(r'\\([^\s])', r'\1', texto)     # quitar backslashes
-    texto = re.sub(r'^#{1,3}\s+', '', texto, flags=re.MULTILINE)  # quitar #
-    texto = texto.strip()
-
-    # Agregar fuentes limpias
-    if fuentes:
-        fuentes_unicas = list(dict.fromkeys(fuentes))[:5]
-        texto += "\n\n📚 Fuentes consultadas:\n"
-        for f in fuentes_unicas:
-            texto += f"• {f}\n"
-
-    return texto
-
 def main():
     print("=" * 50)
     print("  BOT TELEGRAM — Observatorio Sanitario Caldas")
