@@ -41,7 +41,7 @@ export function FeatureImportanceCard() {
 
     return (
         <Card className="p-6 bg-white border border-[#e4efff]">
-            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-4">
+            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-0">
                 Top 5 Variables de Impacto
             </h3>
 

@@ -200,7 +200,7 @@ export function RiskMap() {
     }, [municipalities]);
 
     return (
-        <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff] relative overflow-hidden h-105">
+        <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff] relative overflow-hidden h-110">
             <div className="flex justify-between items-center mb-4">
                 <div className="flex-1">
                     <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-1">

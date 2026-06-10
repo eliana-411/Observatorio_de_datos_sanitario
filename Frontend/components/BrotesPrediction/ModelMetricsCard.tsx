@@ -48,7 +48,7 @@ export function ModelMetricsCard() {
 
     return (
         <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff]">
-            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-4">
+            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-0">
                 Métricas del Modelo
             </h3>
 

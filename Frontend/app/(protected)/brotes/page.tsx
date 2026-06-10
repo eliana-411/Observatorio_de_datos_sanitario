@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertBanner } from '@/components/BrotesPrediction/AlertBanner';
 import { PredictionSummaryCard } from '@/components/BrotesPrediction/PredictionSummaryCard';
 import { RiskMap } from '@/components/BrotesPrediction/RiskMap';
@@ -15,6 +15,9 @@ import { useBrotesApi } from '@/hooks/useBrotesApi';
 import { transformBrotesData, ChartDataPoint, ChartMetadata } from '@/lib/brotes/dataTransformation';
 
 export default function BrotesPredictionPage() {
+    // Ref para scroll
+    const predictionSummaryRef = useRef<HTMLDivElement>(null);
+
     // Estado global (Zustand)
     const { selectedMunicipio, setSelectedMunicipio } = useFilterStore();
 
@@ -31,6 +34,13 @@ export default function BrotesPredictionPage() {
 
     // API hooks
     const { fetchMunicipios, fetchHistorico, fetchPredict } = useBrotesApi();
+
+    // Función para hacer scroll al cuadro de casos de riesgo crítico
+    const handleScrollToCriticalCases = () => {
+        if (predictionSummaryRef.current) {
+            predictionSummaryRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
     // 1. Cargar lista de municipios al montar
     useEffect(() => {
@@ -69,8 +79,6 @@ export default function BrotesPredictionPage() {
                     fetchPredict(municipioNombre, monthsToDisplay),
                 ]);
 
-                console.log('monthsToDisplay:', monthsToDisplay);
-console.log('predictionResponse.predicciones.length:', predictionResponse?.predicciones?.length);
                 // Transformar datos
                 const { data, metadata } = transformBrotesData(
                     historicoData,
@@ -111,22 +119,7 @@ console.log('predictionResponse.predicciones.length:', predictionResponse?.predi
                             onChange={setMonthsToDisplay}
                         />
                         {/* Alert Banner - Compacto a la derecha */}
-                        <div className="ml-auto"><AlertBanner /></div>
-                    </div>
-                </div>
-
-
-
-                {/* Bento Grid - First Row */}
-                <div className="grid grid-cols-12 gap-6">
-                    {/* Prediction Summary */}
-                    <div className="col-span-12 lg:col-span-5">
-                        <PredictionSummaryCard />
-                    </div>
-
-                    {/* Risk Map */}
-                    <div className="col-span-12 lg:col-span-7">
-                        <RiskMap />
+                        <div className="ml-auto"><AlertBanner onScrollToCard={handleScrollToCriticalCases} /></div>
                     </div>
                 </div>
 
@@ -149,6 +142,21 @@ console.log('predictionResponse.predicciones.length:', predictionResponse?.predi
                         <FeatureImportanceCard />
                     </div>
                 </div>
+
+                {/* Bento Grid - First Row */}
+                <div className="grid grid-cols-12 gap-6">
+                    {/* Prediction Summary */}
+                    <div className="col-span-12 lg:col-span-5" ref={predictionSummaryRef}>
+                        <PredictionSummaryCard />
+                    </div>
+
+                    {/* Risk Map */}
+                    <div className="col-span-12 lg:col-span-7">
+                        <RiskMap />
+                    </div>
+                </div>
+
+
 
                 {/* Municipality Table */}
                 <MunicipalityTable />

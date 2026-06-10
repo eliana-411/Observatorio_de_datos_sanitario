@@ -152,7 +152,7 @@ export function TimeSeriesChart({
                 </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={datosGrafico} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e4efff" />
                     <XAxis
