@@ -36,7 +36,7 @@ FORECASTS_DIR   = os.path.join(MODELS_DIR, "forecasts")
 
 # ── Configuración del modelo ──────────────────────────────────────────────────
 EXPERIMENT_NAME  = "brotes_prophet"
-MIN_MESES_TRAIN  = 24       # mínimo de meses para entrenar un municipio
+MIN_MESES_TRAIN  = 12       # mínimo de meses para entrenar un municipio
 FORECAST_PERIODS = 6        # meses a pronosticar hacia adelante
 INTERVAL_WIDTH   = 0.80     # intervalo de confianza
 
