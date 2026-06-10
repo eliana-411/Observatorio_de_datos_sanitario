@@ -62,6 +62,10 @@ builder.Services.AddSingleton(aiBaseUrl);
 builder.Services
        .AddScoped<ETLJobService>();
 
+// Agregar HttpClientFactory y servicio ETL
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IETLProcessorService, ETLProcessorService>();
+
 // Agregar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
