@@ -28,12 +28,11 @@ export default function DashboardPage() {
     const wasLoadingRef = useRef(false);
 
     // Filtros locales para el mapa
-    const [municipioSeleccionado, setMunicipioSeleccionado] = useState("todos");
     const [hospitalizacionSeleccionada, setHospitalizacionSeleccionada] = useState("todos");
     const [metodoSeleccionado, setMetodoSeleccionado] = useState("todos");
 
     const { municipios: municipiosCoordenadas } = useMunicipios();
-    const { selectedGenero, selectedGrupoEtario, selectedAnio } = useFilterStore();
+    const { selectedGenero, selectedGrupoEtario, selectedAnio, selectedMunicipio, setSelectedMunicipio } = useFilterStore();
     const { toasts, showWarning, removeToast } = useToast();
 
     const loadMunicipiosData = async () => {
@@ -42,7 +41,7 @@ export default function DashboardPage() {
             anio: selectedAnio,
             genero: selectedGenero,
             edad: selectedGrupoEtario,
-            municipio: municipioSeleccionado,
+            municipio: selectedMunicipio,
             hospitalizacion: hospitalizacionSeleccionada,
             metodo: metodoSeleccionado
         });
@@ -51,7 +50,7 @@ export default function DashboardPage() {
             selectedAnio !== null ? selectedAnio : undefined,
             selectedGenero !== "Género: Todos" ? selectedGenero.replace("Género: ", "") : undefined,
             selectedGrupoEtario !== "todos" ? selectedGrupoEtario : undefined,
-            municipioSeleccionado !== "todos" ? municipioSeleccionado : undefined,
+            selectedMunicipio !== "todos" ? selectedMunicipio : undefined,
             hospitalizacionSeleccionada !== "todos" ? hospitalizacionSeleccionada : undefined,
             metodoSeleccionado !== "todos" ? metodoSeleccionado : undefined
         );
@@ -69,7 +68,7 @@ export default function DashboardPage() {
     // Cargar datos al montar el componente y cuando cambian los filtros
     useEffect(() => {
         loadMunicipiosData();
-    }, [selectedAnio, selectedGenero, selectedGrupoEtario, municipioSeleccionado, hospitalizacionSeleccionada, metodoSeleccionado]);
+    }, [selectedAnio, selectedGenero, selectedGrupoEtario, selectedMunicipio, hospitalizacionSeleccionada, metodoSeleccionado]);
 
     // Marcar que la carga inicial se completó cuando loading pase de true a false
     useEffect(() => {
@@ -94,10 +93,6 @@ export default function DashboardPage() {
     }, [distribucionGeograficaData, loading, noDataNotified, showWarning]);
 
     // Manejadores de filtros locales para el mapa
-    const handleMunicipioChange = (municipio: string) => {
-        setMunicipioSeleccionado(municipio);
-    };
-
     const handleHospitalizacionChange = (hospitalizacion: string) => {
         setHospitalizacionSeleccionada(hospitalizacion);
     };
@@ -111,8 +106,6 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Filter Bar */}
                 <FilterBar
-                    municipioSeleccionado={municipioSeleccionado}
-                    onMunicipioChange={handleMunicipioChange}
                     hospitalizacionSeleccionada={hospitalizacionSeleccionada}
                     onHospitalizacionChange={handleHospitalizacionChange}
                     metodoSeleccionado={metodoSeleccionado}

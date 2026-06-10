@@ -2,20 +2,19 @@
 
 export function AlertBanner() {
     return (
-        <div className="bg-[#93000a] dark:bg-[#93000a] text-white p-4 rounded-lg flex items-center justify-between border border-[#e74c3c]/20 animate-pulse">
-            <div className="flex items-center gap-3">
+        <div className="bg-[#93000a] dark:bg-[#93000a] text-white p-3 rounded-lg flex items-center justify-between border border-[#e74c3c]/20 animate-pulse">
+            <div className="flex items-center gap-2">
                 <span
-                    className="material-symbols-outlined text-2xl"
+                    className="material-symbols-outlined text-lg shrink-0"
                     style={{ fontVariationSettings: "'FILL' 1" }}
-                    data-icon="warning"
                 >
                     warning
                 </span>
-                <span className="font-bold text-sm uppercase tracking-wide">
-                    Alerta Crítica Detectada: Tendencia Superior al Umbral en 4 Municipios
+                <span className="font-semibold text-xs uppercase tracking-wide">
+                    Alerta: 4 Municipios con Tendencia Alta
                 </span>
             </div>
-            <span className="text-xs font-mono opacity-80">Última actualización: hace 4 min</span>
+            <span className="text-xs opacity-70 shrink-0">hace 4 min</span>
         </div>
     );
 }
