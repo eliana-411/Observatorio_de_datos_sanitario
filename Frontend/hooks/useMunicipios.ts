@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchMunicipiosDelEndpoint } from '@/lib/api/municipios-api';
+import { obtenerCoordenadasPorNombre } from '@/lib/utils/municipios';
 
 export interface Municipio {
-    codigoMunicipio: string;
+    codigoMunicipio?: string;
     nombreMunicipio: string;
-    latitud: number;
-    longitud: number;
+    latitud: number | null;
+    longitud: number | null;
 }
 
 export function useMunicipios() {
@@ -16,35 +18,37 @@ export function useMunicipios() {
     useEffect(() => {
         async function loadMunicipios() {
             try {
-                const response = await fetch('/data/municipios-divipola.csv');
-                const csv = await response.text();
-                const lines = csv.split('\n').slice(1); // Skip header
+                // Obtener nombres de municipios desde el endpoint
+                const nombresMunicipios = await fetchMunicipiosDelEndpoint();
+
+                if (!nombresMunicipios || nombresMunicipios.length === 0) {
+                    console.warn('No se obtuvieron municipios del endpoint');
+                    setMunicipios(new Map());
+                    return;
+                }
+
+                // Crear map con municipios
                 const map = new Map<string, Municipio>();
 
-                lines.forEach(line => {
-                    if (!line.trim()) return;
-                    
-                    // Parser CSV con comillas
-                    const parts = line.match(/"([^"]*)"/g)?.map(p => p.replace(/"/g, '')) || [];
-                    
-                    if (parts.length >= 7) {
-                        const codigoMunicipio = parts[2];
-                        const nombreMunicipio = parts[3];
-                        const longitud = parseFloat(parts[5].replace(',', '.'));
-                        const latitud = parseFloat(parts[6].replace(',', '.'));
+                for (const nombre of nombresMunicipios) {
+                    if (!nombre || !nombre.trim()) continue;
 
-                        map.set(codigoMunicipio, {
-                            codigoMunicipio,
-                            nombreMunicipio,
-                            latitud,
-                            longitud
-                        });
-                    }
-                });
+                    // Obtener coordenadas para este municipio
+                    const coords = await obtenerCoordenadasPorNombre(nombre);
+
+                    const valueKey = nombre.toLowerCase().replace(/\s+/g, '_');
+                    map.set(valueKey, {
+                        nombreMunicipio: nombre,
+                        latitud: coords.latitud,
+                        longitud: coords.longitud
+                    });
+                }
 
                 setMunicipios(map);
+                console.log(`useMunicipios: ${map.size} municipios cargados con coordenadas`);
             } catch (error) {
                 console.error('Error loading municipios:', error);
+                setMunicipios(new Map());
             } finally {
                 setLoading(false);
             }

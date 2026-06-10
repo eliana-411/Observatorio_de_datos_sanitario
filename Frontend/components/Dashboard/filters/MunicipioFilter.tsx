@@ -3,6 +3,7 @@
 import React from 'react';
 import { FilterCombobox } from './FilterCombobox';
 import { Municipio } from './types';
+import { fetchMunicipiosDelEndpoint } from '@/lib/api/municipios-api';
 
 interface MunicipioFilterProps {
     value: string;
@@ -17,30 +18,22 @@ const capitalizeLabel = (text: string): string => {
         .join(' ');
 };
 
-// Función para parsear CSV y extraer municipios
-const parseMunicipiosFromCSV = (csvContent: string): Municipio[] => {
-    const lines = csvContent.trim().split('\n');
+// Función para convertir array de nombres de municipios a opciones del combobox
+const convertMunicipiosToOptions = (nombresMunicipios: string[]): Municipio[] => {
     const municipios: Municipio[] = [{ value: "todos", label: "Todos los municipios" }];
     const seen = new Set<string>();
 
-    // Ignorar la primera línea (encabezados)
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue;
+    for (const nombre of nombresMunicipios) {
+        if (!nombre || !nombre.trim()) continue;
 
-        // Parsear CSV respetando comillas
-        const matches = line.match(/"([^"]*)"/g);
-        if (matches && matches.length >= 4) {
-            const nombreMunicipio = matches[3].replace(/"/g, '').trim();
-            const valueKey = nombreMunicipio.toLowerCase().replace(/\s+/g, '_');
+        const valueKey = nombre.toLowerCase().replace(/\s+/g, '_');
 
-            if (!seen.has(valueKey)) {
-                seen.add(valueKey);
-                municipios.push({
-                    value: valueKey,
-                    label: capitalizeLabel(nombreMunicipio),
-                });
-            }
+        if (!seen.has(valueKey)) {
+            seen.add(valueKey);
+            municipios.push({
+                value: valueKey,
+                label: capitalizeLabel(nombre),
+            });
         }
     }
 
@@ -56,18 +49,18 @@ export function MunicipioFilter({ value, onChange }: MunicipioFilterProps) {
         { value: "todos", label: "Todos los municipios" }
     ]);
     const [loading, setLoading] = React.useState(true);
-    const [csvContent, setCsvContent] = React.useState<string | null>(null);
 
-    // Cargar municipios desde CSV al montar
+    // Cargar municipios desde el endpoint del Backend al montar
     React.useEffect(() => {
         const loadMunicipios = async () => {
             try {
-                const response = await fetch('/data/municipios-divipola.csv');
-                const csvContent = await response.text();
-                setCsvContent(csvContent);
+                const nombresMunicipios = await fetchMunicipiosDelEndpoint();
+                const opciones = convertMunicipiosToOptions(nombresMunicipios);
+                setMunicipios(opciones);
+                console.log(`Municipios cargados: ${opciones.length - 1} municipios (incluyendo "Todos")`);
             } catch (error) {
                 console.error('Error cargando municipios:', error);
-                // Fallback a lista vacía con "Todos"
+                // Mantener la opción "Todos" como fallback
                 setMunicipios([{ value: "todos", label: "Todos los municipios" }]);
             } finally {
                 setLoading(false);
@@ -76,20 +69,6 @@ export function MunicipioFilter({ value, onChange }: MunicipioFilterProps) {
 
         loadMunicipios();
     }, []);
-
-    // Usar useMemo para cachear el parsing del CSV
-    const municipiosParsed = React.useMemo(() => {
-        if (!csvContent) {
-            return [{ value: "todos", label: "Todos los municipios" }];
-        }
-        return parseMunicipiosFromCSV(csvContent);
-    }, [csvContent]);
-
-    React.useEffect(() => {
-        if (csvContent) {
-            setMunicipios(municipiosParsed);
-        }
-    }, [municipiosParsed, csvContent]);
 
     return (
         <FilterCombobox

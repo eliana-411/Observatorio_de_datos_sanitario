@@ -4,6 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { ComparatorCombobox } from './filters';
 import { fetchDistribucionMunicipal } from '@/lib/api/analytics';
+import { fetchMunicipiosDelEndpoint } from '@/lib/api/municipios-api';
 
 interface Municipio {
     value: string;
@@ -24,7 +25,6 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
     const [numComparadores, setNumComparadores] = React.useState(1);
     const [selectedMunicipios, setSelectedMunicipios] = React.useState<string[]>(['']);
     const [loading, setLoading] = React.useState(true);
-    const [csvContent, setCsvContent] = React.useState<string | null>(null);
     const [municipioDatos, setMunicipioDatos] = React.useState<MunicipalDatosState>({});
     const [loadingIndices, setLoadingIndices] = React.useState<Set<number>>(new Set());
 
@@ -65,15 +65,17 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
         });
     }, [selectedMunicipios, municipios, municipioDatos]);
 
-    // Cargar municipios desde CSV al montar
+    // Cargar municipios desde el endpoint del Backend al montar
     React.useEffect(() => {
         const loadMunicipios = async () => {
             try {
-                const response = await fetch('/data/municipios-divipola.csv');
-                const csvContent = await response.text();
-                setCsvContent(csvContent);
+                const nombresMunicipios = await fetchMunicipiosDelEndpoint();
+                const municipiosOptions = convertMunicipiosToOptions(nombresMunicipios);
+                setMunicipios(municipiosOptions);
+                console.log(`Municipios cargados en comparador: ${municipiosOptions.length} opciones`);
             } catch (error) {
                 console.error('Error cargando municipios:', error);
+                setMunicipios([]);
             } finally {
                 setLoading(false);
             }
@@ -82,46 +84,29 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
         loadMunicipios();
     }, []);
 
-    // Parsear CSV
-    const parseMunicipiosFromCSV = React.useCallback((csvContent: string): Municipio[] => {
-        const lines = csvContent.trim().split('\n');
+    // Convertir array de nombres a opciones del combobox
+    const convertMunicipiosToOptions = (nombresMunicipios: string[]): Municipio[] => {
         const municipios: Municipio[] = [];
         const seen = new Set<string>();
 
-        // Ignorar la primera línea (encabezados)
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i];
-            if (!line.trim()) continue;
+        for (const nombre of nombresMunicipios) {
+            if (!nombre || !nombre.trim()) continue;
 
-            const matches = line.match(/"([^"]*)"/g);
-            if (matches && matches.length >= 4) {
-                const nombreMunicipio = matches[3].replace(/"/g, '').trim();
-                const valueKey = nombreMunicipio.toLowerCase().replace(/\s+/g, '_');
+            const valueKey = nombre.toLowerCase().replace(/\s+/g, '_');
 
-                if (!seen.has(valueKey)) {
-                    seen.add(valueKey);
-                    municipios.push({
-                        value: valueKey,
-                        label: nombreMunicipio.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '),
-                    });
-                }
+            if (!seen.has(valueKey)) {
+                seen.add(valueKey);
+                municipios.push({
+                    value: valueKey,
+                    label: nombre.split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' '),
+                });
             }
         }
 
         return municipios.sort((a, b) => a.label.localeCompare(b.label));
-    }, []);
-
-    // Usar useMemo para cachear el parsing
-    const municipiosParsed = React.useMemo(() => {
-        if (!csvContent) return [];
-        return parseMunicipiosFromCSV(csvContent);
-    }, [csvContent, parseMunicipiosFromCSV]);
-
-    React.useEffect(() => {
-        if (csvContent) {
-            setMunicipios(municipiosParsed);
-        }
-    }, [municipiosParsed, csvContent]);
+    };
 
     // Manejar cambio en cantidad de comparadores
     const handleNumComparadoresChange = (num: number) => {

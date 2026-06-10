@@ -210,7 +210,10 @@ export interface DistribucionGeograficaData {
 }
 
 // El backend devuelve directamente un array, no envuelto en { data: [] }
-type DistribucionGeograficaResponse = DistribucionGeograficaData[];
+interface DistribucionGeograficaResponse {
+    totalGlobal: number;
+    municipios: DistribucionGeograficaData[];
+}
 
 // Función auxiliar para construir query string con parámetros opcionales
 function construirQueryParams(params: Record<string, any>): string {
@@ -250,17 +253,21 @@ export async function fetchDistribucionGeografica(
         console.log('Response data:', response.data);
 
         // El backend devuelve directamente un array
-        if (Array.isArray(response.data)) {
-            console.log('Datos recibidos correctamente, cantidad:', response.data.length);
+        // DESPUÉS:
+        console.log('Response data:', response.data);
+
+        // El backend devuelve {totalGlobal, municipios}
+        if (response.data && Array.isArray(response.data.municipios)) {
+            console.log('Datos recibidos correctamente, cantidad:', response.data.municipios.length);
 
             // Extraer códigos de municipios únicos para buscar coordenadas en el CSV
-            const codigosMunicipios = [...new Set(response.data.map(d => d.codigoMunicipio))];
+            const codigosMunicipios = [...new Set(response.data.municipios.map(d => d.codigoMunicipio))];
 
-            // Obtener coordenadas del CSV
+            // Obtener coordenadas del CSV por código
             const coordenadaMap = await obtenerCoordenadas(codigosMunicipios);
 
             // Enriquecer los datos con las coordenadas del CSV
-            const datosEnriquecidos = response.data.map(dato => ({
+            const datosEnriquecidos = response.data.municipios.map(dato => ({
                 ...dato,
                 latitud: coordenadaMap.get(dato.codigoMunicipio)?.latitud ?? null,
                 longitud: coordenadaMap.get(dato.codigoMunicipio)?.longitud ?? null
@@ -376,7 +383,7 @@ export async function fetchDistribucionMunicipal(
         if (response.data && response.data.municipios && response.data.municipios.length > 0) {
             // Extraer el primer municipio del array
             const municipioDatos = response.data.municipios[0];
-            
+
             // Mapear y formatear los datos correctamente
             const datosFormateados: DistribucionMunicipalData = {
                 codigoMunicipio: municipioDatos.codigoMunicipio || '',
@@ -384,13 +391,13 @@ export async function fetchDistribucionMunicipal(
                 totalCasos: municipioDatos.totalCasos || 0,
                 hospitalizados: municipioDatos.hospitalizados || 0,
                 noHospitalizados: municipioDatos.noHospitalizados || 0,
-                tasaHospitalizacion: typeof municipioDatos.tasaHospitalizacion === 'number' 
-                    ? Number(municipioDatos.tasaHospitalizacion) 
+                tasaHospitalizacion: typeof municipioDatos.tasaHospitalizacion === 'number'
+                    ? Number(municipioDatos.tasaHospitalizacion)
                     : 0,
                 tasaNoHospitalizacion: typeof municipioDatos.tasaNoHospitalizacion === 'number'
                     ? Number(municipioDatos.tasaNoHospitalizacion)
                     : 0,
-                distribucionGenero: Array.isArray(municipioDatos.distribucionGenero) 
+                distribucionGenero: Array.isArray(municipioDatos.distribucionGenero)
                     ? municipioDatos.distribucionGenero.map(item => ({
                         nombre: item.nombre || '',
                         cantidad: item.cantidad || 0,
