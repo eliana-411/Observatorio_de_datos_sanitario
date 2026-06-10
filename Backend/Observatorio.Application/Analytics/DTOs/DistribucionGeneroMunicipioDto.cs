@@ -25,7 +25,7 @@ public class DistribucionGeneroMunicipioRegistroDto
     [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
     [DisplayName("Géneros")]
-    public List<GeneroDistribucionDto>? Generos { get; set; }
+    public List<GeneroDistribucionDto> Generos { get; set; } = new();
 }
 
 /// <summary>
@@ -36,5 +36,5 @@ public class DistribucionGeneroMunicipioResponseDto
     [DisplayName("Periodo")]
     public PeriodoDto? Periodo { get; set; }
     [DisplayName("Series")]
-    public List<DistribucionGeneroMunicipioRegistroDto>? Series { get; set; }
+    public List<DistribucionGeneroMunicipioRegistroDto> Series { get; set; } = new();
 }

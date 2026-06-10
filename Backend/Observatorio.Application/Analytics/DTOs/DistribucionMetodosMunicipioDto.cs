@@ -25,7 +25,7 @@ public class DistribucionMetodosMunicipioRegistroDto
     [DisplayName("Total Eventos")]
     public int TotalEventos { get; set; }
     [DisplayName("Metodos")]
-    public List<MetodoDistribucionDto>? Metodos { get; set; }
+    public List<MetodoDistribucionDto> Metodos { get; set; } = new();
 }
 
 /// <summary>
@@ -36,5 +36,5 @@ public class DistribucionMetodosMunicipioResponseDto
     [DisplayName("Periodo")]
     public PeriodoDto? Periodo { get; set; }
     [DisplayName("Series")]
-    public List<DistribucionMetodosMunicipioRegistroDto>? Series { get; set; }
+    public List<DistribucionMetodosMunicipioRegistroDto> Series { get; set; } = new();
 }

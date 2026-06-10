@@ -17,9 +17,10 @@
     "seasonality_prior_scale": 10
   },
   "metrics": {
-    "rmse": 0.6589,
-    "mae": 0.3961,
-    "r2": 0.701
+    "rmse": 36.2525,
+    "mae": 27.4191,
+    "r2": 0.8434,
+    "confiabilidad_modelo": 0.8434
   },
   "aggregation": "municipio+mes",
   "municipios": [
@@ -56,17 +57,17 @@
       "porcentaje": 30.07
     },
     {
-      "variable": "Casos 2 Meses Atr�s",
+      "variable": "Casos 2 Meses Atrás",
       "importancia": 0.3397,
       "porcentaje": 25.5
     },
     {
-      "variable": "Casos 3 Meses Atr�s",
+      "variable": "Casos 3 Meses Atrás",
       "importancia": 0.2963,
       "porcentaje": 22.24
     },
     {
-      "variable": "Factor Socioecon�mico",
+      "variable": "Factor Socioeconómico",
       "importancia": 0.1401,
       "porcentaje": 10.52
     },
@@ -81,7 +82,7 @@
       "porcentaje": 3.48
     },
     {
-      "variable": "Historial Cl�nico",
+      "variable": "Historial Clínico",
       "importancia": 0.0149,
       "porcentaje": 1.12
     }

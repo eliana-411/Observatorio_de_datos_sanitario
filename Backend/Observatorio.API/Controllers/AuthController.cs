@@ -21,14 +21,16 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var result = await _authService.RegisterAsync(request);
         return Ok(result);
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _authService.LoginAsync(request);
         return Ok(result);
@@ -54,6 +56,8 @@ public class AuthController : ControllerBase
     {
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
         var name = User.FindFirst(ClaimTypes.Name)?.Value;
+        name = name ?? email?.Split('@')[0]; // Si no hay nombre, usar la parte antes del @ del email
+        name = name ?? "Usuario"; // Si no hay email, usar un valor por defecto
         var sub = User.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
@@ -84,7 +88,39 @@ public class AuthController : ControllerBase
             var result = await _authService.VerifyTwoFactorCodeAsync(request.Email, request.TwoFactorCode);
             return Ok(result);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Código 2FA inválido") || ex.Message.Contains("Código 2FA expirado"))
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Usuario no encontrado") || ex.Message.Contains("2FA no habilitado"))
+        {
+            return BadRequest(new { message = "Error al verificar el código 2FA" });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Error interno al verificar el código de autenticación" });
+        }
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _authService.RequestPasswordResetAsync(request);
+        // Siempre 200 OK, sin importar si el email existe
+        return Ok(new { message = "Si el email está registrado, recibirás un código de restablecimiento" });
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] VerifyResetCodeRequest request)
+    {
+        try
+        {
+            await _authService.ResetPasswordAsync(request);
+            return Ok(new { message = "Contraseña actualizada exitosamente" });
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }

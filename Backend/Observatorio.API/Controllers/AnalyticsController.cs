@@ -352,9 +352,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Generos.Select(g => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = g.Genero,                     // "Femenino", "Masculino"
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = g.Genero ?? string.Empty,                     // "Femenino", "Masculino"
             Valor1 = g.Total,
             Valor2 = s.TotalEventos,                   // Total del municipio para contexto
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
@@ -391,9 +391,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Generos.Select(g => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = g.Genero,
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = g.Genero ?? string.Empty,
             Valor1 = g.Total,
             Valor2 = s.TotalEventos,
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
@@ -456,9 +456,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.GruposEtarios.Select(g => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = g.GrupoEtario,              // "Adulto", "Adulto Mayor", "Joven", "Adolescente"
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = g.GrupoEtario ?? string.Empty,              // "Adulto", "Adulto Mayor", "Joven", "Adolescente"
             Valor1 = g.Total,
             Valor2 = s.TotalEventos,                  // Total del municipio para contexto
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
@@ -495,9 +495,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.GruposEtarios.Select(g => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = g.GrupoEtario,
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = g.GrupoEtario ?? string.Empty,
             Valor1 = g.Total,
             Valor2 = s.TotalEventos,
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)g.Total / s.TotalEventos * 100 : 0, 2),
@@ -560,9 +560,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Metodos.Select(m => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = m.Metodo,                    // "Ahorcamiento", "Intoxicacion Por Medicamentos", etc.
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = m.Metodo ?? string.Empty,                    // "Ahorcamiento", "Intoxicacion Por Medicamentos", etc.
             Valor1 = m.Total,
             Valor2 = s.TotalEventos,                  // Total del municipio para contexto
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)m.Total / s.TotalEventos * 100 : 0, 2),
@@ -596,9 +596,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Metodos.Select(m => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = m.Metodo,
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = m.Metodo ?? string.Empty,
             Valor1 = m.Total,
             Valor2 = s.TotalEventos,
             Porcentaje1 = Math.Round(s.TotalEventos > 0 ? (decimal)m.Total / s.TotalEventos * 100 : 0, 2),
@@ -662,9 +662,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Estados.Select(e => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = e.Estado,                    // "Hospitalizado" / "No Hospitalizado"
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = e.Estado ?? string.Empty,                    // "Hospitalizado" / "No Hospitalizado"
             Subcategoria = e.Hospitalizado == 1 ? "Sí" : "No",
             Valor1 = e.Total,
             Valor2 = s.TotalEventos,                  // Total del municipio para contexto
@@ -701,9 +701,9 @@ public class AnalyticsController : ControllerBase
         
         var datosPlanos = result.Series?.SelectMany(s => s.Estados.Select(e => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = e.Estado,
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = e.Estado ?? string.Empty,
             Subcategoria = e.Hospitalizado == 1 ? "Sí" : "No",
             Valor1 = e.Total,
             Valor2 = s.TotalEventos,
@@ -857,11 +857,11 @@ public class AnalyticsController : ControllerBase
 
         var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
 
-        var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
+        var datosPlanos = (result.Series ?? new List<TendenciaTemporalMunicipioSerieDto>()).SelectMany(s => (s.Datos ?? new List<TendenciaTemporalMesesDto>()).Select(d => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = d.NombreMes ?? "",
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = d.NombreMes ?? string.Empty,
             Subcategoria = $"Mes {d.Mes}",
             Valor1 = d.TotalEventos,
             Valor2 = d.Hospitalizados,
@@ -908,11 +908,11 @@ public class AnalyticsController : ControllerBase
 
         var periodo = mes.HasValue ? $"{anio}-{mes:D2}" : $"{anio}";
 
-        var datosPlanos = result.Series.SelectMany(s => s.Datos.Select(d => new RegistroAplanadoDto
+        var datosPlanos = (result.Series ?? new List<TendenciaTemporalMunicipioSerieDto>()).SelectMany(s => (s.Datos ?? new List<TendenciaTemporalMesesDto>()).Select(d => new RegistroAplanadoDto
         {
-            Codigo = s.CodigoMunicipio,
-            Nombre = s.Municipio,
-            Categoria = d.NombreMes ?? "",
+            Codigo = s.CodigoMunicipio ?? string.Empty,
+            Nombre = s.Municipio ?? string.Empty,
+            Categoria = d.NombreMes ?? string.Empty,
             Subcategoria = $"Mes {d.Mes}",
             Valor1 = d.TotalEventos,
             Valor2 = d.Hospitalizados,
@@ -965,6 +965,10 @@ public class AnalyticsController : ControllerBase
         var resultado = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
         return Ok(resultado);
     }
+
+    /// <summary>
+    /// Permite descargar en Excel o CSV la distribución geográfica de casos con filtros dinámicos
+    /// </summary>
 
     [HttpGet("distribucion-geografica/excel")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
@@ -1041,6 +1045,88 @@ public class AnalyticsController : ControllerBase
             _logger.LogError(ex, "Error al consultar la vista de pirámide poblacional");
             return BadRequest(new { message = "Error al obtener la pirámide poblacional", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Obtiene datos para construir pirámide poblacional de casos por género y grupo etario y permite exportar a Excel o CSV
+    /// </summary>
+    
+
+    /// <summary>
+    /// Obtiene resumen municipal de casos con filtros dinámicos para el mapa
+    /// </summary>
+    [HttpGet("resumen-municipal")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetResumenMunicipal(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio,
+        CancellationToken cancelToken)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Consultando resumen municipal - Municipio: {municipio}, Año: {anio}",
+                municipio ?? "Todos",
+                anio?.ToString() ?? "Todos");
+
+            var filtros = new ResumenMunicipalFiltrosDto
+            {
+                Municipio = municipio,
+                Anio = anio
+            };
+
+            var result = await _analyticsService.GetResumenMunicipalAsync(filtros, cancelToken);
+
+            _logger.LogInformation("Resumen municipal obtenido exitosamente - {count} registros", result.Data.Count);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar resumen municipal");
+            return BadRequest(new { message = "Error al obtener el resumen municipal", error = ex.Message });
+        }
+    }
+
+    [HttpGet("resumen-municipal/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetResumenMunicipalExcel(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio)
+    {
+        var filtros = new ResumenMunicipalFiltrosDto
+        {
+            Municipio = municipio,
+            Anio = anio
+        };
+
+        var resultado = await _analyticsService.GetResumenMunicipalAsync(filtros);
+
+        var excel = _exportService.GenerarExcel(resultado.Data, "Resumen Municipal");
+        var fileName = $"ResumenMunicipal_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("resumen-municipal/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetResumenMunicipalCsv(
+        [FromQuery] string? municipio,
+        [FromQuery] int? anio)
+    {
+        var filtros = new ResumenMunicipalFiltrosDto
+        {
+            Municipio = municipio,
+            Anio = anio
+        };
+
+        var resultado = await _analyticsService.GetResumenMunicipalAsync(filtros);
+
+        var csv = _exportService.GenerarCsv(resultado.Data);
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        var fileName = $"ResumenMunicipal_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+        return File(csvBytes, "text/csv", fileName);
     }
 
 

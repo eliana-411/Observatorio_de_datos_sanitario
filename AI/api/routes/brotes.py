@@ -1,57 +1,72 @@
+# AI/api/routes/brotes.py
+
+import os
+import json
+import pandas as pd
+from datetime import datetime
+from typing import Optional, List
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
+
 from prediction.brotes_predictor import predecir_brotes
 
 router = APIRouter(prefix="/api/v1/predict", tags=["Brotes"])
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROCESSED_PATH = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
+
+
+# ── Schemas ────────────────────────────────────────────────────────────────────
+
 class BrotesMes(BaseModel):
-    municipio:       str
-    anio:            int
-    mes:             int
-    casos_predichos: int
-    media_historica: float
-    umbral_alerta:   float
-    nivel_alerta:    str
-class PerfilHistorico(BaseModel):
-    zona_mayor_incidencia:                  str
-    distribucion_por_zona:                  dict
-    genero_predominante:                    str
-    porcentaje_genero_predominante:         float
-    grupo_etario_predominante:              str
-    porcentaje_grupo_etario:                float
-    metodo_predominante:                    str
-    porcentaje_metodo:                      float
-    situacion_sentimental_predominante:     str
-    porcentaje_con_antecedentes_mentales:   float
-    porcentaje_consumo_sustancias:          float
-    edad_promedio:                          float
-    estrato_promedio:                       float
-    nivel_letalidad_predominante:           str
-    tendencia_reciente:                     str
+    municipio:          str
+    anio:               int
+    mes:                int
+    casos_predichos:    int
+    intervalo_inferior: int
+    intervalo_superior: int
+    media_historica:    float
+    umbral_alerta:      float
+    nivel_alerta:       str
+    variacion_vs_media: float  # % desviación predicho vs media histórica
+
+
+class PerfilHistoricoBrotes(BaseModel):
+    total_eventos_promedio_mensual: float
+    std_mensual:                    float
+    pct_femenino_promedio:          float
+    pct_adolescente_promedio:       float
+    pct_sin_pareja_promedio:        float
+    pct_intoxicacion_promedio:      float
+    pct_antecedente_sm_promedio:    float
+    pct_sustancias_promedio:        float
+    edad_promedio:                  float
+    estrato_promedio:               float
+    tendencia_reciente:             str
+    meses_con_datos:                int
+    rango_fechas:                   dict
+
 
 class BrotesPayload(BaseModel):
-    municipio:          Optional[str] = Field(default=None, example="Manizales")
-    meses_a_predecir:   int = Field(default=3, ge=1, le=12)
-    variables_externas: Optional[dict] = None
+    municipio:        str = Field(..., example="Manizales")
+    meses_a_predecir: int = Field(default=1, ge=1, le=12)
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "municipio": "Manizales",
-                "meses_a_predecir": 3
-            }
+            "example": {"municipio": "Manizales", "meses_a_predecir": 3}
         }
 
-class BrotesPrediction(BaseModel):
-    status:           str
-    municipio:        str
-    predicciones:     list[BrotesMes]
-    total_meses:      int
-    perfil_historico: Optional[PerfilHistorico] = None
 
-# ── Histórico por municipio 
+class BrotesPrediction(BaseModel):
+    status:              str
+    municipio:           str
+    predicciones:        List[BrotesMes]
+    total_meses:         int
+    variacion_vs_mes_anterior: Optional[float] = None  # % vs último mes real conocido
+    perfil_historico:    Optional[PerfilHistoricoBrotes] = None
+
+
 class HistoricoMes(BaseModel):
     anio:            int
     mes:             int
@@ -59,105 +74,140 @@ class HistoricoMes(BaseModel):
     media_historica: float
     umbral_alerta:   float
 
-# ── Importancia de variables 
+
 class VariableImportancia(BaseModel):
     variable:    str
     importancia: float
     porcentaje:  float
 
-# ── Variación vs mes anterior 
-class VariacionMunicipio(BaseModel):
-    municipio:          str
-    casos_mes_actual:   float
-    casos_mes_anterior: float
-    variacion_pct:      float
-    desviacion_pct:     float
-    tendencia:          str
+
+class MatrizMunicipio(BaseModel):
+    municipio:       str
+    tendencia:       str
+    casos_predichos: int
+    desviacion_pct:  float
+    nivel_alerta:    str
+    media_historica: float
+    umbral_alerta:   float
+
+
+class AlertaCriticaItem(BaseModel):
+    municipio:       str
+    casos_predichos: int
+    nivel_alerta:    str
+
+
+class AlertasCriticas(BaseModel):
+    total_en_alerta:      int
+    nivel_maximo:         str
+    municipios:           List[AlertaCriticaItem]
+    ultima_actualizacion: str
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+def _get_municipios_disponibles() -> list[str]:
+    df = pd.read_csv(PROCESSED_PATH)
+    return sorted(df["municipio"].unique().tolist())
+
+
+def _enrich_mes(r: dict) -> BrotesMes:
+    media = r["media_historica"]
+    pred  = r["casos_predichos"]
+    variacion = round((pred - media) / media * 100, 1) if media > 0 else 0.0
+    return BrotesMes(
+        municipio=r["municipio"],
+        anio=r["anio"],
+        mes=r["mes"],
+        casos_predichos=pred,
+        intervalo_inferior=r["intervalo_inferior"],
+        intervalo_superior=r["intervalo_superior"],
+        media_historica=media,
+        umbral_alerta=r["umbral_alerta"],
+        nivel_alerta=r["nivel_alerta"],
+        variacion_vs_media=variacion,
+    )
+
+
+def _variacion_vs_mes_anterior(municipio: str, casos_predichos: int) -> float:
+    """Compara la predicción contra el último mes real registrado en el CSV."""
+    try:
+        df = pd.read_csv(PROCESSED_PATH)
+        df_m = df[df["municipio"] == municipio].sort_values(["anio", "mes"])
+        ultimo = float(df_m["total_eventos"].iloc[-1])
+        if ultimo > 0:
+            return round((casos_predichos - ultimo) / ultimo * 100, 1)
+    except Exception:
+        pass
+    return 0.0
+
+
+# ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @router.post("/brotes", response_model=BrotesPrediction)
 def predecir(payload: BrotesPayload):
+    """
+    Predice eventos de autolesión para un municipio en los próximos N meses.
+    Incluye perfil histórico y variación vs último mes real.
+    """
     try:
         hoy = datetime.now()
-
-        # Si no se pasa municipio, predecir todos
-        if not payload.municipio:
-            import pandas as pd
-            import os
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
-            df = pd.read_csv(processed_path)
-            municipios = sorted(df["municipio_evento"].unique().tolist())
-
-            todas_predicciones = []
-            for municipio in municipios:
-                try:
-                    resultado = predecir_brotes(
-                        municipio=municipio,
-                        anio=hoy.year,
-                        mes=hoy.month,
-                        meses_a_predecir=payload.meses_a_predecir
-                    )
-                    todas_predicciones.extend(resultado["predicciones"])
-                except Exception:
-                    continue
-
-            return BrotesPrediction(
-                status="ok",
-                municipio="Todos",
-                predicciones=todas_predicciones,
-                total_meses=len(todas_predicciones),
-                perfil_historico=None
-            )
-
-        # Si se pasa municipio específico
         resultado = predecir_brotes(
             municipio=payload.municipio,
             anio=hoy.year,
             mes=hoy.month,
             meses_a_predecir=payload.meses_a_predecir,
-            variables_externas=payload.variables_externas
+        )
+
+        predicciones = [_enrich_mes(r) for r in resultado["predicciones"]]
+        variacion = _variacion_vs_mes_anterior(
+            payload.municipio, predicciones[0].casos_predichos
         )
 
         return BrotesPrediction(
             status="ok",
             municipio=payload.municipio,
-            predicciones=resultado["predicciones"],
-            total_meses=len(resultado["predicciones"]),
-            perfil_historico=resultado["perfil_historico"]
+            predicciones=predicciones,
+            total_meses=len(predicciones),
+            variacion_vs_mes_anterior=variacion,
+            perfil_historico=resultado["perfil_historico"],
         )
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
-    
-@router.get("/brotes/todos", response_model=list[BrotesMes])
+
+
+@router.get("/brotes/municipios")
+def get_municipios():
+    """Lista todos los municipios disponibles."""
+    try:
+        return {"status": "ok", "municipios": _get_municipios_disponibles()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/brotes/todos", response_model=List[BrotesMes])
 def predecir_todos():
     """
-    Predice el mes actual para todos los municipios.
-    Usado para la matriz de monitoreo del dashboard.
+    Predice el próximo mes para todos los municipios.
+    Usado para el mapa de riesgo regional y el banner de alertas.
     """
     try:
-        import pandas as pd
-        import os
-
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
-        df = pd.read_csv(processed_path)
-        municipios = df["municipio_evento"].unique().tolist()
-
+        municipios = _get_municipios_disponibles()
         hoy = datetime.now()
         resultados = []
 
-        for municipio in sorted(municipios):
+        for municipio in municipios:
             try:
                 resultado = predecir_brotes(
                     municipio=municipio,
                     anio=hoy.year,
                     mes=hoy.month,
-                    meses_a_predecir=1
+                    meses_a_predecir=1,
                 )
-                resultados.append(resultado["predicciones"][0])
+                resultados.append(_enrich_mes(resultado["predicciones"][0]))
             except Exception:
                 continue
 
@@ -165,98 +215,159 @@ def predecir_todos():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
-@router.get("/brotes/municipios")
-def get_municipios():
-    import pandas as pd
-    import os
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
+
+@router.get("/brotes/alertas-criticas", response_model=AlertasCriticas)
+def get_alertas_criticas():
+    """
+    Devuelve el conteo y lista de municipios en alerta ALTO o CRÍTICO.
+    Usado para el banner superior del dashboard.
+    """
     try:
-        df = pd.read_csv(processed_path)
-        municipios = df["municipio_evento"].unique().tolist()
-        return {"status": "ok", "municipios": sorted(municipios)}
+        municipios = _get_municipios_disponibles()
+        hoy = datetime.now()
+        en_alerta = []
+        nivel_maximo = "NORMAL"
+        orden = {"CRÍTICO": 3, "ALTO": 2, "MODERADO": 1, "NORMAL": 0}
+
+        for municipio in municipios:
+            try:
+                resultado = predecir_brotes(
+                    municipio=municipio,
+                    anio=hoy.year,
+                    mes=hoy.month,
+                    meses_a_predecir=1,
+                )
+                r = resultado["predicciones"][0]
+                if r["nivel_alerta"] in ("ALTO", "CRÍTICO"):
+                    en_alerta.append(AlertaCriticaItem(
+                        municipio=municipio,
+                        casos_predichos=r["casos_predichos"],
+                        nivel_alerta=r["nivel_alerta"],
+                    ))
+                    if orden.get(r["nivel_alerta"], 0) > orden.get(nivel_maximo, 0):
+                        nivel_maximo = r["nivel_alerta"]
+            except Exception:
+                continue
+
+        en_alerta.sort(key=lambda x: x.casos_predichos, reverse=True)
+
+        return AlertasCriticas(
+            total_en_alerta=len(en_alerta),
+            nivel_maximo=nivel_maximo,
+            municipios=en_alerta,
+            ultima_actualizacion=hoy.strftime("%Y-%m-%d %H:%M"),
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/brotes/matriz", response_model=List[MatrizMunicipio])
+def get_matriz():
+    """
+    Devuelve la tabla de monitoreo por municipio con predicciones reales del modelo.
+    Columnas: municipio, tendencia, casos_predichos, desviacion_pct, nivel_alerta.
+    """
+    try:
+        municipios = _get_municipios_disponibles()
+        hoy = datetime.now()
+        resultados = []
+
+        for municipio in municipios:
+            try:
+                resultado = predecir_brotes(
+                    municipio=municipio,
+                    anio=hoy.year,
+                    mes=hoy.month,
+                    meses_a_predecir=1,
+                )
+                r    = resultado["predicciones"][0]
+                perf = resultado["perfil_historico"]
+                media = r["media_historica"]
+                pred  = r["casos_predichos"]
+                desviacion = round((pred - media) / media * 100, 1) if media > 0 else 0.0
+
+                resultados.append(MatrizMunicipio(
+                    municipio=municipio,
+                    tendencia=perf["tendencia_reciente"],
+                    casos_predichos=pred,
+                    desviacion_pct=desviacion,
+                    nivel_alerta=r["nivel_alerta"],
+                    media_historica=media,
+                    umbral_alerta=r["umbral_alerta"],
+                ))
+            except Exception:
+                continue
+
+        resultados.sort(key=lambda x: x.casos_predichos, reverse=True)
+        return resultados
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/brotes/historico/{municipio}", response_model=List[HistoricoMes])
+def get_historico(municipio: str):
+    """
+    Devuelve la serie histórica de eventos para un municipio.
+    Usada para la gráfica histórico vs predicción.
+    """
+    try:
+        df = pd.read_csv(PROCESSED_PATH, parse_dates=["ds"])
+        df_m = df[df["municipio"] == municipio].sort_values(["anio", "mes"])
+
+        if len(df_m) == 0:
+            raise HTTPException(status_code=404, detail=f"Municipio '{municipio}' no encontrado")
+
+        df_agg = (
+            df_m.groupby(["anio", "mes"])["total_eventos"]
+            .sum()
+            .reset_index()
+        )
+
+        media  = float(df_agg["total_eventos"].mean())
+        std    = float(df_agg["total_eventos"].std() or 0)
+        umbral = media + std
+
+        return [
+            HistoricoMes(
+                anio=int(row["anio"]),
+                mes=int(row["mes"]),
+                casos=float(row["total_eventos"]),
+                media_historica=round(media, 1),
+                umbral_alerta=round(umbral, 1),
+            )
+            for _, row in df_agg.iterrows()
+        ]
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/brotes/model-info")
 def get_model_info():
-    import json, os
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    config_path = os.path.join(BASE_DIR, "models", "brotes", "config.json")
+    """Devuelve las métricas del modelo Prophet (RMSE, MAE, R²)."""
     try:
-        with open(config_path, "r") as f:
+        config_path = os.path.join(BASE_DIR, "models", "brotes", "config.json")
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         return {"status": "ok", "model_info": config}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/brotes/historico/{municipio}", response_model=list[HistoricoMes])
-def get_historico(municipio: str):
-    """
-    Devuelve la serie temporal histórica de casos
-    para un municipio — usado para el gráfico histórico vs predicción.
-    """
-    try:
-        import pandas as pd
-        import os
-        import numpy as np
 
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
-        df = pd.read_csv(processed_path)
-        df["fecha"] = pd.to_datetime(df["fecha"])
-
-        df_m = df[df["municipio_evento"] == municipio].copy()
-
-        if len(df_m) == 0:
-            raise HTTPException(status_code=404, detail=f"Municipio '{municipio}' no encontrado")
-
-        # Agrupar por anio+mes sumando todas las zonas
-        df_agg = (
-            df_m.groupby(["anio", "mes"])["casos"]
-            .sum()
-            .reset_index()
-            .sort_values(["anio", "mes"])
-        )
-
-        media_historica = float(df_agg["casos"].mean())
-        std_historica   = float(df_agg["casos"].std())
-        umbral_alerta   = media_historica + std_historica
-
-        resultado = []
-        for _, row in df_agg.iterrows():
-            resultado.append(HistoricoMes(
-                anio=int(row["anio"]),
-                mes=int(row["mes"]),
-                casos=float(row["casos"]),
-                media_historica=round(media_historica, 1),
-                umbral_alerta=round(umbral_alerta, 1)
-            ))
-
-        return resultado
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/brotes/variables-importancia", response_model=list[VariableImportancia])
+@router.get("/brotes/variables-importancia", response_model=List[VariableImportancia])
 def get_variables_importancia():
     """
-    Devuelve la importancia de cada variable del modelo ordenada de mayor a menor.
-    Lee desde config.json para ser compatible con cualquier tipo de modelo.
+    Devuelve la importancia de variables del modelo ordenada de mayor a menor.
+    Usada para el panel 'Variables de Impacto'.
     """
     try:
-        import json
-        import os
-
-        BASE_DIR    = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         config_path = os.path.join(BASE_DIR, "models", "brotes", "config.json")
-
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
 
         importancia = config.get("feature_importance", [])
@@ -267,68 +378,5 @@ def get_variables_importancia():
 
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/brotes/variacion", response_model=list[VariacionMunicipio])
-def get_variacion():
-    """
-    Devuelve la variación de casos vs mes anterior
-    para todos los municipios — usado en la tabla del dashboard.
-    """
-    try:
-        import pandas as pd
-        import os
-
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        processed_path = os.path.join(BASE_DIR, "data", "processed", "brotes_processed.csv")
-        df = pd.read_csv(processed_path)
-
-        resultado = []
-        for municipio in sorted(df["municipio_evento"].unique()):
-            df_m = df[df["municipio_evento"] == municipio].copy()
-            df_m = df_m.sort_values(["anio", "mes"])
-
-            # Agrupar por mes
-            df_agg = df_m.groupby(["anio", "mes"])["casos"].sum().reset_index()
-
-            if len(df_agg) < 2:
-                continue
-
-            casos_actual   = float(df_agg.iloc[-1]["casos"])
-            casos_anterior = float(df_agg.iloc[-2]["casos"])
-            media          = float(df_agg["casos"].mean())
-
-            # Variación vs mes anterior
-            if casos_anterior > 0:
-                variacion_pct = round((casos_actual - casos_anterior) / casos_anterior * 100, 1)
-            else:
-                variacion_pct = 0.0
-
-            # Desviación vs media histórica
-            if media > 0:
-                desviacion_pct = round((casos_actual - media) / media * 100, 1)
-            else:
-                desviacion_pct = 0.0
-
-            # Tendencia
-            if variacion_pct > 5:
-                tendencia = "Alza"
-            elif variacion_pct < -5:
-                tendencia = "Baja"
-            else:
-                tendencia = "Estable"
-
-            resultado.append(VariacionMunicipio(
-                municipio=municipio,
-                casos_mes_actual=casos_actual,
-                casos_mes_anterior=casos_anterior,
-                variacion_pct=variacion_pct,
-                desviacion_pct=desviacion_pct,
-                tendencia=tendencia
-            ))
-
-        return resultado
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

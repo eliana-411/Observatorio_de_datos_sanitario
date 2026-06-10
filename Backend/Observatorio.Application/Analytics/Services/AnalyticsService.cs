@@ -781,6 +781,84 @@ public class AnalyticsService : IAnalyticsService
 
         return new PiramidePoblacionalResponseDto { Data = data };
     }
+
+    /// <summary>
+    /// Obtiene resumen municipal con casos, hospitalizados y tasa de hospitalización
+    /// </summary>
+    public async Task<ResumenMunicipalResponseDto> GetResumenMunicipalAsync(
+        ResumenMunicipalFiltrosDto filtros,
+        CancellationToken cancelToken = default)
+    {
+        var municipioLog = filtros.Municipio ?? "Todos";
+        var anioLog = filtros.Anio?.ToString() ?? "Todos";
+
+        _logger?.LogInformation(
+            "GetResumenMunicipal: Municipio={municipio}, Anio={anio}",
+            municipioLog, anioLog);
+
+        var sql = new StringBuilder(@"
+            SELECT 
+                l.municipio_evento AS NombreMunicipio,
+                COUNT(*) AS TotalCasos,
+                SUM(CASE WHEN f.hospitalizado = 1 THEN 1 ELSE 0 END) AS Hospitalizados
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE 1=1");
+
+        var parameters = new DynamicParameters();
+
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+        {
+            sql.Append(" AND l.municipio_evento = @Municipio");
+            parameters.Add("Municipio", filtros.Municipio);
+        }
+
+        if (filtros.Anio.HasValue)
+        {
+            sql.Append(" AND t.anio = @Anio");
+            parameters.Add("Anio", filtros.Anio.Value);
+        }
+
+        sql.Append(" GROUP BY l.municipio_evento ORDER BY TotalCasos DESC");
+
+        using var connection = _dbContext.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync(cancelToken);
+
+        var resultados = await connection.QueryAsync<ResumenMunicipalRawDto>(
+            sql.ToString(),
+            parameters);
+
+        var data = new List<ResumenMunicipalDto>();
+
+        foreach (var r in resultados)
+        {
+            var municipioInfo = await _municipiosService
+                .GetMunicipioByNombreAsync(r.NombreMunicipio ?? "", cancelToken);
+
+            data.Add(new ResumenMunicipalDto
+            {
+                NombreMunicipio = r.NombreMunicipio ?? "Desconocido",
+                CodigoDANE = municipioInfo?.CodigoMunicipio ?? "Desconocido",
+                TotalCasos = r.TotalCasos,
+                Hospitalizados = r.Hospitalizados,
+                TasaHospitalizacion = r.TotalCasos > 0
+                    ? Math.Round((decimal)r.Hospitalizados / r.TotalCasos * 100, 2)
+                    : 0
+            });
+        }
+
+        _logger?.LogInformation("GetResumenMunicipal: {count} municipios encontrados", data.Count);
+
+        return new ResumenMunicipalResponseDto
+        {
+            Periodo = filtros.Anio.HasValue 
+                ? new PeriodoDto { Anio = filtros.Anio.Value } 
+                : null,
+            Data = data
+        };
+    }
 }
 /// <summary>
 /// DTO para la query raw de casos por municipio
@@ -835,6 +913,16 @@ internal class DistribucionHospitalizacionMunicipioRawDto
 /// DTO para la query raw de distribución geográfica
 /// </summary>
 internal class DistribucionGeograficaRawDto
+{
+    public string? NombreMunicipio { get; set; }
+    public int TotalCasos { get; set; }
+    public int Hospitalizados { get; set; }
+}
+
+/// <summary>
+/// DTO para la query raw de resumen municipal
+/// </summary>
+internal class ResumenMunicipalRawDto
 {
     public string? NombreMunicipio { get; set; }
     public int TotalCasos { get; set; }
