@@ -2,20 +2,89 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
-    { id: 'ai-assistant', icon: 'smart_toy', label: 'Asistente IA', href: '/ai-assistant' },
-    { id: 'brotes', icon: 'warning', label: 'Predicción Brotes', href: '/brotes' },
-    { id: 'demanda', icon: 'trending_up', label: 'Predicción Demanda', href: '/demanda-prediccion' },
-    { id: 'anomalies', icon: 'query_stats', label: 'Predicción Anomalías', href: '/anomalies' },
+    { id: 'ai-assistant', icon: 'smart_toy', label: 'IA', href: '/ai-assistant' },
+    { id: 'brotes', icon: 'warning', label: 'Brotes', href: '/brotes' },
+    { id: 'demanda', icon: 'trending_up', label: 'Demanda', href: '/demanda-prediccion' },
+    { id: 'anomalies', icon: 'query_stats', label: 'Anomalías', href: '/anomalies' },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // VERSIÓN MOBILE - Bottom Navigation
+    if (isMobile) {
+        return (
+            <nav
+                className={`
+                    fixed
+                    bottom-0
+                    left-0
+                    right-0
+                    z-18
+                    bg-[#eef4ff]
+                    dark:bg-[#0b1d2d]
+                    border-t
+                    border-[#e4efff]
+                    dark:border-[#1a2b3b]
+                    shadow-lg
+                    flex
+                    justify-around
+                    items-center
+                    h-16
+                    px-2
+                `}
+            >
+                {menuItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link
+                            key={item.id}
+                            href={item.href}
+                            title={item.label}
+                            className={`
+                                flex
+                                flex-col
+                                items-center
+                                justify-center
+                                gap-1
+                                flex-1
+                                py-2
+                                rounded-lg
+                                transition-all
+                                duration-200
+                                ${isActive
+                                    ? 'text-[#0059bb] dark:text-[#2e77c9] bg-white dark:bg-surface-container'
+                                    : 'text-on-surface-variant dark:text-surface-variant opacity-70'
+                                }
+                            `}
+                        >
+                            <span className="material-symbols-outlined text-lg">
+                                {item.icon}
+                            </span>
+                            <span className="text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap">
+                                {item.label}
+                            </span>
+                        </Link>
+                    );
+                })}
+            </nav>
+        );
+    }
+
+    // VERSIÓN DESKTOP - Sidebar original
     return (
         <aside
             onMouseEnter={() => setIsExpanded(true)}
@@ -48,7 +117,6 @@ export function Sidebar() {
                         <h1 className="text-lg font-black text-[#0b1d2d] dark:text-[#f7f9ff] tracking-tight">
                             Observatorio
                         </h1>
-
                         <p className="text-[9px] font-semibold uppercase tracking-widest text-[#414754] dark:text-[#d2e4fb] opacity-60">
                             de Datos Sanitarios
                         </p>
@@ -64,7 +132,6 @@ export function Sidebar() {
             <nav className="flex-1 px-0 py-4 overflow-y-auto overflow-x-hidden">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href;
-
                     return (
                         <Link
                             key={item.id}
@@ -80,8 +147,7 @@ export function Sidebar() {
                                 mb-1
                                 transition-all
                                 duration-200
-                                min-h-12                               
-
+                                min-h-12
                                 ${isActive
                                     ? 'bg-white dark:bg-surface-container text-primary dark:text-[#2e77c9] shadow-sm'
                                     : 'text-on-surface-variant dark:text-surface-variant opacity-80 hover:bg-surface-container/50 dark:hover:bg-surface-container/50'
@@ -91,7 +157,6 @@ export function Sidebar() {
                             <span className="material-symbols-outlined shrink-0 text-xl">
                                 {item.icon}
                             </span>
-
                             <span
                                 className={`
                                     text-[13px]
@@ -116,7 +181,6 @@ export function Sidebar() {
 
             {/* Bottom Actions */}
             <div className="p-2 border-t border-[#d2e4fb]/30">
-
                 {isExpanded && (
                     <div className="mt-3 space-y-1">
                         <a
@@ -141,7 +205,6 @@ export function Sidebar() {
                             </span>
                             Soporte
                         </a>
-
                         <a
                             href="#"
                             className="
