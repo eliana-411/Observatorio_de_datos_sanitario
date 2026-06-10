@@ -42,3 +42,4 @@ mlruns/
 mlflow.db 
 
 ANALISIS_CUMPLIMIENTO.md
+CSV_UPLOAD_ENDPOINT.md
