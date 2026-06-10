@@ -183,15 +183,13 @@ export function MapContainer({
                             
                             <div style="padding: 0 0 12px 0;">
                                 <div style="margin-bottom: 10px;">
-                                    <strong style="color: ${colors.fill}; font-size: 14px;">Estadísticas Generales</strong>
-                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid ${colors.fill};">
+                                    <div>
                                         <div style="margin-bottom: 4px;"><strong>Total de Casos:</strong> <span style="color: ${colors.fill}; font-weight: bold;">${municipio.totalCasos}</span></div>
                                     </div>
                                 </div>
                                 
                                 <div style="margin-bottom: 10px;">
-                                    <strong style="color: #059669; font-size: 14px;">Hospitalización</strong>
-                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid #059669;">
+                                    <div ">
                                         <div style="margin-bottom: 4px;">
                                             <strong>Hospitalizados:</strong> ${municipio.hospitalizados} 
                                             <span style="background: #D1FAE5; color: #065F46; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaHospitalizacion.toFixed(2)}%</span>

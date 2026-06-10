@@ -1,39 +1,146 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card } from '@/components/ui/card';
+import { useBrotesTodos, BrotesPredictionData } from '@/hooks/useBrotesTodos';
+import { obtenerCoordenadasPorNombre } from '@/lib/utils/municipios';
 
-interface Municipality {
-    name: string;
-    coordinates: [number, number];
+interface MunicipalityWithPrediction extends BrotesPredictionData {
+    coordinates?: [number, number];
     alertLevel: 'alto' | 'medio' | 'bajo';
-    prediction: number;
+    color: string;
+    size: number;
 }
 
-const municipalities: Municipality[] = [
-    { name: 'Manizales', coordinates: [5.0685, -75.5034], alertLevel: 'alto', prediction: 48 },
-    { name: 'La Dorada', coordinates: [5.3025, -75.2544], alertLevel: 'medio', prediction: 18 },
-    { name: 'Chinchiná', coordinates: [4.9747, -75.3314], alertLevel: 'alto', prediction: 14 },
-    { name: 'Riosucio', coordinates: [5.3853, -75.7483], alertLevel: 'bajo', prediction: 11 },
-    { name: 'Villamaría', coordinates: [4.8914, -75.4903], alertLevel: 'medio', prediction: 9 },
-];
-
-const alertColors = {
-    alto: '#ffb4ab',
-    medio: '#ffb77e',
-    bajo: '#a7c8ff',
+const colorPalette = {
+    alto: {
+        fill: '#dc2626',
+        stroke: '#991b1b',
+        hex: '#dc2626',
+    },
+    medio: {
+        fill: '#f97316',
+        stroke: '#ea580c',
+        hex: '#f97316',
+    },
+    bajo: {
+        fill: '#3b82f6',
+        stroke: '#1e40af',
+        hex: '#3b82f6',
+    },
 };
+
+/**
+ * Determina el nivel de alerta basado en la densidad de casos
+ * Compara casos_predichos con umbral_alerta
+ */
+function determineAlertLevel(
+    casosPedichos: number,
+    umbralAlerta: number
+): 'alto' | 'medio' | 'bajo' {
+    const porcentaje = casosPedichos / umbralAlerta;
+
+    if (porcentaje >= 0.75) return 'alto';
+    if (porcentaje >= 0.5) return 'medio';
+    return 'bajo';
+}
+
+/**
+ * Formatea texto para el tooltip - similar al del dashboard
+ */
+function formatTooltipText(data: MunicipalityWithPrediction): string {
+    const colors = colorPalette[data.alertLevel];
+
+    return `
+        <div style="font-size: 13px; max-width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="background: linear-gradient(135deg, ${colors.fill} 0%, ${colors.stroke} 100%); color: white; padding: 12px; border-radius: 6px 6px 0 0; margin: -12px -12px 8px -12px;">
+                <strong style="font-size: 16px; display: block; margin-bottom: 4px;">${data.municipio}</strong>
+                <span style="font-size: 11px; opacity: 0.9;">Mes: ${data.mes} | Año: ${data.anio}</span>
+            </div>
+            
+            <div style="padding: 12px;">
+                <div style="margin-bottom: 10px;">
+                    <div style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #666; font-size: 13px;"><strong>Casos Predichos:</strong></span>
+                        <span style="color: ${colors.fill}; font-weight: bold; font-size: 14px;">${data.casos_predichos}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <div style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #666; font-size: 13px;"><strong>Media Histórica:</strong></span>
+                        <span style="font-weight: bold; font-size: 14px;">${data.media_historica.toFixed(1)}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 0; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #666; font-size: 13px;"><strong>Nivel de Alerta:</strong></span>
+                        <span style="display: inline-block; padding: 4px 10px; background: ${colors.fill}; color: white; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase;">${data.nivel_alerta}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
 export function RiskMap() {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<L.Map | null>(null);
+    const markersRef = useRef<L.CircleMarker[]>([]);
+    const [municipalities, setMunicipalities] = useState<MunicipalityWithPrediction[]>([]);
+    const [loadingCoords, setLoadingCoords] = useState(false);
 
+    const { data: brotesTodos, loading: loadingData, error: errorData } = useBrotesTodos();
+
+    // Cargar coordenadas de municipios
+    useEffect(() => {
+        if (brotesTodos.length === 0) return;
+
+        const loadCoordinates = async () => {
+            setLoadingCoords(true);
+            try {
+                const municipiosConCoordenadas: MunicipalityWithPrediction[] = [];
+
+                for (const brotesData of brotesTodos) {
+                    const coords = await obtenerCoordenadasPorNombre(brotesData.municipio);
+
+                    if (coords.latitud !== null && coords.longitud !== null) {
+                        const alertLevel = determineAlertLevel(
+                            brotesData.casos_predichos,
+                            brotesData.umbral_alerta
+                        );
+
+                        municipiosConCoordenadas.push({
+                            ...brotesData,
+                            coordinates: [coords.latitud, coords.longitud],
+                            alertLevel,
+                            color: colorPalette[alertLevel].fill,
+                            size: 14, // Tamaño fijo
+                        });
+                    } else {
+                        console.warn(`No se encontraron coordenadas para: ${brotesData.municipio}`);
+                    }
+                }
+
+                setMunicipalities(municipiosConCoordenadas);
+            } catch (err) {
+                console.error('Error loading coordinates:', err);
+            } finally {
+                setLoadingCoords(false);
+            }
+        };
+
+        loadCoordinates();
+    }, [brotesTodos]);
+
+    // Renderizar mapa
     useEffect(() => {
         if (!mapContainer.current) return;
 
-        // Initialize Leaflet map
+        // Inicializar mapa
         if (!map.current) {
             map.current = L.map(mapContainer.current).setView([5.2, -75.5], 8);
 
@@ -43,57 +150,99 @@ export function RiskMap() {
             }).addTo(map.current);
         }
 
-        // Add municipality markers
+        // Limpiar marcadores anteriores
+        markersRef.current.forEach((marker) => {
+            map.current?.removeLayer(marker);
+        });
+        markersRef.current = [];
+
+        if (municipalities.length === 0) return;
+
+        // Crear bounds para centrar el mapa
+        const bounds = L.latLngBounds([]);
+        let municipiosValidos = 0;
+
+        // Agregar nuevos marcadores
         municipalities.forEach((municipality) => {
-            const color = alertColors[municipality.alertLevel];
-            const circleMarker = L.circleMarker(municipality.coordinates, {
-                radius: 12,
-                fillColor: color,
-                color: color,
+            if (!municipality.coordinates) return;
+
+            const [lat, lng] = municipality.coordinates;
+            const colors = colorPalette[municipality.alertLevel];
+
+            const circleMarker = L.circleMarker([lat, lng], {
+                radius: municipality.size,
+                fillColor: colors.fill,
+                color: colors.stroke,
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 0.8,
             }).addTo(map.current!);
 
-            // Add popup
-            circleMarker.bindPopup(`
-                <div class="p-2 text-sm">
-                    <div class="font-bold text-[#0b1d2d]">${municipality.name}</div>
-                    <div class="flex justify-between gap-4 text-[#666] mt-1">
-                        <span>Predicción:</span>
-                        <span class="font-mono font-bold">${municipality.prediction} casos</span>
-                    </div>
-                    <div class="flex justify-between gap-4 text-[#ffb4ab] mt-1">
-                        <span>Alerta:</span>
-                        <span class="font-mono font-bold uppercase">${municipality.alertLevel}</span>
-                    </div>
-                </div>
-            `);
+            // Agregar popup con HTML formateado
+            const popupContent = L.popup({
+                maxWidth: 320,
+                className: 'brotes-popup',
+            }).setContent(formatTooltipText(municipality));
+
+            circleMarker.bindPopup(popupContent);
+
+            // Agregar tooltip en hover
+            circleMarker.bindTooltip(`${municipality.municipio}: ${municipality.casos_predichos} casos`, {
+                permanent: false,
+                direction: 'top',
+                className: 'brotes-tooltip',
+            });
+
+            markersRef.current.push(circleMarker);
+            bounds.extend([lat, lng]);
+            municipiosValidos++;
         });
 
-        return () => {
-            // Cleanup on unmount
-        };
-    }, []);
+        // Ajustar vista del mapa
+        if (municipiosValidos > 0 && bounds.isValid()) {
+            map.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+    }, [municipalities]);
 
     return (
         <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff] relative overflow-hidden h-105">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest">
-                    Mapa de Riesgo Regional
-                </h3>
+                <div className="flex-1">
+                    <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-1">
+                        Mapa de Riesgo Regional
+                    </h3>
+                    {loadingData || loadingCoords ? (
+                        <p className="text-xs text-[#999]">Cargando datos...</p>
+                    ) : errorData ? (
+                        <p className="text-xs text-red-500">{errorData}</p>
+                    ) : (
+                        <p className="text-xs text-[#999]">
+                            {municipalities.length} municipios monitoreados
+                        </p>
+                    )}
+                </div>
+
                 <div className="flex gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alertColors.alto }}></div>
-                        <span className="text-xs text-[#666]">Alto</span>
+                        <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: colorPalette.alto.fill }}
+                        ></div>
+                        <span className="text-xs text-[#666]">Alto (≥75%)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alertColors.medio }}></div>
-                        <span className="text-xs text-[#666]">Medio</span>
+                        <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: colorPalette.medio.fill }}
+                        ></div>
+                        <span className="text-xs text-[#666]">Medio (50-74%)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: alertColors.bajo }}></div>
-                        <span className="text-xs text-[#666]">Bajo</span>
+                        <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: colorPalette.bajo.fill }}
+                        ></div>
+                        <span className="text-xs text-[#666]">Bajo (&lt;50%)</span>
                     </div>
                 </div>
             </div>
@@ -101,3 +250,5 @@ export function RiskMap() {
         </Card>
     );
 }
+
+
