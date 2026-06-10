@@ -30,10 +30,7 @@ export function FilterSection({
             <div className="flex flex-wrap items-center gap-3 bg-[#e4efff] p-2 rounded-xl">
                 {/* Filtros */}
                 <div className="flex flex-wrap gap-4 items-end">
-                    <DemandaMunicipioFilter
-                        value={selectedMunicipio}
-                        onChange={onMunicipioChange}
-                    />
+                    <DemandaMunicipioFilter />
                     <DemandaMonthsFilter
                         value={monthsProjection}
                         onChange={onMonthsProjectionChange}

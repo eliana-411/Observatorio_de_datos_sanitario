@@ -84,6 +84,9 @@ export function ProjectionChart({ monthsProjection }: ProjectionChartProps) {
                 if (perfil) {
                     setMediaHistorica(perfil.media_historica);
                     setUmbral(perfil.umbral_alerta);
+                    // Guardar perfil en store
+                    const { setPerfilHistorico } = useFilterStore.getState();
+                    setPerfilHistorico(perfil);
                 }
             } catch (err) {
                 setError('Error al cargar los datos');
