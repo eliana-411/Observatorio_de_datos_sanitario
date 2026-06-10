@@ -970,58 +970,198 @@ public class AnalyticsController : ControllerBase
     /// Permite descargar en Excel o CSV la distribución geográfica de casos con filtros dinámicos
     /// </summary>
 
-    // [HttpGet("distribucion-geografica/excel")]
-    // [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
-    // public async Task<IActionResult> GetDistribucionGeograficaExcel(
-    //     [FromQuery] string? municipio,
-    //     [FromQuery] string? rangoEdad,
-    //     [FromQuery] string? genero,
-    //     [FromQuery] int? anio,
-    //     [FromQuery] string? hospitalizado)
-    // {
-    //     var filtros = new FiltrosDistribucionDto
-    //     {
-    //         Municipio = municipio,
-    //         RangoEdad = rangoEdad,
-    //         Genero = genero,
-    //         Anio = anio,
-    //         Hospitalizado = hospitalizado
-    //     };
+    [HttpGet("distribucion-geografica/excel")]
+    [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> GetDistribucionGeograficaExcel(
+        [FromQuery] string? municipio,
+        [FromQuery] string? rangoEdad,
+        [FromQuery] string? genero,
+        [FromQuery] int? anio,
+        [FromQuery] string? hospitalizado)
+    {
+        var filtros = new FiltrosDistribucionDto
+        {
+            Municipio = municipio,
+            RangoEdad = rangoEdad,
+            Genero = genero,
+            Anio = anio,
+            Hospitalizado = hospitalizado
+        };
 
-    //     var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+        var resultado = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
 
-    //     var excel = _exportService.GenerarExcel(datos, "Distribución Geográfica");
-    //     var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var datosPlanos = new List<RegistroAplanadoDto>();
 
-    //     return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-    // }
+        foreach (var m in resultado.Municipios)
+        {
+            // Género
+            foreach (var g in m.DistribucionGenero)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Género",
+                    Subcategoria = g.Nombre,
+                    Valor1 = g.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = g.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
 
-    // [HttpGet("distribucion-geografica/csv")]
-    // [Produces("text/csv")]
-    // public async Task<IActionResult> GetDistribucionGeograficaCsv(
-    //     [FromQuery] string? municipio,
-    //     [FromQuery] string? rangoEdad,
-    //     [FromQuery] string? genero,
-    //     [FromQuery] int? anio,
-    //     [FromQuery] string? hospitalizado)
-    // {
-    //     var filtros = new FiltrosDistribucionDto
-    //     {
-    //         Municipio = municipio,
-    //         RangoEdad = rangoEdad,
-    //         Genero = genero,
-    //         Anio = anio,
-    //         Hospitalizado = hospitalizado
-    //     };
+            // Grupo Etario
+            foreach (var ge in m.DistribucionGrupoEtario)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Grupo Etario",
+                    Subcategoria = ge.Nombre,
+                    Valor1 = ge.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = ge.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
 
-    //     var datos = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+            // Top Métodos
+            foreach (var tm in m.TopMetodos)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Método",
+                    Subcategoria = tm.Nombre,
+                    Valor1 = tm.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = tm.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
+        }
 
-    //     var csv = _exportService.GenerarCsv(datos);
-    //     var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
-    //     var fileName = $"DistribucionGeografica_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Tipo" },
+            { "Subcategoria", "Categoría" },
+            { "Valor1", "Cantidad" },
+            { "Valor2", "Total Casos Municipio" },
+            { "Porcentaje1", "% del Tipo" },
+            { "Porcentaje2", "% Hospitalización" },
+            { "Periodo", "Período" }
+        };
 
-    //     return File(csvBytes, "text/csv", fileName);
-    // }
+        var periodo = anio?.ToString() ?? "Historico";
+        var excel = _exportService.GenerarExcel(datosPlanos, $"D. Geográfica {periodo}", headers);
+        var fileName = $"DistribucionGeografica_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("distribucion-geografica/csv")]
+    [Produces("text/csv")]
+    public async Task<IActionResult> GetDistribucionGeograficaCsv(
+        [FromQuery] string? municipio,
+        [FromQuery] string? rangoEdad,
+        [FromQuery] string? genero,
+        [FromQuery] int? anio,
+        [FromQuery] string? hospitalizado)
+    {
+        var filtros = new FiltrosDistribucionDto
+        {
+            Municipio = municipio,
+            RangoEdad = rangoEdad,
+            Genero = genero,
+            Anio = anio,
+            Hospitalizado = hospitalizado
+        };
+
+        var resultado = await _analyticsService.GetDistribucionGeograficaAsync(filtros);
+
+        var datosPlanos = new List<RegistroAplanadoDto>();
+
+        foreach (var m in resultado.Municipios)
+        {
+            // Género
+            foreach (var g in m.DistribucionGenero)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Género",
+                    Subcategoria = g.Nombre,
+                    Valor1 = g.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = g.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
+
+            // Grupo Etario
+            foreach (var ge in m.DistribucionGrupoEtario)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Grupo Etario",
+                    Subcategoria = ge.Nombre,
+                    Valor1 = ge.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = ge.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
+
+            // Top Métodos
+            foreach (var tm in m.TopMetodos)
+            {
+                datosPlanos.Add(new RegistroAplanadoDto
+                {
+                    Codigo = m.CodigoMunicipio,
+                    Nombre = m.NombreMunicipio,
+                    Categoria = "Método",
+                    Subcategoria = tm.Nombre,
+                    Valor1 = tm.Cantidad,
+                    Valor2 = m.TotalCasos,
+                    Porcentaje1 = tm.Porcentaje,
+                    Porcentaje2 = m.TasaHospitalizacion,
+                    Periodo = anio?.ToString() ?? "Histórico"
+                });
+            }
+        }
+
+        var headers = new Dictionary<string, string>
+        {
+            { "Codigo", "Código Municipio" },
+            { "Nombre", "Municipio" },
+            { "Categoria", "Tipo" },
+            { "Subcategoria", "Categoría" },
+            { "Valor1", "Cantidad" },
+            { "Valor2", "Total Casos Municipio" },
+            { "Porcentaje1", "% del Tipo" },
+            { "Porcentaje2", "% Hospitalización" },
+            { "Periodo", "Período" }
+        };
+
+        var periodo = anio?.ToString() ?? "Historico";
+        var csv = _exportService.GenerarCsv(datosPlanos, headers);
+        var csvBytes = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        var fileName = $"DistribucionGeografica_{periodo}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+        return File(csvBytes, "text/csv", fileName);
+    }
 
     /// <summary>
     /// Obtiene datos para construir pirámide poblacional de casos por género y grupo etario   
