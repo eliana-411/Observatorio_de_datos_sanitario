@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { FilterCombobox } from '@/components/Dashboard/filters/FilterCombobox';
 import { useFilterStore } from '@/store/filterStore';
 import { useBrotesApi } from '@/hooks/useBrotesApi';
@@ -11,49 +11,44 @@ interface BrotesMunicipioFilterProps {
     loading?: boolean;
 }
 
-export function BrotesMunicipioFilter({ municipios, loading = false }: BrotesMunicipioFilterProps) {
+export const BrotesMunicipioFilter = React.memo(function BrotesMunicipioFilter({ municipios, loading = false }: BrotesMunicipioFilterProps) {
     const { selectedMunicipio, setSelectedMunicipio } = useFilterStore();
 
-    // Convertir lista de municipios a opciones del filtro
-    const options: FilterOption[] = React.useMemo(() => {
-        const baseOptions: FilterOption[] = [
-            
-        ];
+    // Normalizar municipio a formato consistente
+    const normalizeMunicipio = useCallback((m: string): string => {
+        return m.toLowerCase().replace(/\s+/g, '_');
+    }, []);
 
-        const municipioOptions = municipios
+    // Convertir lista de municipios a opciones del filtro (memoizado)
+    const options: FilterOption[] = useMemo(() => {
+        if (!municipios || municipios.length === 0) return [];
+
+        return [...municipios]
             .sort()
             .map(m => ({
-                value: m.toLowerCase().replace(/\s+/g, '_'),
+                value: normalizeMunicipio(m),
                 label: m
             }));
+    }, [municipios, normalizeMunicipio]);
 
-        return [...baseOptions, ...municipioOptions];
-    }, [municipios]);
+    // Validar que el municipio seleccionado esté en la lista (solo se dispara cuando cambian municipios)
+    useEffect(() => {
+        if (municipios.length === 0) return;
 
-    // Validar que el municipio seleccionado esté en la lista
-    React.useEffect(() => {
-        if (municipios.length > 0) {
-            // Si está en "todos", poner el primer municipio
-            if (selectedMunicipio === 'todos') {
-                const primerMunicipio = municipios[0].toLowerCase().replace(/\s+/g, '_');
-                setSelectedMunicipio(primerMunicipio);
-            } else {
-                // Validar que el municipio esté en la lista
-                const municipioEstaEnLista = municipios.some(
-                    m => m.toLowerCase().replace(/\s+/g, '_') === selectedMunicipio || m === selectedMunicipio
-                );
+        const municipioNormalizado = normalizeMunicipio(selectedMunicipio);
+        const municipioValido = municipios.some(
+            m => normalizeMunicipio(m) === municipioNormalizado
+        );
 
-                if (!municipioEstaEnLista) {
-                    const primerMunicipio = municipios[0].toLowerCase().replace(/\s+/g, '_');
-                    setSelectedMunicipio(primerMunicipio);
-                }
-            }
+        // Solo actualizar si el municipio actual no es válido
+        if (!municipioValido) {
+            setSelectedMunicipio(normalizeMunicipio(municipios[0]));
         }
-    }, [municipios, selectedMunicipio, setSelectedMunicipio]);
+    }, [municipios]); // Solo depende de cambios en municipios, no de selectedMunicipio
 
-    const handleChange = (value: string) => {
+    const handleChange = useCallback((value: string) => {
         setSelectedMunicipio(value);
-    };
+    }, [setSelectedMunicipio]);
 
     return (
         <FilterCombobox
@@ -68,4 +63,4 @@ export function BrotesMunicipioFilter({ municipios, loading = false }: BrotesMun
             hasScroll={true}
         />
     );
-}
+});

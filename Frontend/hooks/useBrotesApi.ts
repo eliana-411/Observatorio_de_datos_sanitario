@@ -33,6 +33,23 @@ export interface PredictionResponse {
     perfil_historico?: any;
 }
 
+export interface ModelMetrics {
+    rmse: number;
+    mae: number;
+    r2: number;
+    confiabilidad_modelo: number;
+    municipios_entrenados: number;
+}
+
+export interface ModelInfoResponse {
+    status: string;
+    timestamp: string;
+    metrics: ModelMetrics;
+    model_info?: {
+        metrics: ModelMetrics;
+    };
+}
+
 // ── Hook ───────────────────────────────────────────────────────────────────
 
 export const useBrotesApi = () => {
@@ -95,9 +112,36 @@ export const useBrotesApi = () => {
         }
     }, []);
 
+    /**
+     * Obtiene información del modelo (métricas de rendimiento)
+     */
+    const fetchModelInfo = useCallback(async (): Promise<ModelMetrics | null> => {
+        try {
+            const response = await api.get<ModelInfoResponse>('/Brotes/info');
+            if (response.error) {
+                console.error('Error fetching model info:', response.error);
+                return null;
+            }
+
+            // Intentar obtener las métricas del nivel superior o del objeto model_info
+            const metrics = response.data?.metrics || response.data?.model_info?.metrics;
+
+            if (!metrics) {
+                console.error('No metrics found in response:', response.data);
+                return null;
+            }
+
+            return metrics;
+        } catch (error) {
+            console.error('Exception in fetchModelInfo:', error);
+            return null;
+        }
+    }, []);
+
     return {
         fetchMunicipios,
         fetchHistorico,
         fetchPredict,
+        fetchModelInfo,
     };
 };
