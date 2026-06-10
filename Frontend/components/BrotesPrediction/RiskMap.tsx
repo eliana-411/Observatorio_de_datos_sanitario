@@ -33,18 +33,16 @@ const colorPalette = {
 };
 
 /**
- * Determina el nivel de alerta basado en la densidad de casos
- * Compara casos_predichos con umbral_alerta
+ * Mapea el nivel_alerta del endpoint a los niveles internos
  */
-function determineAlertLevel(
-    casosPedichos: number,
-    umbralAlerta: number
+function mapAlertLevel(
+    nivelAlerta: string
 ): 'alto' | 'medio' | 'bajo' {
-    const porcentaje = casosPedichos / umbralAlerta;
+    const nivel = nivelAlerta?.toLowerCase().trim() || 'normal';
 
-    if (porcentaje >= 0.75) return 'alto';
-    if (porcentaje >= 0.5) return 'medio';
-    return 'bajo';
+    if (nivel === 'alto' || nivel === 'critical') return 'alto';
+    if (nivel === 'moderado' || nivel === 'moderate') return 'medio';
+    return 'bajo'; // normal, low, etc.
 }
 
 /**
@@ -108,10 +106,7 @@ export function RiskMap() {
                     const coords = await obtenerCoordenadasPorNombre(brotesData.municipio);
 
                     if (coords.latitud !== null && coords.longitud !== null) {
-                        const alertLevel = determineAlertLevel(
-                            brotesData.casos_predichos,
-                            brotesData.umbral_alerta
-                        );
+                        const alertLevel = mapAlertLevel(brotesData.nivel_alerta);
 
                         municipiosConCoordenadas.push({
                             ...brotesData,
@@ -228,21 +223,21 @@ export function RiskMap() {
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: colorPalette.alto.fill }}
                         ></div>
-                        <span className="text-xs text-[#666]">Alto (≥75%)</span>
+                        <span className="text-xs text-[#666]">Alto</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: colorPalette.medio.fill }}
                         ></div>
-                        <span className="text-xs text-[#666]">Medio (50-74%)</span>
+                        <span className="text-xs text-[#666]">Moderado</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: colorPalette.bajo.fill }}
                         ></div>
-                        <span className="text-xs text-[#666]">Bajo (&lt;50%)</span>
+                        <span className="text-xs text-[#666]">Normal</span>
                     </div>
                 </div>
             </div>
