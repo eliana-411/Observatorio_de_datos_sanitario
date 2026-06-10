@@ -308,3 +308,126 @@ export async function fetchPiramidePoblacional(): Promise<ApiResponse<PiramidePo
         };
     }
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Interfaces para Distribucion Geográfica por Municipio (Comparador Municipal)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface DistribucionGeneroDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface DistribucionGrupoEtarioDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface MetodoTopDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface DistribucionMunicipalData {
+    codigoMunicipio: string;
+    nombreMunicipio: string;
+    totalCasos: number;
+    hospitalizados: number;
+    noHospitalizados: number;
+    tasaHospitalizacion: number;
+    tasaNoHospitalizacion: number;
+    distribucionGenero: DistribucionGeneroDato[];
+    distribucionGrupoEtario: DistribucionGrupoEtarioDato[];
+    topMetodos: MetodoTopDato[];
+}
+
+export interface DistribucionMunicipalResponse {
+    totalGlobal: number;
+    municipios: DistribucionMunicipalData[];
+}
+
+/**
+ * Obtiene información detallada de distribución geográfica para un municipio específico
+ * Usado por el comparador municipal para mostrar datos del municipio seleccionado
+ * 
+ * @param municipio - Nombre o código del municipio
+ * @returns Datos detallados del municipio con distribuciones y tasas
+ */
+export async function fetchDistribucionMunicipal(
+    municipio: string
+): Promise<ApiResponse<DistribucionMunicipalData>> {
+    try {
+        if (!municipio || municipio.trim() === '') {
+            return {
+                error: {
+                    message: 'Municipio no especificado'
+                }
+            };
+        }
+
+        const encodedMunicipio = encodeURIComponent(municipio);
+        const response = await api.get<DistribucionMunicipalResponse>(
+            `/Analytics/distribucion-geografica?municipio=${encodedMunicipio}`
+        );
+
+        if (response.data && response.data.municipios && response.data.municipios.length > 0) {
+            // Extraer el primer municipio del array
+            const municipioDatos = response.data.municipios[0];
+            
+            // Mapear y formatear los datos correctamente
+            const datosFormateados: DistribucionMunicipalData = {
+                codigoMunicipio: municipioDatos.codigoMunicipio || '',
+                nombreMunicipio: municipioDatos.nombreMunicipio || '',
+                totalCasos: municipioDatos.totalCasos || 0,
+                hospitalizados: municipioDatos.hospitalizados || 0,
+                noHospitalizados: municipioDatos.noHospitalizados || 0,
+                tasaHospitalizacion: typeof municipioDatos.tasaHospitalizacion === 'number' 
+                    ? Number(municipioDatos.tasaHospitalizacion) 
+                    : 0,
+                tasaNoHospitalizacion: typeof municipioDatos.tasaNoHospitalizacion === 'number'
+                    ? Number(municipioDatos.tasaNoHospitalizacion)
+                    : 0,
+                distribucionGenero: Array.isArray(municipioDatos.distribucionGenero) 
+                    ? municipioDatos.distribucionGenero.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : [],
+                distribucionGrupoEtario: Array.isArray(municipioDatos.distribucionGrupoEtario)
+                    ? municipioDatos.distribucionGrupoEtario.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : [],
+                topMetodos: Array.isArray(municipioDatos.topMetodos)
+                    ? municipioDatos.topMetodos.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : []
+            };
+
+            console.log('✅ Datos del municipio formateados:', datosFormateados);
+            return { data: datosFormateados };
+        }
+
+        return {
+            error: {
+                message: 'No se encontraron datos para el municipio especificado'
+            }
+        };
+    } catch (err) {
+        console.error('❌ Error en fetchDistribucionMunicipal:', err);
+        return {
+            error: {
+                message: 'Error al cargar información del municipio'
+            }
+        };
+    }
+}
