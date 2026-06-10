@@ -4,13 +4,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DistribucionGeograficaData } from '@/lib/api/analytics';
-
-interface Municipio {
-    codigoMunicipio: string;
-    nombreMunicipio: string;
-    latitud: number;
-    longitud: number;
-}
+import { Municipio } from '@/hooks/useMunicipios';
 
 interface MapContainerProps {
     distribucionGeograficaData?: DistribucionGeograficaData[];
@@ -156,17 +150,17 @@ export function MapContainer({
         // Agregar nuevos marcadores
         distribucionGeograficaData.forEach((municipio) => {
             // Validar explícitamente que no sean null/undefined, no usar truthy
-            if (municipio.latitud !== null && municipio.latitud !== undefined && 
+            if (municipio.latitud !== null && municipio.latitud !== undefined &&
                 municipio.longitud !== null && municipio.longitud !== undefined) {
-                
+
                 const colors = getColorByDensity(municipio.totalCasos, maxCasos);
                 const radius = Math.max(10, Math.sqrt(municipio.totalCasos) * 1.5);
 
                 // Transformar coordenadas - ajustar escala inconsistente
-                const lat = municipio.latitud > 1000 
+                const lat = municipio.latitud > 1000
                     ? municipio.latitud / 100000  // Latitud en centimicrogrados
                     : municipio.latitud;           // Ya en grados
-                    
+
                 const lng = municipio.longitud < -1000 || municipio.longitud > 1000
                     ? municipio.longitud / 1000000 // Longitud en microgrados
                     : municipio.longitud;          // Ya en grados
@@ -189,15 +183,13 @@ export function MapContainer({
                             
                             <div style="padding: 0 0 12px 0;">
                                 <div style="margin-bottom: 10px;">
-                                    <strong style="color: ${colors.fill}; font-size: 14px;">Estadísticas Generales</strong>
-                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid ${colors.fill};">
+                                    <div>
                                         <div style="margin-bottom: 4px;"><strong>Total de Casos:</strong> <span style="color: ${colors.fill}; font-weight: bold;">${municipio.totalCasos}</span></div>
                                     </div>
                                 </div>
                                 
                                 <div style="margin-bottom: 10px;">
-                                    <strong style="color: #059669; font-size: 14px;">Hospitalización</strong>
-                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid #059669;">
+                                    <div ">
                                         <div style="margin-bottom: 4px;">
                                             <strong>Hospitalizados:</strong> ${municipio.hospitalizados} 
                                             <span style="background: #D1FAE5; color: #065F46; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaHospitalizacion.toFixed(2)}%</span>

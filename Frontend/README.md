@@ -48,3 +48,4 @@ npx shadcn@latest add command
 npx shadcn@latest add scroll-area
 npx shadcn@latest add drawer
 npx shadcn@latest add dialog
+npx shadcn@latest add badge

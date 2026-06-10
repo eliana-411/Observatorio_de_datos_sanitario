@@ -12,8 +12,6 @@ import {
 } from './filters';
 
 interface FilterBarProps {
-    municipioSeleccionado: string;
-    onMunicipioChange: (municipio: string) => void;
     hospitalizacionSeleccionada: string;
     onHospitalizacionChange: (hospitalizacion: string) => void;
     metodoSeleccionado: string;
@@ -21,17 +19,15 @@ interface FilterBarProps {
 }
 
 export function FilterBar({
-    municipioSeleccionado,
-    onMunicipioChange,
     hospitalizacionSeleccionada,
     onHospitalizacionChange,
     metodoSeleccionado,
     onMetodoChange
 }: FilterBarProps) {
-    const { selectedGenero, selectedGrupoEtario, selectedAnio, setSelectedGenero, setSelectedGrupoEtario, setSelectedAnio } = useFilterStore();
+    const { selectedGenero, selectedGrupoEtario, selectedAnio, selectedMunicipio, setSelectedGenero, setSelectedGrupoEtario, setSelectedAnio, setSelectedMunicipio } = useFilterStore();
 
     // Manejadores de cambio
-    const handleAnioChange = (value: number) => {
+    const handleAnioChange = (value: number | null) => {
         setSelectedAnio(value);
     };
 
@@ -44,7 +40,7 @@ export function FilterBar({
     };
 
     const handleMunicipioChange = (value: string) => {
-        onMunicipioChange(value);
+        setSelectedMunicipio(value);
     };
 
     const handleHospitalizacionChange = (value: string) => {
@@ -65,7 +61,7 @@ export function FilterBar({
 
             {/* Municipios */}
             <MunicipioFilter
-                value={municipioSeleccionado}
+                value={selectedMunicipio}
                 onChange={handleMunicipioChange}
             />
 

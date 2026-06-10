@@ -19,13 +19,13 @@ export function FeatureImportanceCard() {
         const fetchVariablesImportancia = async () => {
             try {
                 setLoading(true);
-                const response = await api.get<VariableImportancia[]>('/models/brotes/variables-importancia');
+                const response = await api.get<VariableImportancia[]>('/Brotes/variables-importancia');
 
                 if (response.error) {
                     setError(response.error.message);
                     setFeatures([]);
                 } else if (response.data) {
-                    setFeatures(response.data);
+                    setFeatures(response.data.slice(0, 5));
                     setError(null);
                 }
             } catch (err) {
@@ -41,8 +41,8 @@ export function FeatureImportanceCard() {
 
     return (
         <Card className="p-6 bg-white border border-[#e4efff]">
-            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-4">
-                Variables de Impacto (Top 5)
+            <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest mb-0">
+                Top 5 Variables de Impacto
             </h3>
 
             {loading && (

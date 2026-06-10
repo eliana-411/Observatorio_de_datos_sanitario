@@ -153,3 +153,99 @@ export async function obtenerCoordenadas(
 
     return coordenadas;
 }
+
+/**
+ * Normaliza un nombre de municipio removiendo tildes, acentos y espacios extra
+ * Convierte a minúsculas para comparación consistente
+ * 
+ * Ejemplos:
+ * - "José María" → "jose maria"
+ * - "MANIZALES" → "manizales"
+ * - "La Dorada" → "la dorada"
+ * 
+ * @param texto - Texto a normalizar
+ * @returns Texto normalizado
+ */
+export function normalizarMunicipio(texto: string): string {
+    if (!texto) return '';
+
+    return texto
+        .normalize('NFD')                           // Descomponer caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, '')            // Remover marcas diacríticas
+        .toLowerCase()                              // Convertir a minúsculas
+        .replace(/\s+/g, ' ')                       // Normalizar espacios múltiples
+        .trim();                                    // Remover espacios al inicio/final
+}
+
+/**
+ * Obtiene coordenadas buscando un municipio por nombre normalizado
+ * Busca en el CSV de DIVIPOLA usando la normalización para manejar variaciones
+ * de mayúsculas, tildes, etc.
+ * 
+ * @param nombreMunicipio - Nombre del municipio (puede tener variaciones)
+ * @returns Las coordenadas o { latitud: null, longitud: null } si no se encuentra
+ */
+export async function obtenerCoordenadasPorNombre(
+    nombreMunicipio: string
+): Promise<{ latitud: number | null; longitud: number | null }> {
+    try {
+        if (!nombreMunicipio || nombreMunicipio.trim() === '') {
+            return { latitud: null, longitud: null };
+        }
+
+        const municipios = await cargarMunicipios();
+        const nombreNormalizado = normalizarMunicipio(nombreMunicipio);
+
+        // Buscar por nombre normalizado
+        for (const municipio of municipios.values()) {
+            if (normalizarMunicipio(municipio.nombreMunicipio) === nombreNormalizado) {
+                return {
+                    latitud: municipio.latitud,
+                    longitud: municipio.longitud
+                };
+            }
+        }
+
+        console.warn(`Municipio "${nombreMunicipio}" no encontrado en CSV (buscado como "${nombreNormalizado}")`);
+        return { latitud: null, longitud: null };
+    } catch (error) {
+        console.error(`Error al obtener coordenadas para municipio "${nombreMunicipio}":`, error);
+        return { latitud: null, longitud: null };
+    }
+}
+
+/**
+ * Obtiene coordenadas para múltiples municipios buscando por nombre normalizado
+ * Útil cuando se tienen nombres de municipios desde el endpoint del Backend
+ * 
+ * @param nombresMunicipios - Array de nombres de municipios
+ * @returns Map con el nombre del municipio como clave y las coordenadas como valor
+ */
+export async function obtenerCoordenadalePorNombres(
+    nombresMunicipios: string[]
+): Promise<Map<string, { latitud: number | null; longitud: number | null }>> {
+    const municipios = await cargarMunicipios();
+    const coordenadas = new Map<string, { latitud: number | null; longitud: number | null }>();
+
+    for (const nombre of nombresMunicipios) {
+        const nombreNormalizado = normalizarMunicipio(nombre);
+        let encontrado = false;
+
+        for (const municipio of municipios.values()) {
+            if (normalizarMunicipio(municipio.nombreMunicipio) === nombreNormalizado) {
+                coordenadas.set(nombre, {
+                    latitud: municipio.latitud,
+                    longitud: municipio.longitud
+                });
+                encontrado = true;
+                break;
+            }
+        }
+
+        if (!encontrado) {
+            coordenadas.set(nombre, { latitud: null, longitud: null });
+        }
+    }
+
+    return coordenadas;
+}

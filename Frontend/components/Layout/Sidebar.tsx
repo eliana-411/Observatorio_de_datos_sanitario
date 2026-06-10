@@ -6,11 +6,10 @@ import { useState } from 'react';
 
 const menuItems = [
     { id: 'paneles', icon: 'dashboard', label: 'Paneles', href: '/dashboard' },
-    { id: 'ai-assistant', icon: 'psychiatry', label: 'Asistente IA', href: '/ai-assistant' },
+    { id: 'ai-assistant', icon: 'smart_toy', label: 'Asistente IA', href: '/ai-assistant' },
     { id: 'brotes', icon: 'warning', label: 'Predicción Brotes', href: '/brotes' },
+    { id: 'demanda', icon: 'trending_up', label: 'Predicción Demanda', href: '/demanda-prediccion' },
     { id: 'anomalies', icon: 'query_stats', label: 'Predicción Anomalías', href: '/anomalies' },
-    { id: 'maps', icon: 'map', label: 'Mapas de Salud', href: '/maps' },
-    { id: 'reports', icon: 'description', label: 'Informes', href: '/reports' },
 ];
 
 export function Sidebar() {
@@ -117,27 +116,6 @@ export function Sidebar() {
 
             {/* Bottom Actions */}
             <div className="p-2 border-t border-[#d2e4fb]/30">
-                <button
-                    className="
-                        w-full
-                        bg-linear-to-br
-                        from-[#0059bb]
-                        to-[#0070ea]
-                        text-white
-                        py-3
-                        rounded-full
-                        font-bold
-                        text-xs
-                        uppercase
-                        tracking-widest
-                        shadow-lg
-                        shadow-primary/20
-                        active:scale-95
-                        transition-transform
-                    "
-                >
-                    {isExpanded ? 'Alerta' : '🚨'}
-                </button>
 
                 {isExpanded && (
                     <div className="mt-3 space-y-1">

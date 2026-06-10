@@ -210,7 +210,16 @@ export interface DistribucionGeograficaData {
 }
 
 // El backend devuelve directamente un array, no envuelto en { data: [] }
-type DistribucionGeograficaResponse = DistribucionGeograficaData[];
+interface DistribucionGeograficaResponse {
+    totalGlobal: number;
+    municipios: DistribucionGeograficaData[];
+}
+
+// Respuesta completa con totalGlobal incluido
+export interface DistribucionGeograficaCompleta {
+    totalGlobal: number;
+    municipios: DistribucionGeograficaData[];
+}
 
 // Función auxiliar para construir query string con parámetros opcionales
 function construirQueryParams(params: Record<string, any>): string {
@@ -228,7 +237,7 @@ export async function fetchDistribucionGeografica(
     municipio?: string,
     hospitalizacion?: string,
     metodo?: string
-): Promise<ApiResponse<DistribucionGeograficaData[]>> {
+): Promise<ApiResponse<DistribucionGeograficaCompleta>> {
     try {
         // Construir query params con los nombres correctos que espera el backend
         const queryParams = new URLSearchParams();
@@ -249,24 +258,29 @@ export async function fetchDistribucionGeografica(
 
         console.log('Response data:', response.data);
 
-        // El backend devuelve directamente un array
-        if (Array.isArray(response.data)) {
-            console.log('Datos recibidos correctamente, cantidad:', response.data.length);
+        // El backend devuelve {totalGlobal, municipios}
+        if (response.data && Array.isArray(response.data.municipios)) {
+            console.log('Datos recibidos correctamente, cantidad:', response.data.municipios.length);
 
             // Extraer códigos de municipios únicos para buscar coordenadas en el CSV
-            const codigosMunicipios = [...new Set(response.data.map(d => d.codigoMunicipio))];
+            const codigosMunicipios = [...new Set(response.data.municipios.map(d => d.codigoMunicipio))];
 
-            // Obtener coordenadas del CSV
+            // Obtener coordenadas del CSV por código
             const coordenadaMap = await obtenerCoordenadas(codigosMunicipios);
 
             // Enriquecer los datos con las coordenadas del CSV
-            const datosEnriquecidos = response.data.map(dato => ({
+            const datosEnriquecidos = response.data.municipios.map(dato => ({
                 ...dato,
                 latitud: coordenadaMap.get(dato.codigoMunicipio)?.latitud ?? null,
                 longitud: coordenadaMap.get(dato.codigoMunicipio)?.longitud ?? null
             }));
 
-            return { data: datosEnriquecidos };
+            return {
+                data: {
+                    totalGlobal: response.data.totalGlobal,
+                    municipios: datosEnriquecidos
+                }
+            };
         }
 
         return { error: response.error };
@@ -275,6 +289,54 @@ export async function fetchDistribucionGeografica(
         return {
             error: {
                 message: 'Error al cargar distribución geográfica'
+            }
+        };
+    }
+}
+
+// Interfaces para Resumen Municipal
+export interface ResumenMunicipalData {
+    nombreMunicipio: string;
+    codigoDANE: string;
+    totalCasos: number;
+    hospitalizados: number;
+    tasaHospitalizacion: number;
+}
+
+interface ResumenMunicipalResponse {
+    periodo: null | { anio: number };
+    data: ResumenMunicipalData[];
+}
+
+export async function fetchResumenMunicipal(
+    anio?: number,
+    municipio?: string
+): Promise<ApiResponse<ResumenMunicipalData[]>> {
+    try {
+        const queryString = construirQueryParams({
+            anio: anio !== undefined ? String(anio) : '',
+            municipio: municipio ?? ''
+        });
+
+        console.log('Fetching resumen-municipal:', `/analytics/resumen-municipal${queryString}`);
+
+        const response = await api.get<ResumenMunicipalResponse>(
+            `/analytics/resumen-municipal${queryString}`
+        );
+
+        console.log('Response resumen-municipal:', response.data);
+
+        if (response.data && Array.isArray(response.data.data)) {
+            console.log('Datos resumen municipal recibidos, cantidad:', response.data.data.length);
+            return { data: response.data.data };
+        }
+
+        return { error: response.error };
+    } catch (err) {
+        console.error('Error en fetchResumenMunicipal:', err);
+        return {
+            error: {
+                message: 'Error al cargar resumen municipal'
             }
         };
     }
@@ -304,6 +366,129 @@ export async function fetchPiramidePoblacional(): Promise<ApiResponse<PiramidePo
         return {
             error: {
                 message: 'Error al cargar la pirámide poblacional'
+            }
+        };
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Interfaces para Distribucion Geográfica por Municipio (Comparador Municipal)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface DistribucionGeneroDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface DistribucionGrupoEtarioDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface MetodoTopDato {
+    nombre: string;
+    cantidad: number;
+    porcentaje: number;
+}
+
+export interface DistribucionMunicipalData {
+    codigoMunicipio: string;
+    nombreMunicipio: string;
+    totalCasos: number;
+    hospitalizados: number;
+    noHospitalizados: number;
+    tasaHospitalizacion: number;
+    tasaNoHospitalizacion: number;
+    distribucionGenero: DistribucionGeneroDato[];
+    distribucionGrupoEtario: DistribucionGrupoEtarioDato[];
+    topMetodos: MetodoTopDato[];
+}
+
+export interface DistribucionMunicipalResponse {
+    totalGlobal: number;
+    municipios: DistribucionMunicipalData[];
+}
+
+/**
+ * Obtiene información detallada de distribución geográfica para un municipio específico
+ * Usado por el comparador municipal para mostrar datos del municipio seleccionado
+ * 
+ * @param municipio - Nombre o código del municipio
+ * @returns Datos detallados del municipio con distribuciones y tasas
+ */
+export async function fetchDistribucionMunicipal(
+    municipio: string
+): Promise<ApiResponse<DistribucionMunicipalData>> {
+    try {
+        if (!municipio || municipio.trim() === '') {
+            return {
+                error: {
+                    message: 'Municipio no especificado'
+                }
+            };
+        }
+
+        const encodedMunicipio = encodeURIComponent(municipio);
+        const response = await api.get<DistribucionMunicipalResponse>(
+            `/Analytics/distribucion-geografica?municipio=${encodedMunicipio}`
+        );
+
+        if (response.data && response.data.municipios && response.data.municipios.length > 0) {
+            // Extraer el primer municipio del array
+            const municipioDatos = response.data.municipios[0];
+
+            // Mapear y formatear los datos correctamente
+            const datosFormateados: DistribucionMunicipalData = {
+                codigoMunicipio: municipioDatos.codigoMunicipio || '',
+                nombreMunicipio: municipioDatos.nombreMunicipio || '',
+                totalCasos: municipioDatos.totalCasos || 0,
+                hospitalizados: municipioDatos.hospitalizados || 0,
+                noHospitalizados: municipioDatos.noHospitalizados || 0,
+                tasaHospitalizacion: typeof municipioDatos.tasaHospitalizacion === 'number'
+                    ? Number(municipioDatos.tasaHospitalizacion)
+                    : 0,
+                tasaNoHospitalizacion: typeof municipioDatos.tasaNoHospitalizacion === 'number'
+                    ? Number(municipioDatos.tasaNoHospitalizacion)
+                    : 0,
+                distribucionGenero: Array.isArray(municipioDatos.distribucionGenero)
+                    ? municipioDatos.distribucionGenero.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : [],
+                distribucionGrupoEtario: Array.isArray(municipioDatos.distribucionGrupoEtario)
+                    ? municipioDatos.distribucionGrupoEtario.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : [],
+                topMetodos: Array.isArray(municipioDatos.topMetodos)
+                    ? municipioDatos.topMetodos.map(item => ({
+                        nombre: item.nombre || '',
+                        cantidad: item.cantidad || 0,
+                        porcentaje: typeof item.porcentaje === 'number' ? Number(item.porcentaje) : 0
+                    }))
+                    : []
+            };
+
+            console.log('✅ Datos del municipio formateados:', datosFormateados);
+            return { data: datosFormateados };
+        }
+
+        return {
+            error: {
+                message: 'No se encontraron datos para el municipio especificado'
+            }
+        };
+    } catch (err) {
+        console.error('❌ Error en fetchDistribucionMunicipal:', err);
+        return {
+            error: {
+                message: 'Error al cargar información del municipio'
             }
         };
     }

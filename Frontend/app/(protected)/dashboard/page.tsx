@@ -15,26 +15,36 @@ import { MunicipalComparator } from '@/components/Dashboard/MunicipalComparator'
 import { Toast } from '@/components/Toast/Toast';
 import { useMunicipios } from '@/hooks/useMunicipios';
 import { useToast } from '@/hooks/useToast';
+import { useKPIData } from '@/hooks/useKPIData';
 import { useFilterStore } from '@/store/filterStore';
-import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
+import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, fetchResumenMunicipal, DistribucionGeograficaCompleta, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData, ResumenMunicipalData } from '@/lib/api/analytics';
 
 export default function DashboardPage() {
-    const [distribucionGeograficaData, setDistribucionGeograficaData] = useState<DistribucionGeograficaData[]>([]);
+    const [distribucionCompleta, setDistribucionCompleta] = useState<DistribucionGeograficaCompleta | null>(null);
     const [municipiosData, setMunicipiosData] = useState<DistribucionGeneroMunicipioData[]>([]);
     const [municipiosGrupoEtarioData, setMunicipiosGrupoEtarioData] = useState<DistribucionGrupoEtarioMunicipioData[]>([]);
+    const [resumenMunicipalData, setResumenMunicipalData] = useState<ResumenMunicipalData[]>([]);
     const [loading, setLoading] = useState(false);
     const [noDataNotified, setNoDataNotified] = useState(false);
     const hasInitialLoadCompleted = useRef(false);
     const wasLoadingRef = useRef(false);
 
     // Filtros locales para el mapa
-    const [municipioSeleccionado, setMunicipioSeleccionado] = useState("todos");
     const [hospitalizacionSeleccionada, setHospitalizacionSeleccionada] = useState("todos");
     const [metodoSeleccionado, setMetodoSeleccionado] = useState("todos");
 
     const { municipios: municipiosCoordenadas } = useMunicipios();
-    const { selectedGenero, selectedGrupoEtario, selectedAnio } = useFilterStore();
+    const { selectedGenero, selectedGrupoEtario, selectedAnio, selectedMunicipio, setSelectedMunicipio } = useFilterStore();
     const { toasts, showWarning, removeToast } = useToast();
+
+    // Usar el hook para calcular KPIs
+    const kpiData = useKPIData(
+        distribucionCompleta?.municipios || [],
+        distribucionCompleta?.totalGlobal || null,
+        resumenMunicipalData,
+        selectedMunicipio,
+        loading
+    );
 
     const loadMunicipiosData = async () => {
         setLoading(true);
@@ -42,7 +52,7 @@ export default function DashboardPage() {
             anio: selectedAnio,
             genero: selectedGenero,
             edad: selectedGrupoEtario,
-            municipio: municipioSeleccionado,
+            municipio: selectedMunicipio,
             hospitalizacion: hospitalizacionSeleccionada,
             metodo: metodoSeleccionado
         });
@@ -51,25 +61,39 @@ export default function DashboardPage() {
             selectedAnio !== null ? selectedAnio : undefined,
             selectedGenero !== "Género: Todos" ? selectedGenero.replace("Género: ", "") : undefined,
             selectedGrupoEtario !== "todos" ? selectedGrupoEtario : undefined,
-            municipioSeleccionado !== "todos" ? municipioSeleccionado : undefined,
+            selectedMunicipio !== "todos" ? selectedMunicipio : undefined,
             hospitalizacionSeleccionada !== "todos" ? hospitalizacionSeleccionada : undefined,
             metodoSeleccionado !== "todos" ? metodoSeleccionado : undefined
         );
 
+        // Cargar datos de resumen municipal
+        const resumenResponse = await fetchResumenMunicipal(
+            selectedAnio !== null ? selectedAnio : undefined,
+            selectedMunicipio !== "todos" ? selectedMunicipio : undefined
+        );
+
         console.log('Dashboard - Respuesta del API:', response);
         if (response.data) {
-            console.log('Dashboard - Datos recibidos, cantidad:', response.data.length);
-            setDistribucionGeograficaData(response.data);
+            console.log('Dashboard - Datos recibidos, cantidad:', response.data.municipios.length);
+            setDistribucionCompleta(response.data);
         } else if (response.error) {
             console.error('Dashboard - Error en API:', response.error);
         }
+
+        if (resumenResponse.data) {
+            console.log('Dashboard - Datos resumen municipal recibidos:', resumenResponse.data.length);
+            setResumenMunicipalData(resumenResponse.data);
+        } else if (resumenResponse.error) {
+            console.error('Dashboard - Error resumen municipal:', resumenResponse.error);
+        }
+
         setLoading(false);
     };
 
     // Cargar datos al montar el componente y cuando cambian los filtros
     useEffect(() => {
         loadMunicipiosData();
-    }, [selectedAnio, selectedGenero, selectedGrupoEtario, municipioSeleccionado, hospitalizacionSeleccionada, metodoSeleccionado]);
+    }, [selectedAnio, selectedGenero, selectedGrupoEtario, selectedMunicipio, hospitalizacionSeleccionada, metodoSeleccionado]);
 
     // Marcar que la carga inicial se completó cuando loading pase de true a false
     useEffect(() => {
@@ -82,22 +106,18 @@ export default function DashboardPage() {
 
     // Mostrar notificación cuando no hay datos (solo después de la carga inicial)
     useEffect(() => {
-        if (hasInitialLoadCompleted.current && !loading && distribucionGeograficaData.length === 0 && !noDataNotified) {
+        if (hasInitialLoadCompleted.current && !loading && (!distribucionCompleta || distribucionCompleta.municipios.length === 0) && !noDataNotified) {
             showWarning(
                 'No hay datos disponibles para los filtros seleccionados. Por favor, intenta con otros criterios.',
                 6000
             );
             setNoDataNotified(true);
-        } else if (distribucionGeograficaData.length > 0) {
+        } else if (distribucionCompleta && distribucionCompleta.municipios.length > 0) {
             setNoDataNotified(false);
         }
-    }, [distribucionGeograficaData, loading, noDataNotified, showWarning]);
+    }, [distribucionCompleta, loading, noDataNotified, showWarning]);
 
     // Manejadores de filtros locales para el mapa
-    const handleMunicipioChange = (municipio: string) => {
-        setMunicipioSeleccionado(municipio);
-    };
-
     const handleHospitalizacionChange = (hospitalizacion: string) => {
         setHospitalizacionSeleccionada(hospitalizacion);
     };
@@ -111,8 +131,6 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Filter Bar */}
                 <FilterBar
-                    municipioSeleccionado={municipioSeleccionado}
-                    onMunicipioChange={handleMunicipioChange}
                     hospitalizacionSeleccionada={hospitalizacionSeleccionada}
                     onHospitalizacionChange={handleHospitalizacionChange}
                     metodoSeleccionado={metodoSeleccionado}
@@ -123,27 +141,27 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <KPICard
                         label="Total de Casos Reportados"
-                        value="2.457"
+                        value={kpiData.totalCasosReportados}
                         icon="monitoring"
-                        infoTooltip="Cantidad total de eventos sanitarios."
+                        infoTooltip="Cantidad total de eventos sanitarios según los filtros aplicados"
                     />
                     <KPICard
                         label="Tasa de Hospitalización"
-                        value="18,5%"
+                        value={kpiData.tasaHospitalizacion}
                         icon="local_hospital"
-                        infoTooltip="Porcentaje de casos que requirieron hospitalización."
+                        infoTooltip="Porcentaje de casos que requirieron hospitalización según los filtros aplicados."
                     />
                     <KPICard
                         label="Municipio con Mayor Incidencia"
-                        value="Córdoba"
+                        value={kpiData.municipioMayorIncidencia}
                         icon="location_on"
-                        infoTooltip="El municipio con más casos."
+                        infoTooltip="El municipio con más casos según los filtros aplicados."
                     />
                     <KPICard
                         label="Índice de Severidad"
-                        value="7,2/10"
+                        value={kpiData.indiceSeveridad}
                         icon="warning"
-                        infoTooltip="Hospitalización (70%) + Reincidencia (30%). Peso de hospitalización refleja gravedad clínica directa."
+                        infoTooltip="Peso de hospitalización refleja gravedad clínica directa."
                     />
                 </div>
 
@@ -151,7 +169,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div className="lg:col-span-8">
                         <MapContainer
-                            distribucionGeograficaData={distribucionGeograficaData}
+                            distribucionGeograficaData={distribucionCompleta?.municipios || []}
                             municipiosCoordenadas={municipiosCoordenadas}
                         />
                         <MunicipalComparator
@@ -165,7 +183,7 @@ export default function DashboardPage() {
 
                     {/* Distribution Charts Stack */}
                     <div className="lg:col-span-4 space-y-6">
-                        <TopCitiesChart />
+                        <TopCitiesChart selectedAnio={selectedAnio} selectedMunicipio={selectedMunicipio} />
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
                         <HospitalizationChart />
