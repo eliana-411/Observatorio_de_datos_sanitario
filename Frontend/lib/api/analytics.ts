@@ -215,6 +215,12 @@ interface DistribucionGeograficaResponse {
     municipios: DistribucionGeograficaData[];
 }
 
+// Respuesta completa con totalGlobal incluido
+export interface DistribucionGeograficaCompleta {
+    totalGlobal: number;
+    municipios: DistribucionGeograficaData[];
+}
+
 // Función auxiliar para construir query string con parámetros opcionales
 function construirQueryParams(params: Record<string, any>): string {
     const queryParams = Object.entries(params)
@@ -231,7 +237,7 @@ export async function fetchDistribucionGeografica(
     municipio?: string,
     hospitalizacion?: string,
     metodo?: string
-): Promise<ApiResponse<DistribucionGeograficaData[]>> {
+): Promise<ApiResponse<DistribucionGeograficaCompleta>> {
     try {
         // Construir query params con los nombres correctos que espera el backend
         const queryParams = new URLSearchParams();
@@ -252,10 +258,6 @@ export async function fetchDistribucionGeografica(
 
         console.log('Response data:', response.data);
 
-        // El backend devuelve directamente un array
-        // DESPUÉS:
-        console.log('Response data:', response.data);
-
         // El backend devuelve {totalGlobal, municipios}
         if (response.data && Array.isArray(response.data.municipios)) {
             console.log('Datos recibidos correctamente, cantidad:', response.data.municipios.length);
@@ -273,7 +275,12 @@ export async function fetchDistribucionGeografica(
                 longitud: coordenadaMap.get(dato.codigoMunicipio)?.longitud ?? null
             }));
 
-            return { data: datosEnriquecidos };
+            return { 
+                data: {
+                    totalGlobal: response.data.totalGlobal,
+                    municipios: datosEnriquecidos
+                }
+            };
         }
 
         return { error: response.error };

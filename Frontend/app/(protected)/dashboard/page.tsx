@@ -15,11 +15,12 @@ import { MunicipalComparator } from '@/components/Dashboard/MunicipalComparator'
 import { Toast } from '@/components/Toast/Toast';
 import { useMunicipios } from '@/hooks/useMunicipios';
 import { useToast } from '@/hooks/useToast';
+import { useKPIData } from '@/hooks/useKPIData';
 import { useFilterStore } from '@/store/filterStore';
-import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
+import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeograficaCompleta, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
 
 export default function DashboardPage() {
-    const [distribucionGeograficaData, setDistribucionGeograficaData] = useState<DistribucionGeograficaData[]>([]);
+    const [distribucionCompleta, setDistribucionCompleta] = useState<DistribucionGeograficaCompleta | null>(null);
     const [municipiosData, setMunicipiosData] = useState<DistribucionGeneroMunicipioData[]>([]);
     const [municipiosGrupoEtarioData, setMunicipiosGrupoEtarioData] = useState<DistribucionGrupoEtarioMunicipioData[]>([]);
     const [loading, setLoading] = useState(false);
@@ -34,6 +35,14 @@ export default function DashboardPage() {
     const { municipios: municipiosCoordenadas } = useMunicipios();
     const { selectedGenero, selectedGrupoEtario, selectedAnio, selectedMunicipio, setSelectedMunicipio } = useFilterStore();
     const { toasts, showWarning, removeToast } = useToast();
+
+    // Usar el hook para calcular KPIs
+    const kpiData = useKPIData(
+        distribucionCompleta?.municipios || [],
+        distribucionCompleta?.totalGlobal || null,
+        selectedMunicipio,
+        loading
+    );
 
     const loadMunicipiosData = async () => {
         setLoading(true);
@@ -57,8 +66,8 @@ export default function DashboardPage() {
 
         console.log('Dashboard - Respuesta del API:', response);
         if (response.data) {
-            console.log('Dashboard - Datos recibidos, cantidad:', response.data.length);
-            setDistribucionGeograficaData(response.data);
+            console.log('Dashboard - Datos recibidos, cantidad:', response.data.municipios.length);
+            setDistribucionCompleta(response.data);
         } else if (response.error) {
             console.error('Dashboard - Error en API:', response.error);
         }
@@ -81,16 +90,16 @@ export default function DashboardPage() {
 
     // Mostrar notificación cuando no hay datos (solo después de la carga inicial)
     useEffect(() => {
-        if (hasInitialLoadCompleted.current && !loading && distribucionGeograficaData.length === 0 && !noDataNotified) {
+        if (hasInitialLoadCompleted.current && !loading && (!distribucionCompleta || distribucionCompleta.municipios.length === 0) && !noDataNotified) {
             showWarning(
                 'No hay datos disponibles para los filtros seleccionados. Por favor, intenta con otros criterios.',
                 6000
             );
             setNoDataNotified(true);
-        } else if (distribucionGeograficaData.length > 0) {
+        } else if (distribucionCompleta && distribucionCompleta.municipios.length > 0) {
             setNoDataNotified(false);
         }
-    }, [distribucionGeograficaData, loading, noDataNotified, showWarning]);
+    }, [distribucionCompleta, loading, noDataNotified, showWarning]);
 
     // Manejadores de filtros locales para el mapa
     const handleHospitalizacionChange = (hospitalizacion: string) => {
@@ -116,25 +125,25 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <KPICard
                         label="Total de Casos Reportados"
-                        value="2.457"
+                        value={kpiData.totalCasosReportados}
                         icon="monitoring"
                         infoTooltip="Cantidad total de eventos sanitarios."
                     />
                     <KPICard
                         label="Tasa de Hospitalización"
-                        value="18,5%"
+                        value={kpiData.tasaHospitalizacion}
                         icon="local_hospital"
                         infoTooltip="Porcentaje de casos que requirieron hospitalización."
                     />
                     <KPICard
                         label="Municipio con Mayor Incidencia"
-                        value="Córdoba"
+                        value={kpiData.municipioMayorIncidencia}
                         icon="location_on"
                         infoTooltip="El municipio con más casos."
                     />
                     <KPICard
                         label="Índice de Severidad"
-                        value="7,2/10"
+                        value={kpiData.indiceSeveridad}
                         icon="warning"
                         infoTooltip="Hospitalización (70%) + Reincidencia (30%). Peso de hospitalización refleja gravedad clínica directa."
                     />
@@ -144,7 +153,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div className="lg:col-span-8">
                         <MapContainer
-                            distribucionGeograficaData={distribucionGeograficaData}
+                            distribucionGeograficaData={distribucionCompleta?.municipios || []}
                             municipiosCoordenadas={municipiosCoordenadas}
                         />
                         <MunicipalComparator
