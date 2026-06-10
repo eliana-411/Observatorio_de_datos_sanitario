@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes.brotes import router as brotes_router
 from api.routes.anomalias import router as anomalias_router
 from api.routes.demanda import router as demanda_router
-from api.routes.chat import router as chat_router
+from api.routes.chatbot import router as chatbot_router
 
 
 app = FastAPI(
@@ -34,7 +34,6 @@ app.add_middleware(
 app.include_router(brotes_router)
 app.include_router(anomalias_router)
 app.include_router(demanda_router)
-app.include_router(chat_router)
-@app.get("/")
+app.include_router(chatbot_router)
 def health():
     return {"status": "ok", "service": "Observatorio Sanitario Caldas"}

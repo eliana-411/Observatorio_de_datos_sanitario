@@ -42,4 +42,4 @@ mlruns/
 mlflow.db 
 
 ANALISIS_CUMPLIMIENTO.md
-AI/data/documents
+AI/rag/documents
