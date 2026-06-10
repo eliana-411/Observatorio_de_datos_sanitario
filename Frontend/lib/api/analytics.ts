@@ -275,7 +275,7 @@ export async function fetchDistribucionGeografica(
                 longitud: coordenadaMap.get(dato.codigoMunicipio)?.longitud ?? null
             }));
 
-            return { 
+            return {
                 data: {
                     totalGlobal: response.data.totalGlobal,
                     municipios: datosEnriquecidos
@@ -289,6 +289,54 @@ export async function fetchDistribucionGeografica(
         return {
             error: {
                 message: 'Error al cargar distribución geográfica'
+            }
+        };
+    }
+}
+
+// Interfaces para Resumen Municipal
+export interface ResumenMunicipalData {
+    nombreMunicipio: string;
+    codigoDANE: string;
+    totalCasos: number;
+    hospitalizados: number;
+    tasaHospitalizacion: number;
+}
+
+interface ResumenMunicipalResponse {
+    periodo: null | { anio: number };
+    data: ResumenMunicipalData[];
+}
+
+export async function fetchResumenMunicipal(
+    anio?: number,
+    municipio?: string
+): Promise<ApiResponse<ResumenMunicipalData[]>> {
+    try {
+        const queryString = construirQueryParams({
+            anio: anio !== undefined ? String(anio) : '',
+            municipio: municipio ?? ''
+        });
+
+        console.log('Fetching resumen-municipal:', `/analytics/resumen-municipal${queryString}`);
+
+        const response = await api.get<ResumenMunicipalResponse>(
+            `/analytics/resumen-municipal${queryString}`
+        );
+
+        console.log('Response resumen-municipal:', response.data);
+
+        if (response.data && Array.isArray(response.data.data)) {
+            console.log('Datos resumen municipal recibidos, cantidad:', response.data.data.length);
+            return { data: response.data.data };
+        }
+
+        return { error: response.error };
+    } catch (err) {
+        console.error('Error en fetchResumenMunicipal:', err);
+        return {
+            error: {
+                message: 'Error al cargar resumen municipal'
             }
         };
     }

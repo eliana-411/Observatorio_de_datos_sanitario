@@ -22,8 +22,8 @@ interface MunicipalDatosState {
 
 export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: MunicipalComparatorProps) {
     const [municipios, setMunicipios] = React.useState<Municipio[]>([]);
-    const [numComparadores, setNumComparadores] = React.useState(1);
-    const [selectedMunicipios, setSelectedMunicipios] = React.useState<string[]>(['']);
+    const [numComparadores, setNumComparadores] = React.useState(2);
+    const [selectedMunicipios, setSelectedMunicipios] = React.useState<string[]>(['', '']);
     const [loading, setLoading] = React.useState(true);
     const [municipioDatos, setMunicipioDatos] = React.useState<MunicipalDatosState>({});
     const [loadingIndices, setLoadingIndices] = React.useState<Set<number>>(new Set());
@@ -73,6 +73,13 @@ export function MunicipalComparator({ municipiosCoordenadas, municipiosData }: M
                 const municipiosOptions = convertMunicipiosToOptions(nombresMunicipios);
                 setMunicipios(municipiosOptions);
                 console.log(`Municipios cargados en comparador: ${municipiosOptions.length} opciones`);
+
+                // Pre-llenar con los dos primeros municipios
+                if (municipiosOptions.length >= 2) {
+                    setSelectedMunicipios([municipiosOptions[0].value, municipiosOptions[1].value]);
+                } else if (municipiosOptions.length === 1) {
+                    setSelectedMunicipios([municipiosOptions[0].value, '']);
+                }
             } catch (error) {
                 console.error('Error cargando municipios:', error);
                 setMunicipios([]);

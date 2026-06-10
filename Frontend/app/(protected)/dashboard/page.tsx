@@ -17,12 +17,13 @@ import { useMunicipios } from '@/hooks/useMunicipios';
 import { useToast } from '@/hooks/useToast';
 import { useKPIData } from '@/hooks/useKPIData';
 import { useFilterStore } from '@/store/filterStore';
-import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, DistribucionGeograficaCompleta, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData } from '@/lib/api/analytics';
+import { fetchDistribucionGeografica, fetchDistribucionGeneroMunicipio, fetchDistribucionGrupoEtarioMunicipio, fetchResumenMunicipal, DistribucionGeograficaCompleta, DistribucionGeograficaData, DistribucionGeneroMunicipioData, DistribucionGrupoEtarioMunicipioData, ResumenMunicipalData } from '@/lib/api/analytics';
 
 export default function DashboardPage() {
     const [distribucionCompleta, setDistribucionCompleta] = useState<DistribucionGeograficaCompleta | null>(null);
     const [municipiosData, setMunicipiosData] = useState<DistribucionGeneroMunicipioData[]>([]);
     const [municipiosGrupoEtarioData, setMunicipiosGrupoEtarioData] = useState<DistribucionGrupoEtarioMunicipioData[]>([]);
+    const [resumenMunicipalData, setResumenMunicipalData] = useState<ResumenMunicipalData[]>([]);
     const [loading, setLoading] = useState(false);
     const [noDataNotified, setNoDataNotified] = useState(false);
     const hasInitialLoadCompleted = useRef(false);
@@ -40,6 +41,7 @@ export default function DashboardPage() {
     const kpiData = useKPIData(
         distribucionCompleta?.municipios || [],
         distribucionCompleta?.totalGlobal || null,
+        resumenMunicipalData,
         selectedMunicipio,
         loading
     );
@@ -64,6 +66,12 @@ export default function DashboardPage() {
             metodoSeleccionado !== "todos" ? metodoSeleccionado : undefined
         );
 
+        // Cargar datos de resumen municipal
+        const resumenResponse = await fetchResumenMunicipal(
+            selectedAnio !== null ? selectedAnio : undefined,
+            selectedMunicipio !== "todos" ? selectedMunicipio : undefined
+        );
+
         console.log('Dashboard - Respuesta del API:', response);
         if (response.data) {
             console.log('Dashboard - Datos recibidos, cantidad:', response.data.municipios.length);
@@ -71,6 +79,14 @@ export default function DashboardPage() {
         } else if (response.error) {
             console.error('Dashboard - Error en API:', response.error);
         }
+
+        if (resumenResponse.data) {
+            console.log('Dashboard - Datos resumen municipal recibidos:', resumenResponse.data.length);
+            setResumenMunicipalData(resumenResponse.data);
+        } else if (resumenResponse.error) {
+            console.error('Dashboard - Error resumen municipal:', resumenResponse.error);
+        }
+
         setLoading(false);
     };
 
@@ -127,25 +143,25 @@ export default function DashboardPage() {
                         label="Total de Casos Reportados"
                         value={kpiData.totalCasosReportados}
                         icon="monitoring"
-                        infoTooltip="Cantidad total de eventos sanitarios."
+                        infoTooltip="Cantidad total de eventos sanitarios según los filtros aplicados"
                     />
                     <KPICard
                         label="Tasa de Hospitalización"
                         value={kpiData.tasaHospitalizacion}
                         icon="local_hospital"
-                        infoTooltip="Porcentaje de casos que requirieron hospitalización."
+                        infoTooltip="Porcentaje de casos que requirieron hospitalización según los filtros aplicados."
                     />
                     <KPICard
                         label="Municipio con Mayor Incidencia"
                         value={kpiData.municipioMayorIncidencia}
                         icon="location_on"
-                        infoTooltip="El municipio con más casos."
+                        infoTooltip="El municipio con más casos según los filtros aplicados."
                     />
                     <KPICard
                         label="Índice de Severidad"
                         value={kpiData.indiceSeveridad}
                         icon="warning"
-                        infoTooltip="Hospitalización (70%) + Reincidencia (30%). Peso de hospitalización refleja gravedad clínica directa."
+                        infoTooltip="Peso de hospitalización refleja gravedad clínica directa."
                     />
                 </div>
 
@@ -167,7 +183,7 @@ export default function DashboardPage() {
 
                     {/* Distribution Charts Stack */}
                     <div className="lg:col-span-4 space-y-6">
-                        <TopCitiesChart />
+                        <TopCitiesChart selectedAnio={selectedAnio} selectedMunicipio={selectedMunicipio} />
                         <GenderDistributionChart />
                         <AgeGroupDistributionChart />
                         <HospitalizationChart />

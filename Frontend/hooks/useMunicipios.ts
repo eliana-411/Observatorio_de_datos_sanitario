@@ -5,7 +5,7 @@ import { fetchMunicipiosDelEndpoint } from '@/lib/api/municipios-api';
 import { obtenerCoordenadasPorNombre } from '@/lib/utils/municipios';
 
 export interface Municipio {
-    codigoMunicipio?: string;
+    codigoMunicipio: string;
     nombreMunicipio: string;
     latitud: number | null;
     longitud: number | null;
@@ -38,6 +38,7 @@ export function useMunicipios() {
 
                     const valueKey = nombre.toLowerCase().replace(/\s+/g, '_');
                     map.set(valueKey, {
+                        codigoMunicipio: valueKey,
                         nombreMunicipio: nombre,
                         latitud: coords.latitud,
                         longitud: coords.longitud

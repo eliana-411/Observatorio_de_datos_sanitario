@@ -4,13 +4,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DistribucionGeograficaData } from '@/lib/api/analytics';
-
-interface Municipio {
-    codigoMunicipio: string;
-    nombreMunicipio: string;
-    latitud: number;
-    longitud: number;
-}
+import { Municipio } from '@/hooks/useMunicipios';
 
 interface MapContainerProps {
     distribucionGeograficaData?: DistribucionGeograficaData[];
@@ -156,17 +150,17 @@ export function MapContainer({
         // Agregar nuevos marcadores
         distribucionGeograficaData.forEach((municipio) => {
             // Validar explícitamente que no sean null/undefined, no usar truthy
-            if (municipio.latitud !== null && municipio.latitud !== undefined && 
+            if (municipio.latitud !== null && municipio.latitud !== undefined &&
                 municipio.longitud !== null && municipio.longitud !== undefined) {
-                
+
                 const colors = getColorByDensity(municipio.totalCasos, maxCasos);
                 const radius = Math.max(10, Math.sqrt(municipio.totalCasos) * 1.5);
 
                 // Transformar coordenadas - ajustar escala inconsistente
-                const lat = municipio.latitud > 1000 
+                const lat = municipio.latitud > 1000
                     ? municipio.latitud / 100000  // Latitud en centimicrogrados
                     : municipio.latitud;           // Ya en grados
-                    
+
                 const lng = municipio.longitud < -1000 || municipio.longitud > 1000
                     ? municipio.longitud / 1000000 // Longitud en microgrados
                     : municipio.longitud;          // Ya en grados

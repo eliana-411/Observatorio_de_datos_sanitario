@@ -2,22 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { fetchResumenMunicipal, ResumenMunicipalData } from '@/lib/api/analytics';
 
 interface CityData {
     ciudad: string;
     casos: number;
 }
 
-// Datos sintéticos para demostración
-const SYNTHETIC_DATA: CityData[] = [
-    { ciudad: 'Córdoba', casos: 485 },
-    { ciudad: 'La Plata', casos: 328 },
-    { ciudad: 'Rosario', casos: 267 },
-    { ciudad: 'Mendoza', casos: 194 },
-    { ciudad: 'Mar del Plata', casos: 152 },
-];
+interface TopCitiesChartProps {
+    selectedAnio?: number | null;
+    selectedMunicipio?: string;
+}
 
-export function TopCitiesChart() {
+export function TopCitiesChart({ selectedAnio, selectedMunicipio }: TopCitiesChartProps) {
     const [data, setData] = useState<CityData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -26,18 +23,35 @@ export function TopCitiesChart() {
         async function loadData() {
             try {
                 setLoading(true);
-                // TODO: Reemplazar con API call cuando esté disponible
-                setData(SYNTHETIC_DATA);
-                setError(null);
+                const response = await fetchResumenMunicipal(
+                    selectedAnio !== undefined && selectedAnio !== null ? selectedAnio : undefined,
+                    selectedMunicipio && selectedMunicipio !== 'todos' ? selectedMunicipio : undefined
+                );
+
+                if (response.data && response.data.length > 0) {
+                    // Mapear datos y limitar a top 5
+                    const topCities: CityData[] = response.data
+                        .slice(0, 5)
+                        .map((municipio: ResumenMunicipalData) => ({
+                            ciudad: municipio.nombreMunicipio,
+                            casos: municipio.totalCasos
+                        }));
+                    setData(topCities);
+                    setError(null);
+                } else {
+                    setData([]);
+                    setError(response.error?.message || 'Sin datos disponibles');
+                }
             } catch (err) {
                 setError('Error al cargar los datos');
+                setData([]);
             } finally {
                 setLoading(false);
             }
         }
 
         loadData();
-    }, []);
+    }, [selectedAnio, selectedMunicipio]);
 
     if (loading) {
         return (
