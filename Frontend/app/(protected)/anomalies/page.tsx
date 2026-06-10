@@ -33,12 +33,9 @@ export default function AnomaliesPredictionPage() {
             <div className="max-w-360 mx-auto space-y-8">
                 {/* Page Title */}
                 <div>
-                    <h1 className="text-3xl font-black text-[#0b1d2d] tracking-tight">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                         Predicción de Anomalías
                     </h1>
-                    <p className="text-sm font-medium tracking-tight text-[#0059bb] uppercase">
-                        Isolation Forest
-                    </p>
                 </div>
 
                 {/* KPI Metrics Section */}

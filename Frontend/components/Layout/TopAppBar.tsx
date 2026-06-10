@@ -31,20 +31,6 @@ export function TopAppBar() {
                         de Datos Sanitarios
                     </p>
                 </div>
-
-                <div className="relative w-full max-w-md">
-                    <span
-                        className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#727886]"
-                        data-icon="search"
-                    >
-                        search
-                    </span>
-                    <input
-                        className="w-full bg-gray-100 border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all text-gray-900 placeholder-gray-500"
-                        placeholder="Buscar datos epidemiológicos..."
-                        type="text"
-                    />
-                </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -53,11 +39,6 @@ export function TopAppBar() {
                         notifications
                     </span>
                     <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-                </button>
-                <button className="p-2 rounded-full hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb] transition-colors">
-                    <span className="material-symbols-outlined" data-icon="smart_toy">
-                        smart_toy
-                    </span>
                 </button>
                 <button
                     onClick={toggleColorblindMode}
