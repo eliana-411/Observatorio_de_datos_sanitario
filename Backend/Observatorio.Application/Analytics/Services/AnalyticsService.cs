@@ -662,7 +662,7 @@ public class AnalyticsService : IAnalyticsService
     /// <summary>
     /// Obtiene distribución geográfica con filtros dinámicos para el mapa
     /// </summary>
-    public async Task<List<DistribucionGeograficaDto>> GetDistribucionGeograficaAsync(
+    public async Task<DistribucionGeograficaDetalladaResponseDto> GetDistribucionGeograficaAsync(
         FiltrosDistribucionDto filtros,
         CancellationToken cancelToken = default)
     {
@@ -676,7 +676,54 @@ public class AnalyticsService : IAnalyticsService
             "GetDistribucionGeografica: Municipio={municipio}, RangoEdad={rangoEdad}, Genero={genero}, Anio={anio}, Hospitalizado={hospitalizado}",
             municipioLog, rangoEdadLog, generoLog, anioLog, hospitalizadoLog);
 
-        var sql = new StringBuilder(@"
+        // ========== QUERY 1: Total Global ==========
+        var sqlTotalGlobal = new StringBuilder(@"
+            SELECT COUNT(*) as TotalGlobal
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE 1=1");
+
+        var parameters = new DynamicParameters();
+
+        // Aplicar filtros al total global
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+        {
+            sqlTotalGlobal.Append(" AND l.municipio_evento = @Municipio");
+            parameters.Add("Municipio", filtros.Municipio);
+        }
+        if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
+        {
+            sqlTotalGlobal.Append(" AND p.grupo_etario = @RangoEdad");
+            parameters.Add("RangoEdad", filtros.RangoEdad);
+        }
+        if (!string.IsNullOrWhiteSpace(filtros.Genero))
+        {
+            sqlTotalGlobal.Append(" AND p.genero = @Genero");
+            parameters.Add("Genero", filtros.Genero);
+        }
+        if (filtros.Anio.HasValue)
+        {
+            sqlTotalGlobal.Append(" AND t.anio = @Anio");
+            parameters.Add("Anio", filtros.Anio.Value);
+        }
+        if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
+        {
+            if (filtros.Hospitalizado == "Hospitalizado")
+                sqlTotalGlobal.Append(" AND f.hospitalizado = 1");
+            else if (filtros.Hospitalizado == "No hospitalizado")
+                sqlTotalGlobal.Append(" AND f.hospitalizado = 0");
+        }
+
+        using var connection = _dbContext.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync(cancelToken);
+
+        var totalGlobal = await connection.ExecuteScalarAsync<int>(sqlTotalGlobal.ToString(), parameters);
+
+        // ========== QUERY 2: Resumen por Municipio ==========
+        var sqlMunicipios = new StringBuilder(@"
             SELECT 
                 l.municipio_evento as NombreMunicipio,
                 COUNT(*) as TotalCasos,
@@ -687,80 +734,208 @@ public class AnalyticsService : IAnalyticsService
             INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
             WHERE 1=1");
 
-        var parameters = new DynamicParameters();
-
+        // Mismos filtros, mismos parámetros (ya están en 'parameters')
         if (!string.IsNullOrWhiteSpace(filtros.Municipio))
-        {
-            sql.Append(" AND l.municipio_evento = @Municipio");
-            parameters.Add("Municipio", filtros.Municipio);
-        }
-
+            sqlMunicipios.Append(" AND l.municipio_evento = @Municipio");
         if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
-        {
-            sql.Append(" AND p.grupo_etario = @RangoEdad");
-            parameters.Add("RangoEdad", filtros.RangoEdad);
-        }
-
+            sqlMunicipios.Append(" AND p.grupo_etario = @RangoEdad");
         if (!string.IsNullOrWhiteSpace(filtros.Genero))
-        {
-            sql.Append(" AND p.genero = @Genero");
-            parameters.Add("Genero", filtros.Genero);
-        }
-
+            sqlMunicipios.Append(" AND p.genero = @Genero");
         if (filtros.Anio.HasValue)
-        {
-            sql.Append(" AND t.anio = @Anio");
-            parameters.Add("Anio", filtros.Anio.Value);
-        }
-
+            sqlMunicipios.Append(" AND t.anio = @Anio");
         if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
         {
             if (filtros.Hospitalizado == "Hospitalizado")
-            {
-                sql.Append(" AND f.hospitalizado = 1");
-            }
+                sqlMunicipios.Append(" AND f.hospitalizado = 1");
             else if (filtros.Hospitalizado == "No hospitalizado")
-            {
-                sql.Append(" AND f.hospitalizado = 0");
-            }
+                sqlMunicipios.Append(" AND f.hospitalizado = 0");
         }
 
-        sql.Append(" GROUP BY l.municipio_evento ORDER BY TotalCasos DESC");
+        sqlMunicipios.Append(" GROUP BY l.municipio_evento ORDER BY TotalCasos DESC");
 
-        // Usar Dapper en vez de EF Core SqlQuery
-        using var connection = _dbContext.Database.GetDbConnection();
-        if (connection.State != ConnectionState.Open)
-            await connection.OpenAsync(cancelToken);
+        var resultadosMunicipios = await connection.QueryAsync<DistribucionGeograficaRawDto>(
+            sqlMunicipios.ToString(), parameters);
 
-        var resultados = await connection.QueryAsync<DistribucionGeograficaRawDto>(
-            sql.ToString(), 
-            parameters);
+        // ========== QUERY 3: Distribución por Género por Municipio ==========
+        var sqlGenero = new StringBuilder(@"
+            SELECT 
+                l.municipio_evento as NombreMunicipio,
+                p.genero as Nombre,
+                COUNT(*) as Cantidad,
+                CAST(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY l.municipio_evento) AS DECIMAL(5,2)) as Porcentaje
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE 1=1");
 
-        // Enriquecer con coordenadas del CSV
-        var resultadoFinal = new List<DistribucionGeograficaDto>();
+        // Mismos filtros...
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+            sqlGenero.Append(" AND l.municipio_evento = @Municipio");
+        if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
+            sqlGenero.Append(" AND p.grupo_etario = @RangoEdad");
+        if (!string.IsNullOrWhiteSpace(filtros.Genero))
+            sqlGenero.Append(" AND p.genero = @Genero");
+        if (filtros.Anio.HasValue)
+            sqlGenero.Append(" AND t.anio = @Anio");
+        if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
+        {
+            if (filtros.Hospitalizado == "Hospitalizado")
+                sqlGenero.Append(" AND f.hospitalizado = 1");
+            else if (filtros.Hospitalizado == "No hospitalizado")
+                sqlGenero.Append(" AND f.hospitalizado = 0");
+        }
 
-        foreach (var r in resultados)
+        sqlGenero.Append(" GROUP BY l.municipio_evento, p.genero");
+
+        var generoPorMunicipio = await connection.QueryAsync<DistribucionItemRawDto>(
+            sqlGenero.ToString(), parameters);
+
+        // ========== QUERY 4: Distribución por Grupo Etario por Municipio ==========
+        var sqlGrupoEtario = new StringBuilder(@"
+            SELECT 
+                l.municipio_evento as NombreMunicipio,
+                p.grupo_etario as Nombre,
+                COUNT(*) as Cantidad,
+                CAST(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY l.municipio_evento) AS DECIMAL(5,2)) as Porcentaje
+            FROM fact_evento f
+            INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+            INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+            INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+            WHERE 1=1");
+
+        // Mismos filtros...
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+            sqlGrupoEtario.Append(" AND l.municipio_evento = @Municipio");
+        if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
+            sqlGrupoEtario.Append(" AND p.grupo_etario = @RangoEdad");
+        if (!string.IsNullOrWhiteSpace(filtros.Genero))
+            sqlGrupoEtario.Append(" AND p.genero = @Genero");
+        if (filtros.Anio.HasValue)
+            sqlGrupoEtario.Append(" AND t.anio = @Anio");
+        if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
+        {
+            if (filtros.Hospitalizado == "Hospitalizado")
+                sqlGrupoEtario.Append(" AND f.hospitalizado = 1");
+            else if (filtros.Hospitalizado == "No hospitalizado")
+                sqlGrupoEtario.Append(" AND f.hospitalizado = 0");
+        }
+
+        sqlGrupoEtario.Append(" GROUP BY l.municipio_evento, p.grupo_etario");
+
+        var grupoEtarioPorMunicipio = await connection.QueryAsync<DistribucionItemRawDto>(
+            sqlGrupoEtario.ToString(), parameters);
+
+        // ========== QUERY 5: Top 3 Métodos por Municipio ==========
+        var sqlMetodos = new StringBuilder(@"
+            SELECT * FROM (
+                SELECT 
+                    l.municipio_evento as NombreMunicipio,
+                    m.metodo as Nombre,
+                    COUNT(*) as Cantidad,
+                    CAST(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY l.municipio_evento) AS DECIMAL(5,2)) as Porcentaje,
+                    ROW_NUMBER() OVER (PARTITION BY l.municipio_evento ORDER BY COUNT(*) DESC) as rn
+                FROM fact_evento f
+                INNER JOIN dim_lugar l ON f.id_lugar = l.id_lugar
+                INNER JOIN dim_metodo m ON f.id_metodo = m.id_metodo
+                INNER JOIN dim_persona p ON f.id_persona = p.id_persona
+                INNER JOIN dim_tiempo t ON f.id_tiempo = t.id_tiempo
+                WHERE 1=1");
+
+        // Mismos filtros...
+        if (!string.IsNullOrWhiteSpace(filtros.Municipio))
+            sqlMetodos.Append(" AND l.municipio_evento = @Municipio");
+        if (!string.IsNullOrWhiteSpace(filtros.RangoEdad))
+            sqlMetodos.Append(" AND p.grupo_etario = @RangoEdad");
+        if (!string.IsNullOrWhiteSpace(filtros.Genero))
+            sqlMetodos.Append(" AND p.genero = @Genero");
+        if (filtros.Anio.HasValue)
+            sqlMetodos.Append(" AND t.anio = @Anio");
+        if (!string.IsNullOrWhiteSpace(filtros.Hospitalizado))
+        {
+            if (filtros.Hospitalizado == "Hospitalizado")
+                sqlMetodos.Append(" AND f.hospitalizado = 1");
+            else if (filtros.Hospitalizado == "No hospitalizado")
+                sqlMetodos.Append(" AND f.hospitalizado = 0");
+        }
+
+        sqlMetodos.Append(@"
+                GROUP BY l.municipio_evento, m.metodo
+            ) t
+            WHERE rn <= 3");
+
+        var topMetodosPorMunicipio = await connection.QueryAsync<DistribucionItemRawDto>(
+            sqlMetodos.ToString(), parameters);
+
+        // ========== ARMAR RESPUESTA ==========
+        var municipiosDict = new Dictionary<string, DistribucionGeograficaDto>();
+
+        foreach (var r in resultadosMunicipios)
         {
             var municipioInfo = await _municipiosService
-                .GetMunicipioConCoordenadasByNombreAsync(r.NombreMunicipio ?? "", cancelToken);
+                .GetMunicipioByNombreAsync(r.NombreMunicipio ?? "", cancelToken);
 
-            resultadoFinal.Add(new DistribucionGeograficaDto
+            municipiosDict[r.NombreMunicipio ?? ""] = new DistribucionGeograficaDto
             {
                 CodigoMunicipio = municipioInfo?.CodigoMunicipio ?? "Desconocido",
                 NombreMunicipio = r.NombreMunicipio ?? "Desconocido",
-                Latitud = municipioInfo?.Latitud,
-                Longitud = municipioInfo?.Longitud,
                 TotalCasos = r.TotalCasos,
                 Hospitalizados = r.Hospitalizados,
-                TasaHospitalizacion = r.TotalCasos > 0
-                    ? Math.Round((decimal)r.Hospitalizados / r.TotalCasos * 100, 2)
-                    : 0
-            });
+                DistribucionGenero = new List<DistribucionItemDto>(),
+                DistribucionGrupoEtario = new List<DistribucionItemDto>(),
+                TopMetodos = new List<DistribucionItemDto>()
+            };
         }
 
-        _logger?.LogInformation("GetDistribucionGeografica: {count} municipios encontrados", resultadoFinal.Count);
+        // Asignar género
+        foreach (var g in generoPorMunicipio)
+        {
+            if (municipiosDict.TryGetValue(g.NombreMunicipio ?? "", out var municipio))
+            {
+                municipio.DistribucionGenero.Add(new DistribucionItemDto
+                {
+                    Nombre = g.Nombre ?? "Desconocido",
+                    Cantidad = g.Cantidad,
+                    Porcentaje = g.Porcentaje
+                });
+            }
+        }
 
-        return resultadoFinal;
+        // Asignar grupo etario
+        foreach (var ge in grupoEtarioPorMunicipio)
+        {
+            if (municipiosDict.TryGetValue(ge.NombreMunicipio ?? "", out var municipio))
+            {
+                municipio.DistribucionGrupoEtario.Add(new DistribucionItemDto
+                {
+                    Nombre = ge.Nombre ?? "Desconocido",
+                    Cantidad = ge.Cantidad,
+                    Porcentaje = ge.Porcentaje
+                });
+            }
+        }
+
+        // Asignar top métodos
+        foreach (var m in topMetodosPorMunicipio)
+        {
+            if (municipiosDict.TryGetValue(m.NombreMunicipio ?? "", out var municipio))
+            {
+                municipio.TopMetodos.Add(new DistribucionItemDto
+                {
+                    Nombre = m.Nombre ?? "Desconocido",
+                    Cantidad = m.Cantidad,
+                    Porcentaje = m.Porcentaje
+                });
+            }
+        }
+
+        _logger?.LogInformation("GetDistribucionGeografica: {count} municipios encontrados", municipiosDict.Count);
+
+        return new DistribucionGeograficaDetalladaResponseDto
+        {
+            TotalGlobal = totalGlobal,
+            Municipios = municipiosDict.Values.ToList()
+        };
     }
 
     public async Task<PiramidePoblacionalResponseDto> GetPiramidePoblacionalAsync(CancellationToken cancelToken = default)
@@ -917,6 +1092,17 @@ internal class DistribucionGeograficaRawDto
     public string? NombreMunicipio { get; set; }
     public int TotalCasos { get; set; }
     public int Hospitalizados { get; set; }
+}
+
+/// <summary>
+/// DTO para items de distribución (género, grupo etario, métodos)
+/// </summary>
+internal class DistribucionItemRawDto
+{
+    public string? NombreMunicipio { get; set; }
+    public string? Nombre { get; set; }
+    public int Cantidad { get; set; }
+    public decimal Porcentaje { get; set; }
 }
 
 /// <summary>
