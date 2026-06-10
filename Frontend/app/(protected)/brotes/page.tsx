@@ -156,8 +156,6 @@ export default function BrotesPredictionPage() {
                     </div>
                 </div>
 
-
-
                 {/* Municipality Table */}
                 <MunicipalityTable />
             </div>

@@ -1,157 +1,233 @@
 'use client';
 
-interface MunicipalityData {
-    name: string;
-    trend: 'alza' | 'estable' | 'baja';
-    prediction: number;
-    deviation: string;
-    alertLevel: 'critica' | 'moderada' | 'estable';
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api/client';
+
+interface MatrizData {
+    municipio: string;
+    tendencia: string;
+    casos_predichos: number;
+    desviacion_pct: number;
+    nivel_alerta: string;
+    media_historica: number;
+    umbral_alerta: number;
 }
 
-const municipalities: MunicipalityData[] = [
-    {
-        name: 'Manizales',
-        trend: 'alza',
-        prediction: 48,
-        deviation: '+14.2%',
-        alertLevel: 'critica',
-    },
-    {
-        name: 'La Dorada',
-        trend: 'estable',
-        prediction: 18,
-        deviation: '+2.1%',
-        alertLevel: 'moderada',
-    },
-    {
-        name: 'Chinchiná',
-        trend: 'alza',
-        prediction: 14,
-        deviation: '+8.5%',
-        alertLevel: 'critica',
-    },
-    {
-        name: 'Riosucio',
-        trend: 'baja',
-        prediction: 11,
-        deviation: '-5.4%',
-        alertLevel: 'estable',
-    },
-    {
-        name: 'Villamaría',
-        trend: 'estable',
-        prediction: 9,
-        deviation: '+1.0%',
-        alertLevel: 'moderada',
-    },
-];
+interface MatrizDataWithAlertLevel extends MatrizData {
+    alertLevel: 'alto' | 'medio' | 'bajo';
+}
 
-const trendIcons = {
-    alza: 'trending_up',
-    estable: 'trending_flat',
-    baja: 'trending_down',
-};
-
-const trendColors = {
-    alza: '#ffb4ab',
-    estable: '#ffb77e',
-    baja: '#0059bb',
+// Colores del mapa de riesgo
+const colorPalette = {
+    alto: {
+        fill: '#dc2626',
+        stroke: '#991b1b',
+    },
+    medio: {
+        fill: '#f97316',
+        stroke: '#ea580c',
+    },
+    bajo: {
+        fill: '#3b82f6',
+        stroke: '#1e40af',
+    },
 };
 
 const alertBgColors = {
-    critica: '#ffb4ab',
-    moderada: '#ffb77e',
-    estable: '#a7c8ff',
+    alto: colorPalette.alto.fill,
+    medio: colorPalette.medio.fill,
+    bajo: colorPalette.bajo.fill,
 };
 
 const alertTextColors = {
-    critica: '#690005',
-    moderada: '#4d2600',
-    estable: '#003061',
+    alto: '#7f1d1d',
+    medio: '#92400e',
+    bajo: '#082f49',
 };
 
+// Mapeo de tendencias a íconos
+const trendIcons = {
+    'al alza': 'trending_up',
+    'alza': 'trending_up',
+    'estable': 'trending_flat',
+    'a la baja': 'trending_down',
+    'baja': 'trending_down',
+} as Record<string, string>;
+
+const trendColors = {
+    'al alza': colorPalette.alto.fill,
+    'alza': colorPalette.alto.fill,
+    'estable': colorPalette.medio.fill,
+    'a la baja': colorPalette.bajo.fill,
+    'baja': colorPalette.bajo.fill,
+} as Record<string, string>;
+
+/**
+ * Mapea nivel_alerta del endpoint a niveles internos
+ */
+function mapAlertLevel(nivelAlerta: string): 'alto' | 'medio' | 'bajo' {
+    const nivel = nivelAlerta?.toLowerCase().trim() || 'bajo';
+    if (nivel === 'alto' || nivel === 'crítico') return 'alto';
+    if (nivel === 'moderado' || nivel === 'medio') return 'medio';
+    return 'bajo';
+}
+
+/**
+ * Obtiene el ícono para una tendencia
+ */
+function getTrendIcon(tendencia: string): string {
+    const normalized = tendencia.toLowerCase().trim();
+    return trendIcons[normalized] || 'trending_flat';
+}
+
+/**
+ * Obtiene el color para una tendencia
+ */
+function getTrendColor(tendencia: string): string {
+    const normalized = tendencia.toLowerCase().trim();
+    return trendColors[normalized] || colorPalette.medio.fill;
+}
+
 export function MunicipalityTable() {
+    const [data, setData] = useState<MatrizDataWithAlertLevel[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchMatrizData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await api.get<MatrizData[]>('/Brotes/matriz');
+
+                if (response.error) {
+                    setError('Error al cargar la matriz de monitoreo');
+                    console.error('Error:', response.error);
+                    setData([]);
+                } else {
+                    // Mapear los datos y agregar alertLevel
+                    const mappedData = (response.data || []).map((item) => ({
+                        ...item,
+                        alertLevel: mapAlertLevel(item.nivel_alerta),
+                    }));
+                    setData(mappedData);
+                }
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+                setError(errorMessage);
+                console.error('Error fetching matriz data:', err);
+                setData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMatrizData();
+    }, []);
+
+    if (loading) {
+        return (
+            <section className="bg-white dark:bg-[#1a2b3b] border border-[#e4efff] rounded-lg overflow-hidden">
+                <div className="p-6 text-center text-[#8d919b]">Cargando datos...</div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="bg-white dark:bg-[#1a2b3b] border border-[#e4efff] rounded-lg overflow-hidden">
+                <div className="p-6 text-center text-red-600">{error}</div>
+            </section>
+        );
+    }
+
     return (
         <section className="bg-white dark:bg-[#1a2b3b] border border-[#e4efff] rounded-lg overflow-hidden">
             <div className="p-6 border-b border-[#e4efff] flex justify-between items-center">
                 <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest">
                     Matriz de Monitoreo por Municipio (Caldas)
                 </h3>
-                <button className="bg-[#f7f9ff] border border-[#e4efff] px-4 py-2 rounded text-sm text-[#0059bb] hover:bg-[#eef4ff] flex items-center gap-2 transition-colors">
-                    <span className="material-symbols-outlined text-base" data-icon="download">
-                        download
-                    </span>
-                    Exportar PDF
-                </button>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-[#f7f9ff] text-[#8d919b] border-b border-[#e4efff]">
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Municipio</th>
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Tendencia</th>
-                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Predicción Oct.</th>
-                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Desv. Histórica</th>
+                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Casos Predichos</th>
+                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Desv. %</th>
+                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Media Histórica</th>
+                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Umbral Alerta</th>
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Estado de Alerta</th>
-                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {municipalities.map((municipality, index) => (
+                        {data.map((item, index) => (
                             <tr
                                 key={index}
                                 className={`border-b border-[#e4efff] hover:bg-[#f7f9ff] transition-colors ${index % 2 === 1 ? 'bg-[#fafbff]' : ''
                                     }`}
                             >
                                 <td className="px-6 py-3 text-sm font-medium text-[#0b1d2d]">
-                                    {municipality.name}
+                                    {item.municipio}
                                 </td>
-                                <td className="px-6 py-3 text-sm flex items-center gap-1" style={{ color: trendColors[municipality.trend] }}>
+                                <td
+                                    className="px-6 py-3 text-sm flex items-center gap-1"
+                                    style={{ color: getTrendColor(item.tendencia) }}
+                                >
                                     <span
                                         className="material-symbols-outlined text-base"
-                                        data-icon={trendIcons[municipality.trend]}
+                                        data-icon={getTrendIcon(item.tendencia)}
                                     >
-                                        {trendIcons[municipality.trend]}
+                                        {getTrendIcon(item.tendencia)}
                                     </span>
-                                    {municipality.trend.charAt(0).toUpperCase() + municipality.trend.slice(1)}
+                                    {item.tendencia}
                                 </td>
                                 <td className="px-6 py-3 text-sm font-mono font-bold text-[#0b1d2d]">
-                                    {municipality.prediction}
+                                    {item.casos_predichos}
                                 </td>
-                                <td className="px-6 py-3 text-sm" style={{ color: trendColors[municipality.trend] }}>
-                                    {municipality.deviation}
+                                <td className="px-6 py-3 text-sm font-bold text-[#0b1d2d]">
+                                    {item.desviacion_pct.toFixed(1)}%
+                                </td>
+                                <td className="px-6 py-3 text-sm text-[#0b1d2d]">
+                                    {item.media_historica.toFixed(2)}
+                                </td>
+                                <td className="px-6 py-3 text-sm text-[#0b1d2d]">
+                                    {item.umbral_alerta.toFixed(2)}
                                 </td>
                                 <td className="px-6 py-3">
                                     <span
                                         className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border"
                                         style={{
-                                            backgroundColor: `${alertBgColors[municipality.alertLevel]}20`,
-                                            color: alertTextColors[municipality.alertLevel],
-                                            borderColor: alertBgColors[municipality.alertLevel],
+                                            backgroundColor: `${alertBgColors[item.alertLevel]}20`,
+                                            color: alertTextColors[item.alertLevel],
+                                            borderColor: alertBgColors[item.alertLevel],
                                         }}
                                     >
                                         <span
                                             className="w-1.5 h-1.5 rounded-full"
-                                            style={{ backgroundColor: alertBgColors[municipality.alertLevel] }}
+                                            style={{ backgroundColor: alertBgColors[item.alertLevel] }}
                                         ></span>
-                                        {municipality.alertLevel.toUpperCase()}
+                                        {item.alertLevel.toUpperCase()}
                                     </span>
-                                </td>
-                                <td className="px-6 py-3">
-                                    <button className="text-[#0059bb] hover:underline text-sm font-medium">
-                                        Ver Reporte
-                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <div className="px-6 py-4 bg-[#f7f9ff] text-center border-t border-[#e4efff]">
-                    <button className="text-sm text-[#8d919b] hover:text-[#0059bb] transition-colors font-medium">
-                        Cargar 20 municipios restantes...
-                    </button>
-                </div>
+                {data.length === 0 && (
+                    <div className="px-6 py-8 text-center text-[#8d919b]">
+                        No hay datos disponibles
+                    </div>
+                )}
+                {data.length > 0 && (
+                    <div className="px-6 py-4 bg-[#f7f9ff] text-center border-t border-[#e4efff]">
+                        <p className="text-xs text-[#8d919b]">
+                            Mostrando {data.length} municipio{data.length !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+                )}
             </div>
         </section>
     );
