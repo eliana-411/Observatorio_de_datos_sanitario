@@ -12,6 +12,7 @@ export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [justLoggedIn, setJustLoggedIn] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [rateLimitError, setRateLimitError] = useState(false);
     const router = useRouter();
     const { login, isLoading, error, requiresTwoFactor } = useAuth();
     const {
@@ -34,6 +35,15 @@ export function LoginForm() {
         }
     }, [requiresTwoFactor, error, justLoggedIn, router]);
 
+    // Detectar error de rate limiting (429)
+    useEffect(() => {
+        if (error && (error.toLowerCase().includes('demasiados') || error.toLowerCase().includes('too many'))) {
+            setRateLimitError(true);
+        } else {
+            setRateLimitError(false);
+        }
+    }, [error]);
+
     const onSubmit = async (data: LoginFormData) => {
         try {
             await login(data.email, data.password);
@@ -45,7 +55,17 @@ export function LoginForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {rateLimitError && (
+                <div className="p-4 bg-red-50 border border-red-300 rounded-lg flex items-center gap-3">
+                    <span className="material-symbols-outlined text-red-600 text-2xl">schedule</span>
+                    <div>
+                        <p className="font-semibold text-red-700">Demasiados intentos</p>
+                        <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-2">
                 <label htmlFor="email" className="text-xs font-bold uppercase  text-on-surface-variant ml-1 text-gray-700">
                     Correo Institucional
@@ -80,7 +100,7 @@ export function LoginForm() {
                         Olvidé mi contraseña
                     </button>
                 </div>
-                <div className="relative group">
+                <div className="relative group mb-0">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary text-gray-600 transition-colors">lock</span>
                     <input
                         {...register('password')}
@@ -105,19 +125,24 @@ export function LoginForm() {
                         {zodErrors.password?.message || passwordErrors[0]}
                     </p>
                 )}
+                {error && (error.toLowerCase().includes('contraseña') || error.toLowerCase().includes('password')) && (
+                    <p className="text-[12px] text-red-600 ml-1">
+                        {error}
+                    </p>
+                )}
             </div>
 
             <button
                 type="submit"
-                disabled={isLoading || googleLoading}
-                className=" bg-blue-600 px-4 hover:bg-blue-700  w-full py-4 bg-linear-to-r from-primary to-primary-container text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
+                disabled={isLoading || googleLoading || rateLimitError}
+                className=" bg-blue-600 px-3 hover:bg-blue-700 h-12 w-full py-3 text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
             >
                 {isLoading ? (
                     <>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="40"
-                            height="40"
+                            width="30"
+                            height="30"
                             viewBox="0 0 24 24"
                             className="animate-spin"
                         >
@@ -130,6 +155,11 @@ export function LoginForm() {
                             />
                         </svg>
                         Ingresando
+                    </>
+                ) : rateLimitError ? (
+                    <>
+                        <span className="material-symbols-outlined text-lg">schedule</span>
+                        Por favor, espera
                     </>
                 ) : (
                     "Ingresar"

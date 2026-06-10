@@ -1,15 +1,14 @@
 {
-  "total": 718,
+  "total": 1007,
   "por_tipo": {
-    "Patrones multivariados complejos": 365,
-    "Primeriza + letalidad alta": 188,
-    "Desplazamiento geogr\u00e1fico": 77,
-    "Gravedad individual": 77,
-    "Combinaciones Salud Mental + Sustancias": 11
+    "Patrones multivariados complejos": 567,
+    "Desplazamiento geogr\u00e1fico": 187,
+    "Gravedad individual": 132,
+    "Primeriza + letalidad alta": 121
   },
   "por_severidad": {
-    "Media": 453,
-    "Alta": 265
+    "Media": 754,
+    "Alta": 253
   },
-  "timestamp": "2026-06-07T18:21:05.547504"
+  "timestamp": "2026-06-07T20:36:01.543234"
 }

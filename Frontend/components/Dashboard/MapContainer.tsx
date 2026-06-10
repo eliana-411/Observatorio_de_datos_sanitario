@@ -3,11 +3,29 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DistribucionGeograficaData } from '@/lib/api/analytics';
 
-export function MapContainer() {
+interface Municipio {
+    codigoMunicipio: string;
+    nombreMunicipio: string;
+    latitud: number;
+    longitud: number;
+}
+
+interface MapContainerProps {
+    distribucionGeograficaData?: DistribucionGeograficaData[];
+    municipiosCoordenadas?: Map<string, Municipio>;
+}
+
+export function MapContainer({
+    distribucionGeograficaData = [],
+    municipiosCoordenadas
+}: MapContainerProps) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const markersRef = useRef<L.CircleMarker[]>([]);
 
+    // Initialize map on mount
     useEffect(() => {
         if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -63,9 +81,11 @@ export function MapContainer() {
             .openPopup();
 
         // Forzar recalcular tamaño del mapa después de montaje
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 100);
+        requestAnimationFrame(() => {
+            if (mapInstanceRef.current && mapRef.current) {
+                mapInstanceRef.current.invalidateSize(false);
+            }
+        });
 
         mapInstanceRef.current = map;
 
@@ -87,6 +107,128 @@ export function MapContainer() {
         };
     }, []);
 
+    // Update markers when data changes
+    useEffect(() => {
+        if (!mapInstanceRef.current) return;
+
+        const map = mapInstanceRef.current;
+        console.log('MapContainer - Datos recibidos:', distribucionGeograficaData);
+
+        // Limpiar marcadores anteriores
+        markersRef.current.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        markersRef.current = [];
+
+        // Si no hay datos, no hacer nada
+        if (!distribucionGeograficaData || distribucionGeograficaData.length === 0) {
+            console.log('MapContainer - Sin datos para mostrar');
+            return;
+        }
+
+        // Calcular el máximo de casos para normalizar colores
+        let maxCasos = 0;
+        distribucionGeograficaData.forEach((municipio) => {
+            maxCasos = Math.max(maxCasos, municipio.totalCasos);
+        });
+        console.log('MapContainer - Max casos:', maxCasos, 'Total municipios:', distribucionGeograficaData.length);
+
+        // Función para obtener color según densidad
+        const getColorByDensity = (casos: number, max: number) => {
+            if (max === 0) return { fill: '#3B82F6', stroke: '#1E40AF' };
+
+            const porcentaje = casos / max;
+
+            if (porcentaje >= 0.66) {
+                return { fill: '#DC2626', stroke: '#991B1B' };
+            } else if (porcentaje >= 0.33) {
+                return { fill: '#F59E0B', stroke: '#D97706' };
+            } else {
+                return { fill: '#3B82F6', stroke: '#1E40AF' };
+            }
+        };
+
+        // Agregar nuevos marcadores
+        // Crear bounds para centrar el mapa en todos los municipios
+        const bounds = L.latLngBounds([]);
+        let municipiosConCoordenadas = 0;
+
+        // Agregar nuevos marcadores
+        distribucionGeograficaData.forEach((municipio) => {
+            // Validar explícitamente que no sean null/undefined, no usar truthy
+            if (municipio.latitud !== null && municipio.latitud !== undefined && 
+                municipio.longitud !== null && municipio.longitud !== undefined) {
+                
+                const colors = getColorByDensity(municipio.totalCasos, maxCasos);
+                const radius = Math.max(10, Math.sqrt(municipio.totalCasos) * 1.5);
+
+                // Transformar coordenadas - ajustar escala inconsistente
+                const lat = municipio.latitud > 1000 
+                    ? municipio.latitud / 100000  // Latitud en centimicrogrados
+                    : municipio.latitud;           // Ya en grados
+                    
+                const lng = municipio.longitud < -1000 || municipio.longitud > 1000
+                    ? municipio.longitud / 1000000 // Longitud en microgrados
+                    : municipio.longitud;          // Ya en grados
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: radius,
+                    fillColor: colors.fill,
+                    color: colors.stroke,
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.75
+                })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="font-size: 13px; max-width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                            <div style="background: linear-gradient(135deg, ${colors.fill} 0%, ${colors.stroke} 100%); color: white; padding: 12px; border-radius: 6px 6px 0 0; margin: -12px -12px 8px -12px;">
+                                <strong style="font-size: 16px; display: block; margin-bottom: 4px;">${municipio.nombreMunicipio}</strong>
+                                <span style="font-size: 11px; opacity: 0.9;">Código: ${municipio.codigoMunicipio}</span>
+                            </div>
+                            
+                            <div style="padding: 0 0 12px 0;">
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: ${colors.fill}; font-size: 14px;">Estadísticas Generales</strong>
+                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid ${colors.fill};">
+                                        <div style="margin-bottom: 4px;"><strong>Total de Casos:</strong> <span style="color: ${colors.fill}; font-weight: bold;">${municipio.totalCasos}</span></div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #059669; font-size: 14px;">Hospitalización</strong>
+                                    <div style="margin-top: 6px; padding-left: 8px; border-left: 3px solid #059669;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>Hospitalizados:</strong> ${municipio.hospitalizados} 
+                                            <span style="background: #D1FAE5; color: #065F46; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaHospitalizacion.toFixed(2)}%</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            <strong>No Hospitalizados:</strong> ${municipio.noHospitalizados} 
+                                            <span style="background: #E0E7FF; color: #312E81; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${municipio.tasaNoHospitalizacion.toFixed(2)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+
+                markersRef.current.push(marker);
+                bounds.extend([lat, lng]);
+                municipiosConCoordenadas++;
+            } else {
+                console.warn(`Municipio sin coordenadas válidas: ${municipio.nombreMunicipio}`);
+            }
+        });
+
+        // Ajustar el mapa para mostrar todos los marcadores
+        if (municipiosConCoordenadas > 0 && bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+            console.log(`MapContainer - ${municipiosConCoordenadas} municipios mostrados en el mapa`);
+        } else {
+            console.warn('No hay municipios con coordenadas válidas para mostrar');
+        }
+    }, [distribucionGeograficaData]);
+
     const handleZoomIn = () => {
         if (mapInstanceRef.current) {
             mapInstanceRef.current.zoomIn();
@@ -107,15 +249,12 @@ export function MapContainer() {
     };
 
     return (
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-full md:h-150">
-            <div className="p-4 md:p-6 border-b border-surface-container flex justify-between items-start md:items-center bg-white/50 backdrop-blur-md gap-4 flex-col md:flex-row">
+        <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col h-full md:h-160">
+            <div className="p-2 md:p-2 border-b border-surface-container flex justify-between items-start md:items-center bg-white/50 backdrop-blur-md gap-4 flex-col md:flex-row">
                 <div className="flex-1">
-                    <h2 className="text-lg font-black text-on-surface tracking-tight dark:text-[#0b1d2d]">
+                    <h3 className=" pl-3 text-lg font-semibold text-gray-800 text-on-surface tracking-tight dark:text-[#0b1d2d]">
                         Mapa de Calor de Prevalencia Geográfica
-                    </h2>
-                    <p className="text-xs text-on-surface-variant font-medium dark:text-[#6b7079] mt-1">
-                        Clústeres regionales de casos de Dengue detectados en tiempo real
-                    </p>
+                    </h3>
                 </div>
                 <div className="flex gap-2 flex-wrap justify-end">
                     <button

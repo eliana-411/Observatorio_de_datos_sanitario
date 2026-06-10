@@ -93,6 +93,7 @@
     "tipo_resultado_Remitido",
     "estado_civil_Casado/A",
     "estado_civil_Divorciado/A",
+    "estado_civil_No Reportado",
     "estado_civil_Separado/A",
     "estado_civil_Soltero/A",
     "estado_civil_Union Libre",
@@ -142,7 +143,7 @@
     "tiene_antecedente",
     "consume_sustancias_flag"
   ],
-  "n_features": 141,
+  "n_features": 149,
   "model_type": "IsolationForest",
   "encoding_method": "one-hot",
   "encoding_info": {
@@ -354,8 +355,8 @@
     },
     "nivel_letalidad": {
       "categories": [
-        "Bajo",
-        "Alto"
+        "Alto",
+        "Bajo"
       ],
       "n_categories": 2,
       "columns": [
@@ -408,10 +409,11 @@
         "Divorciado/A",
         "Viudo/A"
       ],
-      "n_categories": 6,
+      "n_categories": 7,
       "columns": [
         "estado_civil_Casado/A",
         "estado_civil_Divorciado/A",
+        "estado_civil_No Reportado",
         "estado_civil_Separado/A",
         "estado_civil_Soltero/A",
         "estado_civil_Union Libre",
@@ -426,6 +428,8 @@
         "Comunidad Lgbtiq+",
         "Habitante De Calle",
         "Adultez (29-59)",
+        "Comunidad Lgbtiq+",
+        "Adolescencia (12-17)",
         "Persona Mayor (60+)",
         "Discapacidad"
       ],

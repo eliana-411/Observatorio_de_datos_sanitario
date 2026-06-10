@@ -118,7 +118,7 @@ export function TwoFAForm() {
                 <button
                     type="submit"
                     disabled={isLoading || isExpired}
-                    className="bg-blue-600 px-4 hover:bg-blue-700  w-full py-4 bg-linear-to-r from-primary to-primary-container text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
+                    className="bg-blue-600 px-3 hover:bg-blue-700  w-full py-3 h-12 text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:cursor-pointer"
                 >
                     {isLoading ? (
                     <>

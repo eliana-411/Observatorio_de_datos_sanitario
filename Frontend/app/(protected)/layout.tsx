@@ -17,14 +17,17 @@ export default function ProtectedLayout({
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            <Sidebar />
+        <div className="min-h-screen flex flex-col bg-white">
             <TopAppBar />
 
-            {/* Main content */}
-            <main className="md:pl-64 pb-0 md:pb-0 min-h-screen mb-0">
-                {children}
-            </main>
+            <div className="flex flex-1">
+                <Sidebar />
+
+                {/* Main content */}
+                <main className="flex-1 pb-0 md:pb-0 mb-0 ml-16 overflow-x-hidden">
+                    {children}
+                </main>
+            </div>
 
             <BottomNav />
         </div>

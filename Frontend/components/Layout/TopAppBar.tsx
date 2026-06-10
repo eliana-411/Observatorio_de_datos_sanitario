@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useColorblindMode } from '@/contexts/ColorblindModeContext';
+import { getInitials } from '@/lib/utils';
 
 export function TopAppBar() {
     const { user, logout } = useAuth();
@@ -17,18 +18,20 @@ export function TopAppBar() {
         router.push('/login');
     };
 
-    const getInitials = (name?: string) => {
-        if (!name) return 'U';
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
-    };
+
 
     return (
-        <header className="sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 bg-[#f7f9ff]/80 dark:bg-[#0b1d2d]/80 backdrop-blur-xl md:pl-72 shadow-[0px_12px_32px_rgba(11,29,45,0.06)]">
-            <div className="flex items-center gap-4 flex-1">
+        <header className="sticky top-0 z-50 flex justify-between items-center w-full px-6 py-3 bg-[#f7f9ff]/80 dark:bg-[#0b1d2d]/80 backdrop-blur-xl shadow-[0px_12px_32px_rgba(11,29,45,0.06)]">
+            <div className="flex items-center gap-6 flex-1">
+                <div className="hidden md:block">
+                    <h2 className="text-sm font-black text-[#0b1d2d] dark:text-[#f7f9ff] tracking-tight">
+                        Observatorio
+                    </h2>
+                    <p className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest text-[#414754] dark:text-[#d2e4fb] opacity-60">
+                        de Datos Sanitarios
+                    </p>
+                </div>
+
                 <div className="relative w-full max-w-md">
                     <span
                         className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#727886]"
@@ -59,8 +62,8 @@ export function TopAppBar() {
                 <button
                     onClick={toggleColorblindMode}
                     className={`p-2 rounded-full transition-colors ${isColorblindMode
-                            ? 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                            : 'hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb]'
+                        ? 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                        : 'hover:bg-[#e4efff] dark:hover:bg-[#1a2b3b] text-[#414754] dark:text-[#d2e4fb]'
                         }`}
                     title={isColorblindMode ? 'Desactivar modo daltónico' : 'Activar modo daltónico'}
                 >
@@ -84,8 +87,8 @@ export function TopAppBar() {
                         <p className="text-[16px] font-bold text-on-surface leading-tight">
                             {user?.name || 'Usuario'}
                         </p>
-                        <p className="text-[14px] text-on-surface-variant font-medium">
-                            Usuario
+                        <p className="text-[12px] text-on-surface-variant font-medium">
+                            {user?.role === 'Admin' ? 'Administrador' : 'Usuario'}
                         </p>
                     </button>
 

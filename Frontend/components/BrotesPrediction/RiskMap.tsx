@@ -77,7 +77,7 @@ export function RiskMap() {
     }, []);
 
     return (
-        <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff] relative overflow-hidden h-[420px]">
+        <Card className="p-6 bg-white border dark:bg-[#1a2b3b] border-[#e4efff] relative overflow-hidden h-105">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xs font-bold text-[#8d919b] uppercase tracking-widest">
                     Mapa de Riesgo Regional
@@ -97,7 +97,7 @@ export function RiskMap() {
                     </div>
                 </div>
             </div>
-            <div ref={mapContainer} className="w-full h-[350px] rounded border border-[#e4efff]" />
+            <div ref={mapContainer} className="w-full h-87.5 rounded border border-[#e4efff]" />
         </Card>
     );
 }

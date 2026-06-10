@@ -12,6 +12,7 @@ export function useAuth() {
     const logout = useAuthStore((state) => state.logout);
     const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
     const verify2FA = useAuthStore((state) => state.verify2FA);
+    const updateUser = useAuthStore((state) => state.updateUser);
 
     return {
         isAuthenticated,
@@ -25,5 +26,6 @@ export function useAuth() {
         logout,
         loginWithGoogle,
         verify2FA,
+        updateUser,
     };
 }
